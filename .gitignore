@@ -7,6 +7,10 @@
 node_modules/
 dist/
 
+# Ignore Unreal build files
+Binaries/
+Intermediate/
+
 # Compiled Java class files
 *.class
 
