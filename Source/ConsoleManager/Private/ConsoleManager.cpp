@@ -5,6 +5,8 @@
 #include "ConsoleManagerCommands.h"
 #include "Misc/MessageDialog.h"
 #include "ToolMenus.h"
+#include "SConsoleManagerSlateWidget.h"
+
 #include "FileHelper.h"
 
 static const FName ConsoleManagerTabName("ConsoleManager");
@@ -35,8 +37,7 @@ void FConsoleManagerModule::StartupModule()
 		.SetDisplayName(LOCTEXT("FConsoleManagerTabTitle", "Console Manager"))
 		.SetMenuType(ETabSpawnerMenuType::Hidden);
 
-
-
+	CommandsManager = TSharedPtr<FCommandsManager>(new FCommandsManager());
 }
 
 void FConsoleManagerModule::ShutdownModule()
@@ -53,12 +54,13 @@ void FConsoleManagerModule::ShutdownModule()
 	FConsoleManagerCommands::Unregister();
 
 	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(ConsoleManagerTabName);
+
+	CommandsManager.Reset();
 }
 
 void FConsoleManagerModule::OpenTab()
 {
 	FGlobalTabmanager::Get()->InvokeTab(ConsoleManagerTabName);
-
 }
 
 void FConsoleManagerModule::RegisterMenus()
@@ -88,6 +90,7 @@ void FConsoleManagerModule::RegisterMenus()
 
 TSharedRef<class SDockTab> FConsoleManagerModule::OnSpawnPluginTab(const FSpawnTabArgs& SpawnTabArgs)
 {
+	CommandsManager->Refresh();
 
 	FConsoleCommandDelegate Delegate;
 
@@ -116,57 +119,9 @@ TSharedRef<class SDockTab> FConsoleManagerModule::OnSpawnPluginTab(const FSpawnT
 	return DockTab;
 }
 
-TSharedRef<class SWidget> FConsoleManagerModule::BuildUI()
+TSharedRef<class SConsoleManagerSlateWidget> FConsoleManagerModule::BuildUI()
 {
-	TSharedRef<SWidget> Content = SNew(SHorizontalBox)
-		+ SHorizontalBox::Slot()
-		.AutoWidth()
-		.Padding(5.0f)
-		[
-			SNew(SVerticalBox)
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString("Add group"))
-			]
-			+ SVerticalBox::Slot()
-			.FillHeight(1)
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString("Groups"))
-			]
-		]
-		+ SHorizontalBox::Slot()
-		.FillWidth(1)
-		.Padding(5.0f)
-		[
-			SNew(SVerticalBox)
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString("Menu"))
-			]
-
-			+ SVerticalBox::Slot()
-			.FillHeight(1)
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString("Here commands"))
-			]
-
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString("here command input"))
-			]
-		];
-
-
-
-	return Content;
+	return SNew(SConsoleManagerSlateWidget).CommandsManager(CommandsManager);
 }
 
 #undef LOCTEXT_NAMESPACE

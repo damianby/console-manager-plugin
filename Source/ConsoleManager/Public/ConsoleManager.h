@@ -4,10 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "CommandStructs.h"
+#include "CommandsManager.h"
+
 #include "Modules/ModuleManager.h"
 
 class FToolBarBuilder;
 class FMenuBuilder;
+
+
 
 class FConsoleManagerModule : public IModuleInterface
 {
@@ -28,8 +32,10 @@ private:
 
 	TSharedPtr<class FUICommandList> PluginCommands;
 
-	TSharedRef<class SWidget> BuildUI();
+	TSharedRef<class SConsoleManagerSlateWidget> BuildUI();
 
 	//This handle allows to catch any changes to cvars
 	FConsoleVariableSinkHandle Handle;
+
+	TSharedPtr<FCommandsManager> CommandsManager;
 };
