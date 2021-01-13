@@ -5,6 +5,7 @@
 #include "ConsoleManagerCommands.h"
 #include "Misc/MessageDialog.h"
 #include "ToolMenus.h"
+#include "FileHelper.h"
 
 static const FName ConsoleManagerTabName("ConsoleManager");
 
