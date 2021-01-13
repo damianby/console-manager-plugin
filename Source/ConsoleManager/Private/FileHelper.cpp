@@ -102,50 +102,29 @@ void FileHelper::ProcessCommandsFile(const FString& Contents, TArray<FCommandGro
 			//TCHAR* Value = 0;
 			TCHAR* Value = Start;
 
+			// Strip leading whitespace from the property value
+			while (*Value && FChar::IsWhitespace(*Value))
+				Value++;
 
-			//// ignore [comment] lines that start with ;
-			//if (*Start != (TCHAR)';')
-			//{
-			//	Value = FCString::Strstr(Start, TEXT("="));
-			//}
+			// strip trailing whitespace from the property value
+			while (*Value && FChar::IsWhitespace(Value[FCString::Strlen(Value) - 1]))
+				Value[FCString::Strlen(Value) - 1] = 0;
 
-			// Ignore any lines that don't contain a key-value pair
-			if (Value || true)
+			// If this line is delimited by quotes
+			if (*Value == '\"')
 			{
-				//// Terminate the propertyname, advancing past the =
-				//*Value++ = 0;
+				FString ProcessedValue;
+				FParse::QuotedString(Value, ProcessedValue);
 
-				//// strip leading whitespace from the property name
-				//while (*Start && FChar::IsWhitespace(*Start))
-				//	Start++;
-
-				//// Strip trailing spaces from the property name.
-				//while (*Start && FChar::IsWhitespace(Start[FCString::Strlen(Start) - 1]))
-				//	Start[FCString::Strlen(Start) - 1] = 0;
-
-				// Strip leading whitespace from the property value
-				while (*Value && FChar::IsWhitespace(*Value))
-					Value++;
-
-				// strip trailing whitespace from the property value
-				while (*Value && FChar::IsWhitespace(Value[FCString::Strlen(Value) - 1]))
-					Value[FCString::Strlen(Value) - 1] = 0;
-
-				// If this line is delimited by quotes
-				if (*Value == '\"')
-				{
-					FString ProcessedValue;
-					FParse::QuotedString(Value, ProcessedValue);
-
-					// Add this pair to the current FConfigSection
-					CurrentSection->Commands.Add(ProcessedValue);
-				}
-				else
-				{
-					// Add this pair to the current FConfigSection
-					CurrentSection->Commands.Add(Value);
-				}
+				// Add this pair to the current FConfigSection
+				CurrentSection->Commands.Add(ProcessedValue);
 			}
+			else
+			{
+				// Add this pair to the current FConfigSection
+				CurrentSection->Commands.Add(Value);
+			}
+			
 		}
 	}
 }
