@@ -27,6 +27,15 @@ void FConsoleManagerModule::StartupModule()
 		FCanExecuteAction());
 
 	UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FConsoleManagerModule::RegisterMenus));
+
+	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(ConsoleManagerTabName,
+		FOnSpawnTab::CreateRaw(
+			this, &FConsoleManagerModule::OnSpawnPluginTab))
+		.SetDisplayName(LOCTEXT("FConsoleManagerTabTitle", "Console Manager"))
+		.SetMenuType(ETabSpawnerMenuType::Hidden);
+
+
+
 }
 
 void FConsoleManagerModule::ShutdownModule()
@@ -41,12 +50,14 @@ void FConsoleManagerModule::ShutdownModule()
 	FConsoleManagerStyle::Shutdown();
 
 	FConsoleManagerCommands::Unregister();
-}
 
+	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(ConsoleManagerTabName);
+}
 
 void FConsoleManagerModule::OpenTab()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Tab open!"));
+	FGlobalTabmanager::Get()->InvokeTab(ConsoleManagerTabName);
+
 }
 
 void FConsoleManagerModule::RegisterMenus()
@@ -72,6 +83,89 @@ void FConsoleManagerModule::RegisterMenus()
 			}
 		}
 	}
+}
+
+TSharedRef<class SDockTab> FConsoleManagerModule::OnSpawnPluginTab(const FSpawnTabArgs& SpawnTabArgs)
+{
+
+	FConsoleCommandDelegate Delegate;
+
+	Delegate.BindLambda([=]() {
+		//CreateCommandList(ButtonList, AbsoluteFilePath);
+		});
+
+	Handle = IConsoleManager::Get().RegisterConsoleVariableSink_Handle(Delegate);
+
+	TSharedRef<SDockTab> DockTab = SNew(SDockTab)
+		.TabRole(ETabRole::NomadTab)
+		[
+			BuildUI()
+		];
+
+
+	SDockTab::FOnTabClosedCallback ClosedTabDelegate;
+
+	ClosedTabDelegate.BindLambda([=](TSharedRef<SDockTab> DockTab)
+		{
+			IConsoleManager::Get().UnregisterConsoleVariableSink_Handle(Handle);
+		});
+
+	DockTab->SetOnTabClosed(ClosedTabDelegate);
+
+	return DockTab;
+}
+
+TSharedRef<class SWidget> FConsoleManagerModule::BuildUI()
+{
+	TSharedRef<SWidget> Content = SNew(SHorizontalBox)
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.Padding(5.0f)
+		[
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString("Add group"))
+			]
+			+ SVerticalBox::Slot()
+			.FillHeight(1)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString("Groups"))
+			]
+		]
+		+ SHorizontalBox::Slot()
+		.FillWidth(1)
+		.Padding(5.0f)
+		[
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString("Menu"))
+			]
+
+			+ SVerticalBox::Slot()
+			.FillHeight(1)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString("Here commands"))
+			]
+
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString("here command input"))
+			]
+		];
+
+
+
+	return Content;
 }
 
 #undef LOCTEXT_NAMESPACE

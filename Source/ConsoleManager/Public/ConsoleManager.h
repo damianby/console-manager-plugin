@@ -23,7 +23,12 @@ private:
 
 	void RegisterMenus();
 
+	TSharedRef<class SDockTab> OnSpawnPluginTab(const class FSpawnTabArgs& SpawnTabArgs);
 
-private:
 	TSharedPtr<class FUICommandList> PluginCommands;
+
+	TSharedRef<class SWidget> BuildUI();
+
+	//This handle allows to catch any changes to cvars
+	FConsoleVariableSinkHandle Handle;
 };
