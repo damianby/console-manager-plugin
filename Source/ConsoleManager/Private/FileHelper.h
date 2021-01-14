@@ -47,6 +47,9 @@ public:
 
 
 
-
+	/**
+	 * @brief Debug print to log
+	 * @param Groups 
+	*/
 	static void PrintGroups_Debug(const TArray<FCommandGroup>& Groups);
 };

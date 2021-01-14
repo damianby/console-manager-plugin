@@ -25,33 +25,25 @@ void FileHelper::LoadConsoleHistory(FCommandGroup& OutGroup)
 		if (ConfigPair.Key == SectionName)
 		{
 			// uses empty HistoryKey
-			//UE_LOG(LogTemp, Warning, TEXT("History empty"));
-
 		}
 		else if (ConfigPair.Key.StartsWith(SectionName))
 		{
 			HistoryKey = ConfigPair.Key.Mid(SectionName.Len());
-			//UE_LOG(LogTemp, Warning, TEXT("History key mid: %s"), *HistoryKey);
-
 		}
 		else
 		{
 			continue;
 		}
 
-		//TArray<FString>& HistoryEntries = HistoryEntriesMap.FindOrAdd(HistoryKey);
 		for (const auto& ConfigSectionPair : ConfigPair.Value)
 		{
 			if (ConfigSectionPair.Key == KeyName)
 			{
-				//HistoryEntries.Add(ConfigSectionPair.Value.GetValue());
-				//UE_LOG(LogTemp, Warning, TEXT("History starts: %s"), *ConfigSectionPair.Value.GetValue());
 				OutGroup.Commands.Add(ConfigSectionPair.Value.GetValue());
 			}
 		}
 	}
 }
-
 
 void FileHelper::ProcessCommandsFile(const FString& Contents, TArray<FCommandGroup>& OutGroups)
 {
@@ -117,12 +109,12 @@ void FileHelper::ProcessCommandsFile(const FString& Contents, TArray<FCommandGro
 				FParse::QuotedString(Value, ProcessedValue);
 
 				// Add this pair to the current FConfigSection
-				CurrentSection->Commands.Add(ProcessedValue);
+				CurrentSection->Commands.Add(FConsoleCommand(ProcessedValue));
 			}
 			else
 			{
 				// Add this pair to the current FConfigSection
-				CurrentSection->Commands.Add(Value);
+				CurrentSection->Commands.Add(FConsoleCommand(Value));
 			}
 			
 		}
@@ -135,7 +127,6 @@ bool FileHelper::ReadCommandFile(const FString& Path, TArray<FCommandGroup>& Out
 	{
 		return false;
 	}
-
 
 	FString Contents;
 	if (!FFileHelper::LoadFileToString(Contents, *Path))
@@ -163,9 +154,9 @@ bool FileHelper::SaveCommandFile(const FString& Path, const TArray<FCommandGroup
 
 		Text.Appendf(TEXT("[%s]") LINE_TERMINATOR, *Group.Name);
 
-		for (const FString& Command : Group.Commands)
+		for (const FConsoleCommand& Command : Group.Commands)
 		{
-			Text.Appendf(TEXT("%s") LINE_TERMINATOR, *Command);
+			Text.Appendf(TEXT("%s") LINE_TERMINATOR, *Command.Command);
 		}
 		//For nice formatting add terminator at end of section
 		Text.Append(LINE_TERMINATOR);
@@ -183,9 +174,9 @@ void FileHelper::PrintGroups_Debug(const TArray<FCommandGroup>& Groups)
 		UE_LOG(LogTemp, Warning, TEXT("Group Name: %s"), *Group.Name);
 
 		int i = 1;
-		for (const FString& Command : Group.Commands)
+		for (const FConsoleCommand& Command : Group.Commands)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("%d. %s"), i, *Command);
+			UE_LOG(LogTemp, Warning, TEXT("%d. %s"), i, *Command.Command);
 			i++;
 		}
 	}
