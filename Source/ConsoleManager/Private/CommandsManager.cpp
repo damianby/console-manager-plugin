@@ -3,6 +3,31 @@
 
 #include "CommandsManager.h"
 
+static inline bool IsWhiteSpace(TCHAR Value) { return Value == TCHAR(' '); }
+
+static const TCHAR* GetSetByTCHAR(EConsoleVariableFlags InSetBy)
+{
+	EConsoleVariableFlags SetBy = (EConsoleVariableFlags)((uint32)InSetBy & ECVF_SetByMask);
+
+	switch (SetBy)
+	{
+#define CASE(A) case ECVF_SetBy##A: return TEXT(#A);
+		// Could also be done with enum reflection instead
+		CASE(Constructor)
+			CASE(Scalability)
+			CASE(GameSetting)
+			CASE(ProjectSetting)
+			CASE(DeviceProfile)
+			CASE(SystemSettingsIni)
+			CASE(ConsoleVariablesIni)
+			CASE(Commandline)
+			CASE(Code)
+			CASE(Console)
+#undef CASE
+	}
+	return TEXT("<UNKNOWN>");
+}
+
 FCommandsManager::FCommandsManager()
 {
 
