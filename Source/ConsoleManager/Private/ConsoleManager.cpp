@@ -95,6 +95,7 @@ TSharedRef<class SDockTab> FConsoleManagerModule::OnSpawnPluginTab(const FSpawnT
 	FConsoleCommandDelegate Delegate;
 
 	Delegate.BindLambda([=]() {
+		CommandsManager->RefreshCurrentTrackedCommands();
 		//CreateCommandList(ButtonList, AbsoluteFilePath);
 		});
 
@@ -112,6 +113,7 @@ TSharedRef<class SDockTab> FConsoleManagerModule::OnSpawnPluginTab(const FSpawnT
 	ClosedTabDelegate.BindLambda([=](TSharedRef<SDockTab> DockTab)
 		{
 			IConsoleManager::Get().UnregisterConsoleVariableSink_Handle(Handle);
+			DockTab->ClearContent();
 		});
 
 	DockTab->SetOnTabClosed(ClosedTabDelegate);
