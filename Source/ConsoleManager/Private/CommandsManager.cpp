@@ -98,7 +98,7 @@ void FCommandsManager::SetActiveGroup(int NewId)
 	SetCurrentCommands(CommandGroups[ActiveGroupId]);
 	RefreshCurrentTrackedCommands();
 
-	DumpAllCommandsToFile_Debug();
+	DumpAllCommands();
 }
 
 void FCommandsManager::AddNewGroup(const FString& Name)
@@ -449,30 +449,9 @@ FString FCommandsManager::GetTextSection(const TCHAR*& It)
 	return ret;
 }
 
-
-#include "Misc/FileHelper.h"
-
-//class FConsoleVariableDumpVisitor
-//{
-//public:
-//	// @param Name must not be 0
-//	// @param " must not be 0
-//	static void OnConsoleVariable(const TCHAR* Name, IConsoleObject* CVar, TSet<FString>& Sink)
-//	{
-//		if (CVar->TestFlags(ECVF_Unregistered))
-//		{
-//			return;
-//		}
-//
-//		Sink.Add(Name);
-//	}
-//};
-
-void FCommandsManager::DumpAllCommandsToFile_Debug()
+void FCommandsManager::DumpAllCommands()
 {
-
-
-	TSet<FString> LocalCommands;
+	TSet<FString>& LocalCommands = AllCommands;
 
 	FConsoleObjectVisitor Visitor;
 	Visitor.BindLambda([&LocalCommands](const TCHAR* Name, IConsoleObject* Obj) {
@@ -486,6 +465,6 @@ void FCommandsManager::DumpAllCommandsToFile_Debug()
 
 
 	const FString Path = FPaths::GeneratedConfigDir() + TEXT("Console.txt");
-	FFileHelper::SaveStringArrayToFile(LocalCommands.Array(), *Path);
+	FileHelper::DumpAllCommands(Path, LocalCommands);
 
 }

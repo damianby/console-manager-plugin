@@ -53,8 +53,10 @@ private:
 	void RefreshCommand(FConsoleCommand& Command);
 
 
-	void DumpAllCommandsToFile_Debug();
+	void DumpAllCommands();
 
 	FString GetTextSection(const TCHAR*& It);
 
+
+	TSet<FString> AllCommands;
 };

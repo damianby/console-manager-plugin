@@ -167,6 +167,11 @@ bool FileHelper::SaveCommandFile(const FString& Path, const TArray<FCommandGroup
 	return FFileHelper::SaveStringToFile(Final, *Path);
 }
 
+bool FileHelper::DumpAllCommands(const FString& Path, const TSet<FString> Commands)
+{
+	return FFileHelper::SaveStringArrayToFile(Commands.Array(), *Path);
+}
+
 void FileHelper::PrintGroups_Debug(const TArray<FCommandGroup>& Groups)
 {
 	for (const FCommandGroup& Group : Groups)

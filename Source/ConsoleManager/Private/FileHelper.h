@@ -40,11 +40,17 @@ public:
 	 * @param Path			Out file path
 	 * @param Groups		Input groups
 	 * @param bOverwrite	If true overwrite if file exists
-	 * @return 
+	 * @return				AllCommands
 	*/
 	static bool SaveCommandFile(const FString& Path, const TArray<FCommandGroup>& Groups, bool bOverwrite = true);
 
-
+	/**
+	 * @brief				Save all commands to file
+	 * @param Path			Out file path
+	 * @param Commands		Set of all commands
+	 * @return				Success
+	*/
+	static bool DumpAllCommands(const FString& Path, const TSet<FString> Commands);
 
 
 	/**
