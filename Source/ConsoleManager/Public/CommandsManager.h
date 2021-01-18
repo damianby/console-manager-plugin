@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "FileHelper.h"
 #include "Interfaces/IPluginManager.h"
+#include "Misc/Parse.h"
 #include "CommandStructs.h"
 
 /**
@@ -23,11 +24,37 @@ public:
 	const TArray<FConsoleCommand>& GetCurrentCommands();
 	const TArray<FString> GetGroupList();
 
+	void SetActiveGroup(int NewId);
+	int GetActiveGroupId() { return ActiveGroupId; };
+
+	void AddNewGroup(const FString& Name);
+
+	void RefreshCurrentTrackedCommands();
+
+	const FConsoleCommand& GetConsoleCommand(int Id);
+
+	bool ExecuteCurrentCommand(int Id);
+	bool ExecuteCommand(const FConsoleCommand& Command);
+
 private:
+
+	void SetCurrentCommands(FCommandGroup& Group);
 
 	FCommandGroup ConsoleHistory;
 
 	TArray<FCommandGroup> CommandGroups;
 
-	TArray<FConsoleCommand> CurrentCommands;
+	FCommandGroup* CurrentCommands = nullptr;
+
+	int ActiveGroupId = 0;
+
+	bool Execute(FConsoleCommand& Command);
+
+	void RefreshCommand(FConsoleCommand& Command);
+
+
+	void DumpAllCommandsToFile_Debug();
+
+	FString GetTextSection(const TCHAR*& It);
+
 };
