@@ -2,12 +2,6 @@
 
 #include "CoreMinimal.h"
 
-struct FCommandGroup
-{
-	FString Name;
-	TArray<FString> Commands;
-};
-
 enum class EConsoleCommandInputType : uint8
 {
 	None,
@@ -15,8 +9,12 @@ enum class EConsoleCommandInputType : uint8
 	Slider
 };
 
+
+
 struct FConsoleCommand
 {
+	FConsoleCommand(FString _Command) : Command(_Command) {}
+
 	FString Name;
 	EConsoleCommandInputType InputType;
 	bool IsValid;
@@ -25,3 +23,11 @@ struct FConsoleCommand
 	FString Type;
 	FString SetBy;
 };
+
+struct FCommandGroup
+{
+	FString Name;
+	TArray<FConsoleCommand> Commands;
+	bool bInitiallySet = false;
+};
+
