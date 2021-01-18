@@ -31,10 +31,14 @@ private:
 	TWeakPtr<FCommandsManager> CommandsManager;
 
 	TSharedPtr<SScrollBox> GroupsScrollBox;
+	TSharedPtr<SScrollBox> CommandsScrollBox;
 
 	FReply OnAddGroupButtonClicked();
 
-	FReply OnSelectGroupClicked();
+	FReply OnSelectGroupClicked(int Id);
+	FReply OnSelectCommandClicked(int Id);
 
-	TSharedRef<SScrollBox> GenerateGroupsScrollBox();
+	void GenerateGroupsScrollBox();
+
+	void GenerateCommandsScrollBox();
 };

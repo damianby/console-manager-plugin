@@ -12,9 +12,15 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
 void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 {
+
+	UE_LOG(LogTemp, Warning, TEXT("Construct slate widget"));
 	CommandsManager = InArgs._CommandsManager;
 
-	GroupsScrollBox = GenerateGroupsScrollBox();
+	GroupsScrollBox = SNew(SScrollBox);
+	GenerateGroupsScrollBox();
+
+	CommandsScrollBox = SNew(SScrollBox);
+	GenerateCommandsScrollBox();
 
 	TSharedRef<SWidget> Content = SNew(SHorizontalBox)
 		+ SHorizontalBox::Slot()
@@ -32,31 +38,41 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 	
 			]
 			+ SVerticalBox::Slot()
-				.FillHeight(1)
-				[
-					GroupsScrollBox.ToSharedRef()
-				]
-			]
-		+ SHorizontalBox::Slot()
-			.FillWidth(1)
-			.Padding(5.0f)
-			[
-				SNew(SVerticalBox)
-				+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString("Menu"))
-			]
-
-		+ SVerticalBox::Slot()
 			.FillHeight(1)
 			[
-				SNew(STextBlock)
-				.Text(FText::FromString("Here commands"))
+				GroupsScrollBox.ToSharedRef()
+			]
+		]
+		+ SHorizontalBox::Slot()
+		.FillWidth(1)
+		.Padding(5.0f)
+		[
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+			.HAlign(EHorizontalAlignment::HAlign_Right)
+			.AutoHeight()
+			[
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNew(SButton)
+					.Text(FText::FromString("History"))
+				]
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNew(SButton)
+					.Text(FText::FromString("All Commands"))
+				]
 			]
 
-		+ SVerticalBox::Slot()
+			+ SVerticalBox::Slot()
+			.FillHeight(1)
+			[
+				CommandsScrollBox.ToSharedRef()
+			]
+			+ SVerticalBox::Slot()
 			.AutoHeight()
 			[
 				SNew(STextBlock)
@@ -78,32 +94,113 @@ FReply SConsoleManagerSlateWidget::OnAddGroupButtonClicked()
 {
 	UE_LOG(LogTemp, Warning, TEXT("CLICKED ADD GROUP"));
 
-	GroupsScrollBox->AddSlot()
-		[
-			SNew(SButton)
-			.Text(FText::FromString("ELO"))
-		];
+	CommandsManager.Pin()->AddNewGroup("NewGroup");
+
+	GenerateGroupsScrollBox();
 
 	return FReply::Handled();
 }
 
-TSharedRef<SScrollBox> SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
+FReply SConsoleManagerSlateWidget::OnSelectGroupClicked(int Id)
 {
-	TSharedRef<SScrollBox> ScrollBox = SNew(SScrollBox);
+	UE_LOG(LogTemp, Warning, TEXT("Id: %d"), Id);
+
+	CommandsManager.Pin()->SetActiveGroup(Id);
+
+	GenerateCommandsScrollBox();
+
+	return FReply::Handled();
+}
+
+FReply SConsoleManagerSlateWidget::OnSelectCommandClicked(int Id)
+{
+	const FConsoleCommand& Command = CommandsManager.Pin()->GetConsoleCommand(Id);
+
+	if (!CommandsManager.Pin()->ExecuteCurrentCommand(Id))
+	{
+		//GenerateCommandsScrollBox();
+	}
+
+	return FReply::Handled();
+}
+
+void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
+{
+	check(GroupsScrollBox.IsValid());
+
+	GroupsScrollBox->ClearChildren();
 
 	const TArray<FString> Commands = CommandsManager.Pin()->GetGroupList();
 
 	for (int i = 0; i < Commands.Num(); i++)
 	{
-		ScrollBox->AddSlot()
+		GroupsScrollBox->AddSlot()
 			[
 				SNew(SButton)
 				.Text(FText::FromString(Commands[i]))
+				.OnClicked(this, &SConsoleManagerSlateWidget::OnSelectGroupClicked, i)
+			];
+	}
+}
+
+void SConsoleManagerSlateWidget::GenerateCommandsScrollBox()
+{
+	check(CommandsScrollBox.IsValid());
+
+	CommandsScrollBox->ClearChildren();
+
+	const TArray<FConsoleCommand>& Commands = CommandsManager.Pin()->GetCurrentCommands();
+
+	for (int i = 0; i < Commands.Num(); i++)
+	{
+		//////crash!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		const FConsoleCommand& Command = Commands[i];
+		UE_LOG(LogTemp, Warning, TEXT("Command: %s %s %s %s"), *Command.Command, *Command.SetBy, *Command.Type, *Command.Value);
+
+		TAttribute<FSlateColor> Value = TAttribute<FSlateColor>::Create(TAttribute<FSlateColor>::FGetter::CreateLambda([&Command]() {
+			if (!Command.IsValid)
+			{
+				return FSlateColor(FLinearColor(255, 0, 0, 255));
+			}
+			return FSlateColor(FLinearColor(255, 255, 255, 255));
+			}));
+		
+
+		TAttribute<FText> CommandValue = TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateLambda([&Command]() {
+			return FText::FromString(Command.Value);
+			}));
+
+
+		CommandsScrollBox->AddSlot()
+			[
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNew(SButton)
+					.Text(FText::FromString(Command.Command))
+					.ButtonColorAndOpacity(Value)
+					.OnClicked(this, &SConsoleManagerSlateWidget::OnSelectCommandClicked, i)
+				]
+				+ SHorizontalBox::Slot()
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString(Command.SetBy))
+				]
+				+ SHorizontalBox::Slot()
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString(Command.Type))
+				]
+				+ SHorizontalBox::Slot()
+				[
+					SNew(STextBlock)
+					.Text(CommandValue)
+				]
+				
 			];
 	}
 
-
-	return ScrollBox;
 }
 
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
