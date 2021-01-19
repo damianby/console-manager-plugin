@@ -5,6 +5,9 @@
 #include "CoreMinimal.h"
 #include "CommandStructs.h"
 #include "CommandsManager.h"
+#include "SGroupButton.h"
+#include "Framework/MultiBox/MultiBoxBuilder.h"
+#include "Widgets/Input/SSearchBox.h"
 #include "Widgets/SCompoundWidget.h"
 
 /**
@@ -26,6 +29,10 @@ public:
 	void Construct(const FArguments& InArgs);
 
 
+protected:
+	//virtual FReply OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
+
+
 private:
 
 	TWeakPtr<FCommandsManager> CommandsManager;
@@ -33,7 +40,7 @@ private:
 	TSharedPtr<SScrollBox> GroupsScrollBox;
 	TSharedPtr<SScrollBox> CommandsScrollBox;
 
-	FReply OnAddGroupButtonClicked();
+	void OnAddGroupButtonClicked();
 
 	FReply OnSelectGroupClicked(int Id);
 	FReply OnSelectCommandClicked(int Id);
@@ -41,4 +48,5 @@ private:
 	void GenerateGroupsScrollBox();
 
 	void GenerateCommandsScrollBox();
+
 };

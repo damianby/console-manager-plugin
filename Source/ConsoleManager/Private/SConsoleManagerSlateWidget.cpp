@@ -3,6 +3,8 @@
 
 #include "SConsoleManagerSlateWidget.h"
 #include "SlateOptMacros.h"
+#include "ConsoleManagerCommands.h"
+
 #include "Widgets/Layout/SScrollBox.h"
 
 #define LOCTEXT_NAMESPACE "FConsoleManagerModule"
@@ -22,63 +24,96 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 	CommandsScrollBox = SNew(SScrollBox);
 	GenerateCommandsScrollBox();
 
-	TSharedRef<SWidget> Content = SNew(SHorizontalBox)
-		+ SHorizontalBox::Slot()
-		.AutoWidth()
-		.Padding(5.0f)
-		[
-			SNew(SVerticalBox)
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SNew(SButton)
-				.Text(LOCTEXT("AddGroupButtonText", "Add Group"))
-				.ContentPadding(FMargin(4.0f))
-				.OnClicked(this, &SConsoleManagerSlateWidget::OnAddGroupButtonClicked)
+
+
+	//FConsoleManagerCommands::Get().GroupContextMenu = MakeShareable(new FUICommandList);
+
+	FConsoleManagerCommands::Get().GroupContextMenu->MapAction(
+		FConsoleManagerCommands::Get().NewGroupCommand,
+		FExecuteAction::CreateLambda([=]() {
+			UE_LOG(LogTemp, Warning, TEXT("LAmbda"))
+			}),
+		FCanExecuteAction());
+
 	
-			]
-			+ SVerticalBox::Slot()
-			.FillHeight(1)
-			[
-				GroupsScrollBox.ToSharedRef()
+	TSharedRef<SWidget> Content = SNew(SVerticalBox)
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+			.FillWidth(1.0f)
+			[	
+				SNew(SSearchBox)
+				.HintText(FText::FromString("Search/Filter"))
 			]
 		]
-		+ SHorizontalBox::Slot()
-		.FillWidth(1)
-		.Padding(5.0f)
-		[
-			SNew(SVerticalBox)
-			+ SVerticalBox::Slot()
-			.HAlign(EHorizontalAlignment::HAlign_Right)
-			.AutoHeight()
-			[
-				SNew(SHorizontalBox)
-				+ SHorizontalBox::Slot()
-				.AutoWidth()
-				[
-					SNew(SButton)
-					.Text(FText::FromString("History"))
-				]
-				+ SHorizontalBox::Slot()
-				.AutoWidth()
-				[
-					SNew(SButton)
-					.Text(FText::FromString("All Commands"))
-				]
-			]
 
-			+ SVerticalBox::Slot()
-			.FillHeight(1)
+		+ SVerticalBox::Slot()
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.Padding(5.0f)
 			[
-				CommandsScrollBox.ToSharedRef()
+				SNew(SVerticalBox)
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(SButton)
+					.Text(LOCTEXT("HistoryButton", "History"))
+				]
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(SButton)
+					.Text(LOCTEXT("ShowAllButton", "Show All"))
+				]
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(SSpacer)
+					.Size(FVector2D(0.0f, 15.0f))
+					
+
+				]
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(SButton)
+					.Text(LOCTEXT("AddGroupButtonText", "Add Group"))
+					.ContentPadding(FMargin(4.0f))
+					//.OnClicked(this, &SConsoleManagerSlateWidget::OnAddGroupButtonClicked)
+
+				]
+				+ SVerticalBox::Slot()
+				.FillHeight(1)
+				[
+					GroupsScrollBox.ToSharedRef()
+				]
 			]
-			+ SVerticalBox::Slot()
-			.AutoHeight()
+			+ SHorizontalBox::Slot()
+			.FillWidth(1)
+			.Padding(5.0f)
 			[
-				SNew(STextBlock)
-				.Text(FText::FromString("here command input"))
+				SNew(SVerticalBox)
+				+ SVerticalBox::Slot()
+				.FillHeight(1)
+				[
+					CommandsScrollBox.ToSharedRef()
+				]
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString("here command input"))
+				]
 			]
 		];
+		
 
 
 
@@ -90,7 +125,56 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 		];
 }
 
-FReply SConsoleManagerSlateWidget::OnAddGroupButtonClicked()
+//FReply SConsoleManagerSlateWidget::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
+//{
+//	return FReply::Unhandled();
+//
+//	FMenuBuilder MenuBuilder(true, NULL, TSharedPtr<FExtender>());
+//	
+//	{
+//		MenuBuilder.BeginSection("Group", LOCTEXT("GroupContextMenu_Header_Group", "Group"));
+//		{
+//			FUIAction Action_NewGroup(
+//
+//				FExecuteAction::CreateSP(this, &SConsoleManagerSlateWidget::OnAddGroupButtonClicked),
+//				FCanExecuteAction()
+//			);
+//
+//			MenuBuilder.AddMenuEntry
+//			(
+//				LOCTEXT("GroupContextMenu_NewGroup", "Add group"),
+//				LOCTEXT("GroupContextMenu_NewGroup_Desc", "Creates new group"),
+//				FSlateIcon(),
+//				Action_NewGroup,
+//				NAME_None,
+//				EUserInterfaceActionType::Button
+//			);
+//		}
+//		MenuBuilder.EndSection();
+//	}
+//
+//	
+//
+//	UE_LOG(LogTemp, Warning, TEXT("Mouse btn up"));
+//
+//	if (MouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
+//	{
+//		TSharedRef<SWidget> MenuContents = MenuBuilder.MakeWidget();
+//		FWidgetPath WidgetPath = MouseEvent.GetEventPath() != nullptr ? *MouseEvent.GetEventPath() : FWidgetPath();
+//		FSlateApplication::Get().PushMenu(AsShared(), WidgetPath, MenuContents, MouseEvent.GetScreenSpacePosition(), FPopupTransitionEffect(FPopupTransitionEffect::ContextMenu));
+//
+//		return FReply::Handled();
+//	}
+//	else
+//	{
+//		return FReply::Unhandled();
+//	}
+//
+//
+//
+//}
+
+void SConsoleManagerSlateWidget::OnAddGroupButtonClicked()
 {
 	UE_LOG(LogTemp, Warning, TEXT("CLICKED ADD GROUP"));
 
@@ -98,7 +182,6 @@ FReply SConsoleManagerSlateWidget::OnAddGroupButtonClicked()
 
 	GenerateGroupsScrollBox();
 
-	return FReply::Handled();
 }
 
 FReply SConsoleManagerSlateWidget::OnSelectGroupClicked(int Id)
@@ -132,13 +215,107 @@ void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
 
 	const TArray<FString> Commands = CommandsManager.Pin()->GetGroupList();
 
+	GroupsScrollBox->SetOnMouseButtonUp(FPointerEventHandler::CreateLambda(
+		[=](const FGeometry& Geometry, const FPointerEvent& MouseEvent) 
+		{
+			UE_LOG(LogTemp, Warning, TEXT("IUPPP"));
+
+			return FReply::Handled();
+		}));
+
+	
+
 	for (int i = 0; i < Commands.Num(); i++)
 	{
+		TSharedRef<SGroupButton> Button =
+			SNew(SGroupButton)
+			.Text(FText::FromString(Commands[i]))
+			.OnClicked(this, &SConsoleManagerSlateWidget::OnSelectGroupClicked, i);
+
+
+		//FPointerEventHandler MouseButtonDownHandler;
+		//MouseButtonDownHandler.BindLambda
+
+		Button->RightClickDelegate.BindLambda(
+			[=](const FGeometry& Geometry, const FPointerEvent& MouseEvent) 
+			{
+
+				UE_LOG(LogTemp, Warning, TEXT("Group clicked!"));
+				FMenuBuilder MenuBuilder(true, NULL, TSharedPtr<FExtender>());
+
+				{
+					MenuBuilder.BeginSection("Group", LOCTEXT("GroupContextMenu_Header_Group", "Group"));
+					{
+						FUIAction Action_EditGroup(
+
+							FExecuteAction::CreateSP(this, &SConsoleManagerSlateWidget::OnAddGroupButtonClicked),
+							FCanExecuteAction()
+						);
+
+						MenuBuilder.AddMenuEntry
+						(
+							LOCTEXT("GroupContextMenu_EditGroup", "Edit"),
+							LOCTEXT("GroupContextMenu_EditGroup_Desc", "Edit group"),
+							FSlateIcon(),
+							Action_EditGroup,
+							NAME_None,
+							EUserInterfaceActionType::Button
+						);
+
+
+						FUIAction Action_DuplicateGroup(
+
+							FExecuteAction::CreateSP(this, &SConsoleManagerSlateWidget::OnAddGroupButtonClicked),
+							FCanExecuteAction()
+						);
+
+						MenuBuilder.AddMenuEntry
+						(
+							LOCTEXT("GroupContextMenu_DuplicateGroup", "Duplicate"),
+							LOCTEXT("GroupContextMenu_DuplicateGroup_Desc", "Duplicate group"),
+							FSlateIcon(),
+							Action_DuplicateGroup,
+							NAME_None,
+							EUserInterfaceActionType::Button
+						);
+						FUIAction Action_RemoveGroup(
+
+							FExecuteAction::CreateSP(this, &SConsoleManagerSlateWidget::OnAddGroupButtonClicked),
+							FCanExecuteAction()
+						);
+
+						MenuBuilder.AddMenuEntry
+						(
+							LOCTEXT("GroupContextMenu_RemoveGroup", "Remove"),
+							LOCTEXT("GroupContextMenu_RemoveGroup_Desc", "Remove group"),
+							FSlateIcon(),
+							Action_RemoveGroup,
+							NAME_None,
+							EUserInterfaceActionType::Button
+						);
+
+					}
+					MenuBuilder.EndSection();
+				}
+
+
+				if (MouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
+				{
+					TSharedRef<SWidget> MenuContents = MenuBuilder.MakeWidget();
+					FWidgetPath WidgetPath = MouseEvent.GetEventPath() != nullptr ? *MouseEvent.GetEventPath() : FWidgetPath();
+					FSlateApplication::Get().PushMenu(AsShared(), WidgetPath, MenuContents, MouseEvent.GetScreenSpacePosition(), FPopupTransitionEffect(FPopupTransitionEffect::ContextMenu));
+
+					return FReply::Handled();
+				}
+				else
+				{
+					return FReply::Unhandled();
+				}
+			});
+
 		GroupsScrollBox->AddSlot()
 			[
-				SNew(SButton)
-				.Text(FText::FromString(Commands[i]))
-				.OnClicked(this, &SConsoleManagerSlateWidget::OnSelectGroupClicked, i)
+				Button
 			];
 	}
 }
