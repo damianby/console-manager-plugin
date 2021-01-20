@@ -113,6 +113,7 @@ TSharedRef<class SDockTab> FConsoleManagerModule::OnSpawnPluginTab(const FSpawnT
 	ClosedTabDelegate.BindLambda([=](TSharedRef<SDockTab> DockTab)
 		{
 			IConsoleManager::Get().UnregisterConsoleVariableSink_Handle(Handle);
+			CommandsManager->SaveCommands();
 			DockTab->ClearContent();
 		});
 

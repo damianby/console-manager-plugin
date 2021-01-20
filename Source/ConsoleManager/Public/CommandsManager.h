@@ -36,6 +36,7 @@ public:
 	bool ExecuteCurrentCommand(int Id);
 	bool ExecuteCommand(const FConsoleCommand& Command);
 
+	bool SaveCommands();
 private:
 
 	void SetCurrentCommands(FCommandGroup& Group);

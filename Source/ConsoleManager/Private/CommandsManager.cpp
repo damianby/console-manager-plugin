@@ -124,6 +124,13 @@ bool FCommandsManager::ExecuteCommand(const FConsoleCommand& Command)
 	return false; // Execute(Command);
 }
 
+bool FCommandsManager::SaveCommands()
+{
+	const FString CommandsPath = IPluginManager::Get().FindPlugin("ConsoleManager")->GetBaseDir() / TEXT("Resources") / TEXT("Commands.txt");
+
+	return FileHelper::SaveCommandFile(CommandsPath, CommandGroups);
+}
+
 //It will not add wrong command to history
 bool FCommandsManager::Execute(FConsoleCommand& Command)
 {
