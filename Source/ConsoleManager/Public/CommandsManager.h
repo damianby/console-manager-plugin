@@ -59,4 +59,5 @@ private:
 
 
 	TSet<FString> AllCommands;
+	FString CurrentGroupId;
 };
