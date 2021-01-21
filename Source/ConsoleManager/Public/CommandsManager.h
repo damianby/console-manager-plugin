@@ -39,6 +39,8 @@ public:
 
 	void SetActiveGroup(int NewId);
 
+	void SetActiveHistory();
+	void SetActiveAllCommands();
 
 	void AddNewGroup(const FString& Name);
 

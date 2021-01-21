@@ -99,6 +99,13 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 				[
 					SNew(SButton)
 					.Text(LOCTEXT("HistoryButton", "History"))
+					.OnClicked(FOnClicked::CreateLambda([=]() {
+						CommandsManager.Pin()->SetActiveHistory();
+						GenerateCommandsScrollBox();
+						CommandsListView->ScrollToBottom();
+						UE_LOG(LogTemp, Warning, TEXT("History"));
+						return FReply::Handled();
+					}))
 				]
 
 				+ SVerticalBox::Slot()
@@ -106,6 +113,13 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 				[
 					SNew(SButton)
 					.Text(LOCTEXT("ShowAllButton", "Show All"))
+					.OnClicked(FOnClicked::CreateLambda([=]() {
+						CommandsManager.Pin()->SetActiveAllCommands();
+						GenerateCommandsScrollBox();
+						CommandsListView->ScrollToBottom();
+						UE_LOG(LogTemp, Warning, TEXT("All commands"));
+						return FReply::Handled();
+						}))
 				]
 
 				+ SVerticalBox::Slot()
@@ -117,15 +131,6 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 
 				]
 
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				[
-					SNew(SButton)
-					.Text(LOCTEXT("AddGroupButtonText", "Add Group"))
-					.ContentPadding(FMargin(4.0f))
-					//.OnClicked(this, &SConsoleManagerSlateWidget::OnAddGroupButtonClicked)
-
-				]
 				+ SVerticalBox::Slot()
 				.FillHeight(1)
 				[

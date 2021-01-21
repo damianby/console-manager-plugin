@@ -94,7 +94,16 @@ void FCommandsManager::SetActiveGroup(int NewId)
 	
 	
 	SetCurrentCommands(CommandGroups[NewId]);
+}
 
+void FCommandsManager::SetActiveHistory()
+{
+	SetCurrentCommands(ConsoleHistory);
+}
+
+void FCommandsManager::SetActiveAllCommands()
+{
+	SetCurrentCommands(AllCommands);
 }
 
 void FCommandsManager::AddNewGroup(const FString& Name)
