@@ -92,10 +92,14 @@ TSharedRef<class SDockTab> FConsoleManagerModule::OnSpawnPluginTab(const FSpawnT
 {
 	CommandsManager->Refresh();
 
+
+	TSharedRef<SConsoleManagerSlateWidget> UI = BuildUI();
+
 	FConsoleCommandDelegate Delegate;
 
 	Delegate.BindLambda([=]() {
 		CommandsManager->RefreshCurrentTrackedCommands();
+		UI->RefreshListView();
 		//CreateCommandList(ButtonList, AbsoluteFilePath);
 		});
 
@@ -104,7 +108,7 @@ TSharedRef<class SDockTab> FConsoleManagerModule::OnSpawnPluginTab(const FSpawnT
 	TSharedRef<SDockTab> DockTab = SNew(SDockTab)
 		.TabRole(ETabRole::NomadTab)
 		[
-			BuildUI()
+			UI
 		];
 
 
