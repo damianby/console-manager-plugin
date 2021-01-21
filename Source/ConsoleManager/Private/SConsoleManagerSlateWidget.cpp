@@ -79,7 +79,76 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 		.ItemHeight(20.0f)
 		.OnGenerateRow(this, &SConsoleManagerSlateWidget::OnCommandsRowGenerate)
 		.SelectionMode(ESelectionMode::Multi)
-		.HeaderRow(HeaderRow);
+		.HeaderRow(HeaderRow)
+		.OnContextMenuOpening_Lambda(
+			[=]() 
+			{
+				
+
+
+				FMenuBuilder MenuBuilder(true, NULL, TSharedPtr<FExtender>());
+
+				{
+					MenuBuilder.BeginSection("Group", LOCTEXT("GroupContextMenu_Header_Group", "Group"));
+					{
+						FUIAction Action_EditGroup(
+							FExecuteAction::CreateRaw(this, &SConsoleManagerSlateWidget::EditGroup, 0),
+							FCanExecuteAction()
+						);
+
+						MenuBuilder.AddMenuEntry
+						(
+							LOCTEXT("GroupContextMenu_EditGroup", "Edit"),
+							LOCTEXT("GroupContextMenu_EditGroup_Desc", "Edit group"),
+							FSlateIcon(),
+							Action_EditGroup,
+							NAME_None,
+							EUserInterfaceActionType::Button
+						);
+
+
+						FUIAction Action_DuplicateGroup(
+							FExecuteAction::CreateRaw(this, &SConsoleManagerSlateWidget::DuplicateGroup, 0),
+							FCanExecuteAction()
+						);
+
+						MenuBuilder.AddMenuEntry
+						(
+							LOCTEXT("GroupContextMenu_DuplicateGroup", "Duplicate"),
+							LOCTEXT("GroupContextMenu_DuplicateGroup_Desc", "Duplicate group"),
+							FSlateIcon(),
+							Action_DuplicateGroup,
+							NAME_None,
+							EUserInterfaceActionType::Button
+						);
+						FUIAction Action_RemoveGroup(
+							FExecuteAction::CreateRaw(this, &SConsoleManagerSlateWidget::RemoveGroup, 0),
+							FCanExecuteAction()
+						);
+
+						MenuBuilder.AddMenuEntry
+						(
+							LOCTEXT("GroupContextMenu_RemoveGroup", "Remove"),
+							LOCTEXT("GroupContextMenu_RemoveGroup_Desc", "Remove group"),
+							FSlateIcon(),
+							Action_RemoveGroup,
+							NAME_None,
+							EUserInterfaceActionType::Button
+						);
+
+					}
+					MenuBuilder.EndSection();
+				}
+
+				TSharedPtr<SWidget> Widget;
+
+				Widget = MenuBuilder.MakeWidget();
+
+
+
+
+				return Widget;
+			});
 		
 
 	GroupsScrollBox = SNew(SScrollBox);
