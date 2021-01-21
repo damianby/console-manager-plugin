@@ -66,6 +66,7 @@ private:
 
 	bool Execute(FConsoleCommand& Command);
 
+	void ValidateCommands(TArray<FConsoleCommand>& Commands);
 
 	FString GetNewIdForGroup(const FCommandGroup& Group);
 

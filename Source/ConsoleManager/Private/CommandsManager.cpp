@@ -30,6 +30,12 @@ void FCommandsManager::Refresh()
 	FileHelper::ReadCommandFile(CommandsPath, CommandGroups);
 	FileHelper::LoadConsoleHistory(ConsoleHistory);
 	
+	ValidateCommands(ConsoleHistory.Commands);
+	for (auto& Group : CommandGroups)
+	{
+		ValidateCommands(Group.Commands);
+	}
+
 	FCommandGroup* CurrentGroupByName = CommandGroups.FindByKey<FString>(CurrentGroupId);
 	if (CurrentGroupByName)
 	{
@@ -268,9 +274,13 @@ bool FCommandsManager::Execute(FConsoleCommand& Command)
 	*/
 }
 
+void FCommandsManager::ValidateCommands(TArray<FConsoleCommand>& Commands)
 {
+	for (auto& Command : Commands)
 	{
+		if (!AllCommands.Commands.FindByKey<FString>(Command.Name))
 		{
+			Command.IsValid = false;
 		}
 	}
 }
