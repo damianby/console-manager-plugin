@@ -18,7 +18,7 @@
 		{
 			"Name": "ConsoleManager",
 			"Type": "Editor",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "PostEngineInit"
 		}
 	]
 }
