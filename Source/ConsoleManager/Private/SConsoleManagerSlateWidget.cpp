@@ -21,6 +21,32 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 	UE_LOG(LogTemp, Warning, TEXT("Construct slate widget"));
 	CommandsManager = InArgs._CommandsManager;
 
+	TSharedPtr< SHeaderRow > HeaderRow = SNew(SHeaderRow);
+	
+
+	HeaderRow->AddColumn(SHeaderRow::Column("Command")
+		[
+			SNew(SBorder)
+			.Padding(5)
+			.Content()
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString("Command"))
+			]
+		]);
+
+	HeaderRow->AddColumn(SHeaderRow::Column("Value").DefaultLabel(FText::FromString("Value")));
+
+	if (InArgs._DisplayCommandValueType)
+	{
+		HeaderRow->AddColumn(SHeaderRow::Column("Type").DefaultLabel(FText::FromString("Type")));
+	}
+	if (InArgs._DisplaySetByValue)
+	{
+		HeaderRow->AddColumn(SHeaderRow::Column("SetBy").DefaultLabel(FText::FromString("SetBy")));
+	}
+	HeaderRow->AddColumn(SHeaderRow::Column("Current Value").DefaultLabel(FText::FromString("Current Value")));
+	HeaderRow->AddColumn(SHeaderRow::Column("Execute").DefaultLabel(FText::FromString("")));
 
 
 	CommandsListView = SNew(SListView< TSharedPtr<FConsoleCommand> >)
@@ -28,35 +54,14 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 		.ItemHeight(20.0f)
 		.OnGenerateRow(this, &SConsoleManagerSlateWidget::OnCommandsRowGenerate)
 		.SelectionMode(ESelectionMode::Multi)
-		.HeaderRow(
-			SNew(SHeaderRow)
-			+ SHeaderRow::Column("Command")
-			[
-				SNew(SBorder)
-				.Padding(5)
-			.Content()
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString("Command"))
-			]
-			]
-			+ SHeaderRow::Column("Value").DefaultLabel(FText::FromString("Value"))
-			+ SHeaderRow::Column("Type").DefaultLabel(FText::FromString("Type"))
-			+ SHeaderRow::Column("SetBy").DefaultLabel(FText::FromString("SetBy"))
-			+ SHeaderRow::Column("Current Value").DefaultLabel(FText::FromString("Current Value"))
-			+ SHeaderRow::Column("").DefaultLabel(FText::FromString(""))
-		);
-
-
+		.HeaderRow(HeaderRow);
+		
 
 	GroupsScrollBox = SNew(SScrollBox);
 	GenerateGroupsScrollBox();
 
 	CommandsScrollBox = SNew(SScrollBox);
 	GenerateCommandsScrollBox();
-
-
-		
 
 	//FConsoleManagerCommands::Get().GroupContextMenu = MakeShareable(new FUICommandList);
 
@@ -500,7 +505,7 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 		return SNew(STextBlock).Text(FText::FromString(Item->Type));
 	}
 
-	if (ColumnName.IsEqual(FName(TEXT("Set By"))))
+	if (ColumnName.IsEqual(FName(TEXT("SetBy"))))
 	{
 		return SNew(STextBlock).Text(FText::FromString(Item->SetBy));
 	}
@@ -510,7 +515,7 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 		return SNew(STextBlock).Text(FText::FromString(Item->CurrentValue));
 	}
 
-	if (ColumnName.IsEqual(FName(TEXT(""))))
+	if (ColumnName.IsEqual(FName(TEXT("Execute"))))
 	{
 		return SNew(SButton).Text(FText::FromString("Execute"))
 			.OnClicked(FOnClicked::CreateLambda([=]() {

@@ -145,7 +145,11 @@ TSharedRef<class SDockTab> FConsoleManagerModule::OnSpawnPluginTab(const FSpawnT
 
 TSharedRef<class SConsoleManagerSlateWidget> FConsoleManagerModule::BuildUI()
 {
-	return SNew(SConsoleManagerSlateWidget).CommandsManager(CommandsManager);
+	bool DisplayCommandValueType = GetMutableDefault<UConsoleManagerSettings>()->DisplayCommandValueType;
+	bool DisplaySetByValue = GetMutableDefault<UConsoleManagerSettings>()->DisplaySetByValue;
+
+
+	return SNew(SConsoleManagerSlateWidget).CommandsManager(CommandsManager).DisplayCommandValueType(DisplayCommandValueType).DisplaySetByValue(DisplaySetByValue);
 }
 
 #undef LOCTEXT_NAMESPACE
