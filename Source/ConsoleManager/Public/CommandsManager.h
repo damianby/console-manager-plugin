@@ -56,6 +56,7 @@ public:
 	bool SaveCommands();
 private:
 
+	// We should generate new array every time this array might be resized! (When adding, removing elements)
 	TArray<TSharedPtr<FConsoleCommand>> CurrentCommandsShared;
 
 	void SetCurrentCommands(FCommandGroup& Group);
