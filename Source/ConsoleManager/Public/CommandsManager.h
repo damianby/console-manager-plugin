@@ -37,7 +37,6 @@ public:
 	FORCEINLINE const TArray<FCommandGroup>& GetCommandGroups() { return CommandGroups; };
 
 	void SetActiveGroup(int NewId);
-	int GetActiveGroupId() { return ActiveGroupId; };
 
 	void AddNewGroup(const FString& Name);
 
