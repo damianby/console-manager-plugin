@@ -27,7 +27,12 @@ struct FConsoleCommand
 struct FCommandGroup
 {
 	FString Name;
+	FString Id;
 	TArray<FConsoleCommand> Commands;
 	bool bInitiallySet = false;
+
+	FORCEINLINE bool operator == (const FString& Other) const {
+		return Id.Equals(Other);
+	};
 };
 

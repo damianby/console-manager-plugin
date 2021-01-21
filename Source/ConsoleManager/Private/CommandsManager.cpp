@@ -50,7 +50,7 @@ void FCommandsManager::Refresh()
 	FileHelper::ReadCommandFile(CommandsPath, CommandGroups);
 	FileHelper::LoadConsoleHistory(ConsoleHistory);
 	
-	FCommandGroup* CurrentGroupByName = CommandGroups.FindByKey<FString>(CurrentCommandGroupName);
+	FCommandGroup* CurrentGroupByName = CommandGroups.FindByKey<FString>(CurrentGroupId);
 	if (CurrentGroupByName)
 	{
 		SetCurrentCommands(*CurrentGroupByName);
@@ -125,6 +125,21 @@ bool FCommandsManager::ExecuteCurrentCommand(int Id)
 bool FCommandsManager::ExecuteCommand(const FConsoleCommand& Command)
 {
 	return false; // Execute(Command);
+}
+
+FString FCommandsManager::GetNewIdForGroup(const FCommandGroup& Group)
+{
+	FString NewGroupId = FString(Group.Name) + "_";
+
+	int NewId = 0;
+
+	FString TempName = NewGroupId + FString::FromInt(NewId);
+	while (CommandGroups.FindByKey<FString>(TempName))
+	{
+		++NewId;
+		TempName = NewGroupId + FString::FromInt(NewId);
+	}
+	return TempName;
 }
 
 bool FCommandsManager::SaveCommands()
@@ -269,6 +284,8 @@ void FCommandsManager::RefreshCurrentTrackedCommands()
 // no need to reparse every time, keep objects IConsoleObjects in memory 
 void FCommandsManager::SetCurrentCommands(FCommandGroup& Group)
 {
+	CurrentGroupId = Group.Id;
+
 	if (Group.bInitiallySet)
 	{
 		CurrentCommands = &Group;

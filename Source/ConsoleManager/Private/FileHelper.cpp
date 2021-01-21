@@ -86,6 +86,19 @@ void FileHelper::ProcessCommandsFile(const FString& Contents, TArray<FCommandGro
 
 			CurrentSection = &OutGroups.AddDefaulted_GetRef();
 			CurrentSection->Name = Start;
+
+			FString NewGroupId = FString(Start) + "_";
+
+			int NewId = 0;
+
+			FString TempName = NewGroupId + FString::FromInt(NewId);
+			while (OutGroups.FindByKey<FString>(TempName))
+			{
+				++NewId;
+				TempName = NewGroupId + FString::FromInt(NewId);
+			}
+
+			CurrentSection->Id = TempName;
 		}
 
 		// Otherwise, if we're currently inside a section, and we haven't reached the end of the stream

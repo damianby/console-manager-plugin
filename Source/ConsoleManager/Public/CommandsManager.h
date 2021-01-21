@@ -47,12 +47,11 @@ private:
 
 	FCommandGroup* CurrentCommands = nullptr;
 
-	int ActiveGroupId = 0;
-
 	bool Execute(FConsoleCommand& Command);
 
 	void RefreshCommand(FConsoleCommand& Command);
 
+	FString GetNewIdForGroup(const FCommandGroup& Group);
 
 	void DumpAllCommands();
 
