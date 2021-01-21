@@ -7,6 +7,9 @@
 
 #include "Widgets/Layout/SScrollBox.h"
 
+#include "Dialogs/Dialogs.h"
+#include "Dialogs/CustomDialog.h"
+
 #define LOCTEXT_NAMESPACE "FConsoleManagerModule"
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
@@ -18,6 +21,34 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 	UE_LOG(LogTemp, Warning, TEXT("Construct slate widget"));
 	CommandsManager = InArgs._CommandsManager;
 
+
+
+	CommandsListView = SNew(SListView< TSharedPtr<FConsoleCommand> >)
+		.ListItemsSource(&CommandsManager.Pin()->GetCurrentCommandsSharedPtr())
+		.ItemHeight(20.0f)
+		.OnGenerateRow(this, &SConsoleManagerSlateWidget::OnCommandsRowGenerate)
+		.SelectionMode(ESelectionMode::Multi)
+		.HeaderRow(
+			SNew(SHeaderRow)
+			+ SHeaderRow::Column("Command")
+			[
+				SNew(SBorder)
+				.Padding(5)
+			.Content()
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString("Command"))
+			]
+			]
+			+ SHeaderRow::Column("Value").DefaultLabel(FText::FromString("Value"))
+			+ SHeaderRow::Column("Type").DefaultLabel(FText::FromString("Type"))
+			+ SHeaderRow::Column("SetBy").DefaultLabel(FText::FromString("SetBy"))
+			+ SHeaderRow::Column("Current Value").DefaultLabel(FText::FromString("Current Value"))
+			+ SHeaderRow::Column("").DefaultLabel(FText::FromString(""))
+		);
+
+
+
 	GroupsScrollBox = SNew(SScrollBox);
 	GenerateGroupsScrollBox();
 
@@ -25,6 +56,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 	GenerateCommandsScrollBox();
 
 
+		
 
 	//FConsoleManagerCommands::Get().GroupContextMenu = MakeShareable(new FUICommandList);
 
@@ -53,7 +85,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 		[
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot()
-			.AutoWidth()
+			.FillWidth(0.3)
 			.Padding(5.0f)
 			[
 				SNew(SVerticalBox)
@@ -103,7 +135,8 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 				+ SVerticalBox::Slot()
 				.FillHeight(1)
 				[
-					CommandsScrollBox.ToSharedRef()
+					CommandsListView.ToSharedRef()
+					//CommandsScrollBox.ToSharedRef()
 				]
 				+ SVerticalBox::Slot()
 				.AutoHeight()
@@ -207,13 +240,18 @@ FReply SConsoleManagerSlateWidget::OnSelectCommandClicked(int Id)
 	return FReply::Handled();
 }
 
+TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedPtr<FConsoleCommand> Item, const TSharedRef<STableViewBase>& OwnerTable)
+{
+	return SNew(SConsoleCommandListRow, OwnerTable).Item(Item);
+}
+
 void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
 {
 	check(GroupsScrollBox.IsValid());
 
 	GroupsScrollBox->ClearChildren();
 
-	const TArray<FString> Commands = CommandsManager.Pin()->GetGroupList();
+	const TArray<FCommandGroup>& Groups = CommandsManager.Pin()->GetCommandGroups();
 
 	GroupsScrollBox->SetOnMouseButtonUp(FPointerEventHandler::CreateLambda(
 		[=](const FGeometry& Geometry, const FPointerEvent& MouseEvent) 
@@ -225,13 +263,28 @@ void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
 
 	
 
-	for (int i = 0; i < Commands.Num(); i++)
+	for (int i = 0; i < Groups.Num(); i++)
 	{
+		const FCommandGroup& Group = Groups[i];
+
+		TAttribute<FText> GroupName = TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateLambda([&Group]() {
+			return FText::FromString(Group.Name);
+			}));
+
+
 		TSharedRef<SGroupButton> Button =
 			SNew(SGroupButton)
-			.Text(FText::FromString(Commands[i]))
-			.OnClicked(this, &SConsoleManagerSlateWidget::OnSelectGroupClicked, i);
+			//.Text(GroupName)
+			.OnClicked(this, &SConsoleManagerSlateWidget::OnSelectGroupClicked, i)
+			.Content()
+			[
+				SNew(STextBlock)
+				.Text(GroupName)
+				.AutoWrapText(true)
+				.WrappingPolicy(ETextWrappingPolicy::AllowPerCharacterWrapping)
+			];
 
+			
 
 		//FPointerEventHandler MouseButtonDownHandler;
 		//MouseButtonDownHandler.BindLambda
@@ -247,8 +300,7 @@ void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
 					MenuBuilder.BeginSection("Group", LOCTEXT("GroupContextMenu_Header_Group", "Group"));
 					{
 						FUIAction Action_EditGroup(
-
-							FExecuteAction::CreateSP(this, &SConsoleManagerSlateWidget::OnAddGroupButtonClicked),
+							FExecuteAction::CreateRaw(this, &SConsoleManagerSlateWidget::EditGroup, i),
 							FCanExecuteAction()
 						);
 
@@ -264,8 +316,7 @@ void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
 
 
 						FUIAction Action_DuplicateGroup(
-
-							FExecuteAction::CreateSP(this, &SConsoleManagerSlateWidget::OnAddGroupButtonClicked),
+							FExecuteAction::CreateRaw(this, &SConsoleManagerSlateWidget::DuplicateGroup, i),
 							FCanExecuteAction()
 						);
 
@@ -279,8 +330,7 @@ void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
 							EUserInterfaceActionType::Button
 						);
 						FUIAction Action_RemoveGroup(
-
-							FExecuteAction::CreateSP(this, &SConsoleManagerSlateWidget::OnAddGroupButtonClicked),
+							FExecuteAction::CreateRaw(this, &SConsoleManagerSlateWidget::RemoveGroup, i),
 							FCanExecuteAction()
 						);
 
@@ -322,63 +372,165 @@ void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
 
 void SConsoleManagerSlateWidget::GenerateCommandsScrollBox()
 {
-	check(CommandsScrollBox.IsValid());
-
-	CommandsScrollBox->ClearChildren();
-
-	const TArray<FConsoleCommand>& Commands = CommandsManager.Pin()->GetCurrentCommands();
-
-	for (int i = 0; i < Commands.Num(); i++)
-	{
-		//////crash!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		const FConsoleCommand& Command = Commands[i];
-		UE_LOG(LogTemp, Warning, TEXT("Command: %s %s %s %s"), *Command.Command, *Command.SetBy, *Command.Type, *Command.Value);
-
-		TAttribute<FSlateColor> Value = TAttribute<FSlateColor>::Create(TAttribute<FSlateColor>::FGetter::CreateLambda([&Command]() {
-			if (!Command.IsValid)
-			{
-				return FSlateColor(FLinearColor(255, 0, 0, 255));
-			}
-			return FSlateColor(FLinearColor(255, 255, 255, 255));
-			}));
-		
-
-		TAttribute<FText> CommandValue = TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateLambda([&Command]() {
-			return FText::FromString(Command.Value);
-			}));
+	
+	CommandsListView->SetListItemsSource(CommandsManager.Pin()->GetCurrentCommandsSharedPtr());
+	CommandsListView->RebuildList();
 
 
-		CommandsScrollBox->AddSlot()
-			[
-				SNew(SHorizontalBox)
-				+ SHorizontalBox::Slot()
-				.AutoWidth()
-				[
-					SNew(SButton)
-					.Text(FText::FromString(Command.Command))
-					.ButtonColorAndOpacity(Value)
-					.OnClicked(this, &SConsoleManagerSlateWidget::OnSelectCommandClicked, i)
-				]
-				+ SHorizontalBox::Slot()
-				[
-					SNew(STextBlock)
-					.Text(FText::FromString(Command.SetBy))
-				]
-				+ SHorizontalBox::Slot()
-				[
-					SNew(STextBlock)
-					.Text(FText::FromString(Command.Type))
-				]
-				+ SHorizontalBox::Slot()
-				[
-					SNew(STextBlock)
-					.Text(CommandValue)
-				]
-				
-			];
-	}
+	/*for (int i = 0; i < Commands.Num(); i++)
+	{*/
+		////////crash!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		//const FConsoleCommand& Command = Commands[i];
+		//UE_LOG(LogTemp, Warning, TEXT("Command: %s %s %s %s"), *Command.Command, *Command.SetBy, *Command.Type, *Command.Value);
+
+		//TAttribute<FSlateColor> Value = TAttribute<FSlateColor>::Create(TAttribute<FSlateColor>::FGetter::CreateLambda([&Command]() {
+		//	if (!Command.IsValid)
+		//	{
+		//		return FSlateColor(FLinearColor(255, 0, 0, 255));
+		//	}
+		//	return FSlateColor(FLinearColor(255, 255, 255, 255));
+		//	}));
+		//
+
+		//TAttribute<FText> CommandValue = TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateLambda([&Command]() {
+		//	return FText::FromString(Command.Value);
+		//	}));
+
+	//}
 
 }
+
+void SConsoleManagerSlateWidget::RemoveGroup(int Id)
+{
+	FText Title = FText::FromString("Remove Group");
+
+	EAppReturnType::Type Output = FMessageDialog::Open(EAppMsgType::YesNo, LOCTEXT("RemoveGroupDialog", "Do you want to remove group?"), &Title);
+
+	switch (Output)
+	{
+	case EAppReturnType::Type::Yes:
+		CommandsManager.Pin()->RemoveGroup(Id);
+		GenerateGroupsScrollBox();
+		GenerateCommandsScrollBox();
+		break;
+
+	case EAppReturnType::Type::No:
+	default:
+		break;
+	}
+}
+
+void SConsoleManagerSlateWidget::DuplicateGroup(int Id)
+{
+	CommandsManager.Pin()->DuplicateGroup(Id);
+	GenerateGroupsScrollBox();
+}
+
+void SConsoleManagerSlateWidget::EditGroup(int Id)
+{
+	const TArray<FString> Groups = CommandsManager.Pin()->GetGroupList();
+
+
+	TSharedRef<SEditableTextBox> Widget =
+		SNew(SEditableTextBox)
+		.HintText(FText::FromString("New Name"))
+		.Text(FText::FromString(Groups[Id]));
+
+	TSharedRef<SWidget> ContentWidget =
+		SNew(SBox)
+		.Padding(FMargin(0.f, 15.f, 0.f, 0.f))
+		.WidthOverride(250)
+		[
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(FMargin(0.f, 0.f, 0.f, 10.f))
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(FString::Printf(TEXT("Choose new name for group %s"), *Groups[Id])))
+				.AutoWrapText(true)
+				.WrappingPolicy(ETextWrappingPolicy::AllowPerCharacterWrapping)
+			]
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				Widget
+			]
+		];
+
+
+	TSharedRef<SCustomDialog> EditDialog = SNew(SCustomDialog)
+		.Title(FText(LOCTEXT("EditGroupDialog_Title", "Edit Group")))
+		.DialogContent(ContentWidget)
+		.Buttons({
+			SCustomDialog::FButton(LOCTEXT("OK", "OK"), FSimpleDelegate()),
+			SCustomDialog::FButton(LOCTEXT("Cancel", "Cancel"), FSimpleDelegate())
+			});
+
+	
+
+	// returns 0 when OK is pressed, 1 when Cancel is pressed, -1 if the window is closed
+	const int ButtonPressed = EditDialog->ShowModal();
+
+	switch (ButtonPressed)
+	{
+	case 0:
+		CommandsManager.Pin()->RenameGroup(Id, Widget->GetText().ToString());
+		break;
+	}
+
+	//SGenericDialogWidget::OpenDialog(LOCTEXT("EditGroupDialog_Title", "Edit Group"), Widget, SGenericDialogWidget::FArguments(), true);
+}
+
+
+TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName& ColumnName)
+{
+	
+	if (ColumnName.IsEqual(FName(TEXT("Command"))))
+	{
+		return SNew(STextBlock).Text(FText::FromString(Item->Command));
+	}
+	if (ColumnName.IsEqual(FName(TEXT("Value"))))
+	{
+		return SNew(STextBlock).Text(FText::FromString(Item->Value));
+	}
+
+	if (ColumnName.IsEqual(FName(TEXT("Type"))))
+	{
+		return SNew(STextBlock).Text(FText::FromString(Item->Type));
+	}
+
+	if (ColumnName.IsEqual(FName(TEXT("Set By"))))
+	{
+		return SNew(STextBlock).Text(FText::FromString(Item->SetBy));
+	}
+
+	if (ColumnName.IsEqual(FName(TEXT("Current Value"))))
+	{
+		return SNew(STextBlock).Text(FText::FromString(Item->CurrentValue));
+	}
+
+	if (ColumnName.IsEqual(FName(TEXT(""))))
+	{
+		return SNew(SButton).Text(FText::FromString("Execute"))
+			.OnClicked(FOnClicked::CreateLambda([=]() {
+			UE_LOG(LogTemp, Warning, TEXT("Value of click: %s"), *Item->CurrentValue);
+
+			//auto Widget = OwnerTablePtr.Pin()->WidgetFromItem(Item);
+
+			//if (Widget)
+			//{
+			//	Widget->ResetRow();
+			//}
+
+
+			return FReply::Unhandled();
+				}));
+	}
+
+	return SNullWidget::NullWidget;
+}
+
 
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
 

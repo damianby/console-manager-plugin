@@ -9,10 +9,48 @@
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "Widgets/Input/SSearchBox.h"
 #include "Widgets/SCompoundWidget.h"
+#include "Widgets/Views/STableRow.h"
 
 /**
  * 
  */
+
+
+
+class SConsoleCommandListRow : public SMultiColumnTableRow<TSharedPtr<FConsoleCommand>>
+{
+public:
+
+    SLATE_BEGIN_ARGS(SConsoleCommandListRow) {}
+    SLATE_ARGUMENT(TSharedPtr<FConsoleCommand>, Item)
+        SLATE_END_ARGS()
+
+public:
+
+    void Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView)
+    {
+        Item = InArgs._Item;
+        SMultiColumnTableRow<TSharedPtr<FConsoleCommand> >::Construct(FSuperRowType::FArguments(), InOwnerTableView);
+    }
+
+    /**
+     * Generate a widget for the column name.
+     * Will try to convert a property to a string and return STextBlock within an SBox.
+     * Override if you want to special case some columns or overhaul the widgets returned.
+     */
+    virtual TSharedRef<SWidget> GenerateWidgetForColumn(const FName& ColumnName) override;
+
+protected:
+    TSharedPtr<FConsoleCommand> Item;
+};
+
+
+
+
+
+
+
+
 class SScrollBox;
 
 class CONSOLEMANAGER_API SConsoleManagerSlateWidget : public SCompoundWidget
@@ -28,6 +66,7 @@ public:
 	/** Constructs this widget with InArgs */
 	void Construct(const FArguments& InArgs);
 
+	void RefreshListView() { CommandsListView->RebuildList(); };
 
 protected:
 	//virtual FReply OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
@@ -40,13 +79,21 @@ private:
 	TSharedPtr<SScrollBox> GroupsScrollBox;
 	TSharedPtr<SScrollBox> CommandsScrollBox;
 
+	TSharedPtr< SListView< TSharedPtr<FConsoleCommand >> > CommandsListView;
+
 	void OnAddGroupButtonClicked();
 
 	FReply OnSelectGroupClicked(int Id);
 	FReply OnSelectCommandClicked(int Id);
 
+	TSharedRef< ITableRow > OnCommandsRowGenerate(TSharedPtr<FConsoleCommand> Item, const TSharedRef< STableViewBase >& OwnerTable);
+
 	void GenerateGroupsScrollBox();
 
 	void GenerateCommandsScrollBox();
+
+	void RemoveGroup(int Id);
+	void DuplicateGroup(int Id);
+	void EditGroup(int Id);
 
 };
