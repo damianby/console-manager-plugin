@@ -24,6 +24,8 @@ public:
 	const TArray<FConsoleCommand>& GetCurrentCommands();
 	const TArray<FString> GetGroupList();
 
+	FORCEINLINE const TArray<FCommandGroup>& GetCommandGroups() { return CommandGroups; };
+
 	void SetActiveGroup(int NewId);
 	int GetActiveGroupId() { return ActiveGroupId; };
 
