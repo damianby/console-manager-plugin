@@ -45,7 +45,7 @@ private:
 
 	TArray<FCommandGroup> CommandGroups;
 
-	FCommandGroup* CurrentCommands = nullptr;
+	FCommandGroup* CurrentGroup;
 
 	bool Execute(FConsoleCommand& Command);
 

@@ -67,7 +67,7 @@ void FCommandsManager::Refresh()
 const TArray<FConsoleCommand>& FCommandsManager::GetCurrentCommands()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Test"));
-	return CurrentCommands->Commands;
+	return CurrentGroup->Commands;
 }
 
 const TArray<FString> FCommandsManager::GetGroupList()
@@ -112,14 +112,14 @@ void FCommandsManager::AddNewGroup(const FString& Name)
 
 const FConsoleCommand& FCommandsManager::GetConsoleCommand(int Id)
 {
-	return CurrentCommands->Commands[Id];
+	return CurrentGroup->Commands[Id];
 }
 
 
 
 bool FCommandsManager::ExecuteCurrentCommand(int Id)
 {
-	return Execute(CurrentCommands->Commands[Id]);
+	return Execute(CurrentGroup->Commands[Id]);
 }
 
 bool FCommandsManager::ExecuteCommand(const FConsoleCommand& Command)
@@ -274,7 +274,7 @@ void FCommandsManager::RefreshCommand(FConsoleCommand& Command)
 
 void FCommandsManager::RefreshCurrentTrackedCommands()
 {
-	TArray<FConsoleCommand>& CommandCollection = CurrentCommands->Commands;
+	TArray<FConsoleCommand>& CommandCollection = CurrentGroup->Commands;
 
 	for (auto& Command : CommandCollection)
 	{
@@ -289,7 +289,7 @@ void FCommandsManager::SetCurrentCommands(FCommandGroup& Group)
 
 	if (Group.bInitiallySet)
 	{
-		CurrentCommands = &Group;
+		CurrentGroup = &Group;
 		RefreshCurrentTrackedCommands();
 		return;
 	}
@@ -302,7 +302,7 @@ void FCommandsManager::SetCurrentCommands(FCommandGroup& Group)
 	{
 		FConsoleCommand& Command = CommandCollection[i];
 
-		//we assume that is valid, we will later check that if its used
+		//we assume that is valid, we will later check that if its true
 		Command.IsValid = true;
 
 		const TCHAR* It = *Command.Command;
@@ -429,32 +429,9 @@ void FCommandsManager::SetCurrentCommands(FCommandGroup& Group)
 	}
 	Group.bInitiallySet = true;
 
-	CurrentCommands = &Group;
+	CurrentGroup = &Group;
 	RefreshCurrentTrackedCommands();
-
-
-		/*ButtonList->AddSlot()[
-			SNew(SHorizontalBox)
-				+ SHorizontalBox::Slot()
-				.Padding(3.0f, 1.0f)[
-					SNew(SButton)
-						.ToolTipText(FText::FromString(HelpString))
-						.ButtonColorAndOpacity(FLinearColor(1, 1, 1, .9))[
-							SNew(SHorizontalBox)
-								+ SHorizontalBox::Slot()
-								.Padding(1.0f, 3.0f)[
-									SNew(STextBlock)
-										.Text(FText::FromString(ConsoleCommand))
-										.Font(FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 9))
-								]
-						]
-						.OnClicked_Lambda([ConsoleCommand, this]()-> FReply {
-										GEngine->Exec(GEngine->GetWorldContexts().Last().World(), *ConsoleCommand, *GLog);
-										IConsoleManager::Get().AddConsoleHistoryEntry(TEXT(""), *ConsoleCommand);*/
 }
-
-
-
 
 FString FCommandsManager::GetTextSection(const TCHAR*& It)
 {
