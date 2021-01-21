@@ -22,7 +22,8 @@ class SConsoleCommandListRow : public SMultiColumnTableRow<TSharedPtr<FConsoleCo
 public:
 
     SLATE_BEGIN_ARGS(SConsoleCommandListRow) {}
-    SLATE_ARGUMENT(TSharedPtr<FConsoleCommand>, Item)
+	SLATE_ARGUMENT(TSharedPtr<FConsoleCommand>, Item)
+		SLATE_ARGUMENT(bool, bIsValid)
         SLATE_END_ARGS()
 
 public:
@@ -30,7 +31,15 @@ public:
     void Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView)
     {
         Item = InArgs._Item;
-        SMultiColumnTableRow<TSharedPtr<FConsoleCommand> >::Construct(FSuperRowType::FArguments(), InOwnerTableView);
+		bIsValid = InArgs._bIsValid;
+
+		//SNew(SBorder)
+		//	.BorderBackgroundColor(bIsValid ? FSlateColor(FLinearColor(255, 0, 0)) : FSlateColor(FLinearColor(255, 255, 255)))
+		//	[
+
+		//	];
+		SMultiColumnTableRow<TSharedPtr<FConsoleCommand> >::Construct(FSuperRowType::FArguments(), InOwnerTableView);
+
     }
 
     /**
@@ -42,6 +51,7 @@ public:
 
 protected:
     TSharedPtr<FConsoleCommand> Item;
+	bool bIsValid;
 };
 
 
@@ -83,6 +93,8 @@ private:
 	TSharedPtr<SScrollBox> CommandsScrollBox;
 
 	TSharedPtr< SListView< TSharedPtr<FConsoleCommand >> > CommandsListView;
+
+	TArray<TSharedPtr<FConsoleCommand>> FilteredListView;
 
 	void OnAddGroupButtonClicked();
 

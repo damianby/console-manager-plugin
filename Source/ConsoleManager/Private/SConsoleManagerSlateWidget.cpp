@@ -35,18 +35,43 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 			]
 		]);
 
-	HeaderRow->AddColumn(SHeaderRow::Column("Value").DefaultLabel(FText::FromString("Value")));
+	HeaderRow->AddColumn(SHeaderRow::Column("Value")
+		.DefaultLabel(FText::FromString("Value"))
+	);
 
 	if (InArgs._DisplayCommandValueType)
 	{
-		HeaderRow->AddColumn(SHeaderRow::Column("Type").DefaultLabel(FText::FromString("Type")));
+		HeaderRow->AddColumn(SHeaderRow::Column("Type")
+			.DefaultLabel(FText::FromString("Type"))
+			.HAlignCell(EHorizontalAlignment::HAlign_Center)
+			.HAlignHeader(EHorizontalAlignment::HAlign_Center)
+			.VAlignCell(EVerticalAlignment::VAlign_Center)
+			.FixedWidth(80)
+		);
+
 	}
 	if (InArgs._DisplaySetByValue)
 	{
-		HeaderRow->AddColumn(SHeaderRow::Column("SetBy").DefaultLabel(FText::FromString("SetBy")));
+		HeaderRow->AddColumn(SHeaderRow::Column("SetBy")
+			.DefaultLabel(FText::FromString("SetBy"))
+			.HAlignCell(EHorizontalAlignment::HAlign_Center)
+			.HAlignHeader(EHorizontalAlignment::HAlign_Center)
+			.VAlignCell(EVerticalAlignment::VAlign_Center)
+			.FixedWidth(130)
+		);
+
 	}
-	HeaderRow->AddColumn(SHeaderRow::Column("Current Value").DefaultLabel(FText::FromString("Current Value")));
-	HeaderRow->AddColumn(SHeaderRow::Column("Execute").DefaultLabel(FText::FromString("")));
+	HeaderRow->AddColumn(SHeaderRow::Column("Current Value")
+		.DefaultLabel(FText::FromString("Current Value"))
+		.HAlignCell(EHorizontalAlignment::HAlign_Center)
+		.HAlignHeader(EHorizontalAlignment::HAlign_Center)
+		.VAlignCell(EVerticalAlignment::VAlign_Center)
+	);
+		
+
+	HeaderRow->AddColumn(SHeaderRow::Column("Execute")
+		.DefaultLabel(FText::FromString(""))
+	);
 
 
 	CommandsListView = SNew(SListView< TSharedPtr<FConsoleCommand> >)
@@ -83,6 +108,31 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 			[	
 				SNew(SSearchBox)
 				.HintText(FText::FromString("Search/Filter"))
+				.OnTextChanged_Lambda(
+						[=](const FText& NewText) {
+							const TArray<TSharedPtr<FConsoleCommand>>&  Commands = CommandsManager.Pin()->GetCurrentCommandsSharedPtr();
+							
+							if (NewText.IsEmpty())
+							{
+								CommandsListView->SetListItemsSource(Commands);
+								CommandsListView->RebuildList();
+								return;
+							}
+
+							FilteredListView.Empty();
+							for (const auto& Command : Commands)
+							{
+								FString Part = NewText.ToString();
+								if (Command->Name.Contains(Part))
+								{
+									FilteredListView.Add(Command);
+								}
+								
+							}
+							CommandsListView->SetListItemsSource(FilteredListView);
+							CommandsListView->RebuildList();
+						}
+					)
 			]
 		]
 
@@ -252,7 +302,11 @@ FReply SConsoleManagerSlateWidget::OnSelectCommandClicked(int Id)
 
 TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedPtr<FConsoleCommand> Item, const TSharedRef<STableViewBase>& OwnerTable)
 {
-	return SNew(SConsoleCommandListRow, OwnerTable).Item(Item);
+	Item->Refresh();
+
+	
+
+	return SNew(SConsoleCommandListRow, OwnerTable).Item(Item).bIsValid(Item->IsValid);
 }
 
 void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
@@ -498,7 +552,13 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 	
 	if (ColumnName.IsEqual(FName(TEXT("Command"))))
 	{
-		return SNew(STextBlock).Text(FText::FromString(Item->Command));
+		return SNew(STextBlock)
+				.Text(FText::FromString(Item->Command))
+				.ToolTipText(FText::FromString(Item->GetTooltip()))
+				.AutoWrapText(true)
+				.WrappingPolicy(ETextWrappingPolicy::AllowPerCharacterWrapping);
+
+			
 	}
 	if (ColumnName.IsEqual(FName(TEXT("Value"))))
 	{
@@ -524,7 +584,7 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 	{
 		return SNew(SButton).Text(FText::FromString("Execute"))
 			.OnClicked(FOnClicked::CreateLambda([=]() {
-			UE_LOG(LogTemp, Warning, TEXT("Value of click: %s"), *Item->CurrentValue);
+			UE_LOG(LogTemp, Warning, TEXT("Value of click:%s"), *Item->Value);
 
 			//auto Widget = OwnerTablePtr.Pin()->WidgetFromItem(Item);
 
