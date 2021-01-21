@@ -6,11 +6,20 @@
 #include "FileHelper.h"
 #include "Interfaces/IPluginManager.h"
 #include "Misc/Parse.h"
+
 #include "CommandStructs.h"
 
 /**
  * 
  */
+
+class FDeleterNot
+{
+public:
+	void operator() (void*) {};
+};
+
+
 class CONSOLEMANAGER_API FCommandsManager
 {
 public:
@@ -21,6 +30,7 @@ public:
 
 	void Refresh();
 
+	const TArray<TSharedPtr<FConsoleCommand>>& GetCurrentCommandsSharedPtr();
 	const TArray<FConsoleCommand>& GetCurrentCommands();
 	const TArray<FString> GetGroupList();
 
@@ -44,6 +54,8 @@ public:
 
 	bool SaveCommands();
 private:
+
+	TArray<TSharedPtr<FConsoleCommand>> CurrentCommandsShared;
 
 	void SetCurrentCommands(FCommandGroup& Group);
 

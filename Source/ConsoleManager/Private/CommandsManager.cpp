@@ -62,6 +62,16 @@ void FCommandsManager::Refresh()
 	
 }
 
+const TArray<TSharedPtr<FConsoleCommand>>& FCommandsManager::GetCurrentCommandsSharedPtr()
+{
+	CurrentCommandsShared.Empty();
+
+	for (int i = 0; i < CurrentGroup->Commands.Num(); i++)
+	{
+		CurrentCommandsShared.Add(MakeShareable(&CurrentGroup->Commands[i], FDeleterNot()));
+	}
+
+	return CurrentCommandsShared;
 }
 
 const TArray<FConsoleCommand>& FCommandsManager::GetCurrentCommands()
