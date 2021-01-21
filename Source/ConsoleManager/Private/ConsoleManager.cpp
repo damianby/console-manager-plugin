@@ -115,7 +115,6 @@ TSharedRef<class SDockTab> FConsoleManagerModule::OnSpawnPluginTab(const FSpawnT
 	FConsoleCommandDelegate Delegate;
 
 	Delegate.BindLambda([=]() {
-		CommandsManager->RefreshCurrentTrackedCommands();
 		UI->RefreshListView();
 		//CreateCommandList(ButtonList, AbsoluteFilePath);
 		});

@@ -7,31 +7,6 @@
 
 #define LOCTEXT_NAMESPACE "FConsoleManagerModule"
 
-static inline bool IsWhiteSpace(TCHAR Value) { return Value == TCHAR(' '); }
-
-static const TCHAR* GetSetByTCHAR(EConsoleVariableFlags InSetBy)
-{
-	EConsoleVariableFlags SetBy = (EConsoleVariableFlags)((uint32)InSetBy & ECVF_SetByMask);
-
-	switch (SetBy)
-	{
-#define CASE(A) case ECVF_SetBy##A: return TEXT(#A);
-		// Could also be done with enum reflection instead
-		CASE(Constructor)
-			CASE(Scalability)
-			CASE(GameSetting)
-			CASE(ProjectSetting)
-			CASE(DeviceProfile)
-			CASE(SystemSettingsIni)
-			CASE(ConsoleVariablesIni)
-			CASE(Commandline)
-			CASE(Code)
-			CASE(Console)
-#undef CASE
-	}
-	return TEXT("<UNKNOWN>");
-}
-
 FCommandsManager::FCommandsManager()
 {
 
@@ -63,7 +38,6 @@ void FCommandsManager::Refresh()
 	{
 		SetCurrentCommands(ConsoleHistory);
 	}
-	
 }
 
 const TArray<TSharedPtr<FConsoleCommand>>& FCommandsManager::GetCurrentCommandsSharedPtr()
@@ -216,8 +190,6 @@ bool FCommandsManager::Execute(FConsoleCommand& Command)
 
 		Command.IsValid = true;
 
-		RefreshCommand(Command);
-
 		return true;
 	}
 
@@ -296,213 +268,23 @@ bool FCommandsManager::Execute(FConsoleCommand& Command)
 	*/
 }
 
-void FCommandsManager::RefreshCommand(FConsoleCommand& Command)
 {
-	const TCHAR* It = *Command.Command;
-
-	FString Param1 = GetTextSection(It);
-	if (Param1.IsEmpty())
 	{
-		//return false;
-	}
-
-	IConsoleObject* Obj = IConsoleManager::Get().FindConsoleObject(*Param1);
-
-	if (Obj)
-	{
-		Command.SetBy = GetSetByTCHAR(Obj->GetFlags());
-
-		IConsoleVariable* CVar = Obj->AsVariable();
-		if (CVar)
 		{
-			Command.CurrentValue = CVar->GetString();
-			UE_LOG(LogTemp, Warning, TEXT("Current value updated:%s %s"), *Command.Command , *Command.CurrentValue);
 		}
 	}
 }
 
-void FCommandsManager::RefreshCurrentTrackedCommands()
-{
-	TArray<FConsoleCommand>& CommandCollection = CurrentGroup->Commands;
-
-	for (auto& Command : CommandCollection)
-	{
-		RefreshCommand(Command);
-	}
-}
 
 // no need to reparse every time, keep objects IConsoleObjects in memory 
 void FCommandsManager::SetCurrentCommands(FCommandGroup& Group)
 {
-	CurrentGroupId = Group.Id;
-
-	if (Group.bInitiallySet)
-	{
-		CurrentGroup = &Group;
-		RefreshCurrentTrackedCommands();
-		return;
-	}
-		
-	
-	TArray<FConsoleCommand>& CommandCollection = Group.Commands;
-
-
-	for (int i = 0; i < CommandCollection.Num(); i++)
-	{
-		FConsoleCommand& Command = CommandCollection[i];
-
-		//we assume that is valid, we will later check that if its true
-		Command.IsValid = true;
-
-		const TCHAR* It = *Command.Command;
-
-		FString Param1 = GetTextSection(It);
-		if (Param1.IsEmpty())
-		{
-			//return false;
-		}
-
-
-		IConsoleObject* Obj = IConsoleManager::Get().FindConsoleObject(*Param1);
-	
-		if (Obj)
-		{
-			//Object exists so its safe to assume it has any kind of value
-			Command.InputType = EConsoleCommandInputType::Value;
-
-			Command.Name = Param1;
-			Command.Value = Command.Command.Mid(Param1.Len());
-
-			Command.SetBy = GetSetByTCHAR(Obj->GetFlags());
-
-			IConsoleCommand* CCmd = Obj->AsCommand();
-			IConsoleVariable* CVar = Obj->AsVariable();
-
-
-			if (CCmd)
-			{
-			}
-			else if (CVar)
-			{
-
-				Command.CurrentValue = CVar->GetString();
-
-				if (CVar->IsVariableBool())
-				{
-					Command.Type = "Bool";
-				}
-				else if (CVar->IsVariableFloat())
-				{
-					Command.Type = "Float";
-				}
-				else if (CVar->IsVariableInt())
-				{
-					Command.Type = "Int";
-				}
-				else if (CVar->IsVariableString())
-				{
-					Command.Type = "String";
-				}
-			}
-
-		}
-		else
-		{
-			//Its engine command?
-			Command.InputType = EConsoleCommandInputType::None;
-
-			Command.Name = Command.Command;
-		}
-
-		UE_LOG(LogTemp, Warning, TEXT("Initial: %s, %s, %s, %d"), *Command.Name, *Command.Value, *Command.Command, Command.InputType);
-
-	}
-	for (const auto& ConsoleCommand : CommandCollection) {
-
-		//IConsoleManager::Get().ForEachConsoleObjectThatContains(FConsoleObjectVisitor::CreateLambda(OnConsoleVariable), *InputTextStr);
-
-		const TCHAR* It = *ConsoleCommand.Command;
-
-		FString Param1 = GetTextSection(It);
-		if (Param1.IsEmpty())
-		{
-			//return false;
-		}
-
-		FString HelpString;
-
-		IConsoleObject* Obj = IConsoleManager::Get().FindConsoleObject(*Param1);
-		if (Obj)
-		{
-			if (Obj->TestFlags(ECVF_Unregistered))
-			{
-				//Handle unregistered!
-				UE_LOG(LogTemp, Warning, TEXT("No test flag"));
-
-				continue;
-			}
-
-			IConsoleCommand* CCmd = Obj->AsCommand();
-			IConsoleVariable* CVar = Obj->AsVariable();
-
-
-
-			if (CCmd)
-			{
-				HelpString = "Command:\n";
-			}
-			else if (CVar)
-			{
-				HelpString = "Variable:\n";
-
-
-			}
-
-
-			if (Obj != nullptr)
-			{
-				//UE_LOG(LogTemp, Warning, TEXT("Value is: %s\n Set by: %s"), *Obj->);
-				UE_LOG(LogTemp, Warning, TEXT("Set by: %s"), Obj->GetHelp());
-
-				HelpString += Obj->GetHelp();
-
-			}
-			else
-			{
-				UE_LOG(LogTemp, Warning, TEXT("DIdnt find console command!"));
-			}
-		}
-
-		
-
-	}
-	Group.bInitiallySet = true;
-
 	CurrentGroup = &Group;
-	RefreshCurrentTrackedCommands();
 }
 
-FString FCommandsManager::GetTextSection(const TCHAR*& It)
 {
-	FString ret;
 
-	while (*It)
-	{
-		if (IsWhiteSpace(*It))
-		{
-			break;
-		}
 
-		ret += *It++;
-	}
-
-	while (IsWhiteSpace(*It))
-	{
-		++It;
-	}
-
-	return ret;
-}
 
 void FCommandsManager::DumpAllCommands()
 {

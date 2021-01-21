@@ -31,6 +31,7 @@ public:
 	void Refresh();
 
 	const TArray<TSharedPtr<FConsoleCommand>>& GetCurrentCommandsSharedPtr();
+	FORCEINLINE const TArray<TSharedPtr<FConsoleCommand>>& GetCurrentCommandsSharedPtr_Cache() { return CurrentCommandsShared; }
 	const TArray<FConsoleCommand>& GetCurrentCommands();
 	const TArray<FString> GetGroupList();
 
@@ -38,9 +39,8 @@ public:
 
 	void SetActiveGroup(int NewId);
 
-	void AddNewGroup(const FString& Name);
 
-	void RefreshCurrentTrackedCommands();
+	void AddNewGroup(const FString& Name);
 
 	const FConsoleCommand& GetConsoleCommand(int Id);
 
@@ -66,13 +66,11 @@ private:
 
 	bool Execute(FConsoleCommand& Command);
 
-	void RefreshCommand(FConsoleCommand& Command);
 
 	FString GetNewIdForGroup(const FCommandGroup& Group);
 
 	void DumpAllCommands();
 
-	FString GetTextSection(const TCHAR*& It);
 
 	TSet<FString> AllCommands;
 	FString CurrentGroupId;

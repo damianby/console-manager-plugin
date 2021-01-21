@@ -10,19 +10,34 @@ enum class EConsoleCommandInputType : uint8
 };
 
 
-
-struct FConsoleCommand
+class FConsoleCommand
 {
-	FConsoleCommand(FString _Command) : Command(_Command) {}
+public:
+	FConsoleCommand(FString _Command);
 
 	FString Name;
 	EConsoleCommandInputType InputType;
-	bool IsValid;
 	FString Command;
 	FString Value;
 	FString CurrentValue;
 	FString Type;
 	FString SetBy;
+
+	bool IsValid = true;
+
+	FORCEINLINE bool operator == (const FString& Other) const {
+		return Name.Equals(Other);
+	};
+
+	void Refresh();
+	FString GetTooltip();
+	
+private:
+
+	static FString GetTextSection(const TCHAR * &It);
+
+	bool bIsInitiallySet = false;
+
 };
 
 struct FCommandGroup
