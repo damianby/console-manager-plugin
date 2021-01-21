@@ -38,6 +38,8 @@ public class ConsoleManager : ModuleRules
 				"InputCore",
 				"UnrealEd",
 				"ToolMenus",
+				"LevelEditor",
+				"Settings",
 				"CoreUObject",
 				"Engine",
 				"Slate",

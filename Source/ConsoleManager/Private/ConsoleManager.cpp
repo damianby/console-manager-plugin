@@ -7,7 +7,10 @@
 #include "ToolMenus.h"
 #include "SConsoleManagerSlateWidget.h"
 
+#include "ISettingsModule.h"
+
 #include "FileHelper.h"
+#include "ConsoleManagerSettings.h"
 
 static const FName ConsoleManagerTabName("ConsoleManager");
 
@@ -16,6 +19,16 @@ static const FName ConsoleManagerTabName("ConsoleManager");
 void FConsoleManagerModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
+
+	if (ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings")) {
+		SettingsModule->RegisterSettings("Editor", "Plugins", "Console Manager",
+			LOCTEXT("ConsoleManagerName", "Console Manager"),
+			LOCTEXT("ConsoleManagerNameDesc",
+				"Configure display options of commands"),
+			GetMutableDefault<UConsoleManagerSettings>()
+		);
+	}
+
 
 	FConsoleManagerStyle::Initialize();
 	FConsoleManagerStyle::ReloadTextures();
@@ -42,6 +55,10 @@ void FConsoleManagerModule::StartupModule()
 
 void FConsoleManagerModule::ShutdownModule()
 {
+	if (ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings"))
+		SettingsModule->UnregisterSettings("Editor", "Plugins", "Console Manager");
+
+
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
 
