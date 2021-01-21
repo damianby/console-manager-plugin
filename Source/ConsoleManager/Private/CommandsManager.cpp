@@ -3,6 +3,10 @@
 
 #include "CommandsManager.h"
 
+#include "Misc/MessageDialog.h"
+
+#define LOCTEXT_NAMESPACE "FConsoleManagerModule"
+
 static inline bool IsWhiteSpace(TCHAR Value) { return Value == TCHAR(' '); }
 
 static const TCHAR* GetSetByTCHAR(EConsoleVariableFlags InSetBy)
@@ -105,11 +109,10 @@ void FCommandsManager::SetActiveGroup(int NewId)
 	//{
 	//	return;
 	//}
-
-	ActiveGroupId = NewId;
 	
-	SetCurrentCommands(CommandGroups[ActiveGroupId]);
-	RefreshCurrentTrackedCommands();
+	
+	
+	SetCurrentCommands(CommandGroups[NewId]);
 
 	DumpAllCommands();
 }
@@ -520,3 +523,6 @@ void FCommandsManager::DumpAllCommands()
 	FileHelper::DumpAllCommands(Path, LocalCommands);
 
 }
+
+
+#undef LOCTEXT_NAMESPACE
