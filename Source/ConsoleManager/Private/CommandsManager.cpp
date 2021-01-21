@@ -266,7 +266,8 @@ void FCommandsManager::RefreshCommand(FConsoleCommand& Command)
 		IConsoleVariable* CVar = Obj->AsVariable();
 		if (CVar)
 		{
-			Command.Value = CVar->GetString();
+			Command.CurrentValue = CVar->GetString();
+			UE_LOG(LogTemp, Warning, TEXT("Current value updated:%s %s"), *Command.Command , *Command.CurrentValue);
 		}
 	}
 }
@@ -321,6 +322,7 @@ void FCommandsManager::SetCurrentCommands(FCommandGroup& Group)
 			Command.InputType = EConsoleCommandInputType::Value;
 
 			Command.Name = Param1;
+			Command.Value = Command.Command.Mid(Param1.Len());
 
 			Command.SetBy = GetSetByTCHAR(Obj->GetFlags());
 
@@ -334,7 +336,7 @@ void FCommandsManager::SetCurrentCommands(FCommandGroup& Group)
 			else if (CVar)
 			{
 
-				Command.Value = CVar->GetString();
+				Command.CurrentValue = CVar->GetString();
 
 				if (CVar->IsVariableBool())
 				{

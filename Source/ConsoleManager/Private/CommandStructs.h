@@ -20,6 +20,7 @@ struct FConsoleCommand
 	bool IsValid;
 	FString Command;
 	FString Value;
+	FString CurrentValue;
 	FString Type;
 	FString SetBy;
 };
