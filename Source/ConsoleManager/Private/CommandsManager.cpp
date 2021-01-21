@@ -139,7 +139,7 @@ void FCommandsManager::RemoveGroup(int Id)
 		SetCurrentCommands(ConsoleHistory);
 	}
 
-	CommandGroups.RemoveAt(Id);
+	CommandGroups.RemoveAt(Id, 1, false);
 
 }
 
@@ -299,6 +299,8 @@ void FCommandsManager::ValidateCommands(TArray<FConsoleCommand>& Commands)
 void FCommandsManager::SetCurrentCommands(FCommandGroup& Group)
 {
 	CurrentGroup = &Group;
+
+	CurrentGroupId = Group.Id;
 }
 
 void FCommandsManager::DumpAllCommands()
