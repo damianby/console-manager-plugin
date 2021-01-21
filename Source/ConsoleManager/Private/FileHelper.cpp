@@ -180,9 +180,9 @@ bool FileHelper::SaveCommandFile(const FString& Path, const TArray<FCommandGroup
 	return FFileHelper::SaveStringToFile(Final, *Path);
 }
 
-bool FileHelper::DumpAllCommands(const FString& Path, const TSet<FString> Commands)
+bool FileHelper::DumpAllCommands(const FString& Path, const TArray<FString> Commands)
 {
-	return FFileHelper::SaveStringArrayToFile(Commands.Array(), *Path);
+	return FFileHelper::SaveStringArrayToFile(Commands, *Path);
 }
 
 void FileHelper::PrintGroups_Debug(const TArray<FCommandGroup>& Groups)

@@ -71,7 +71,6 @@ private:
 
 	void DumpAllCommands();
 
-
-	TSet<FString> AllCommands;
+	FCommandGroup AllCommands;
 	FString CurrentGroupId;
 };

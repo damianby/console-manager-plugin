@@ -9,6 +9,7 @@
 
 FCommandsManager::FCommandsManager()
 {
+	DumpAllCommands();
 
 	Refresh();
 
@@ -88,7 +89,6 @@ void FCommandsManager::SetActiveGroup(int NewId)
 	
 	SetCurrentCommands(CommandGroups[NewId]);
 
-	DumpAllCommands();
 }
 
 void FCommandsManager::AddNewGroup(const FString& Name)
@@ -282,28 +282,36 @@ void FCommandsManager::SetCurrentCommands(FCommandGroup& Group)
 	CurrentGroup = &Group;
 }
 
-{
-
-
-
 void FCommandsManager::DumpAllCommands()
 {
-	TSet<FString>& LocalCommands = AllCommands;
+	TArray<FString> LocalCommands;
 
-	FConsoleObjectVisitor Visitor;
-	Visitor.BindLambda([&LocalCommands](const TCHAR* Name, IConsoleObject* Obj) {
+	FStringOutputDevice StringOutDevice;
+	StringOutDevice.SetAutoEmitLineTerminator(true);
+	ConsoleCommandLibrary_DumpLibrary(GEditor->GetEditorWorldContext().World(), *GEngine, FString(TEXT("")) + TEXT("*"), StringOutDevice);
+	StringOutDevice.ParseIntoArrayLines(LocalCommands);
 
-		LocalCommands.Add(Name);
-	});
+	//FConsoleObjectVisitor Visitor;
+	//Visitor.BindLambda([&LocalCommands](const TCHAR* Name, IConsoleObject* Obj) {
 
-	IConsoleManager::Get().ForEachConsoleObjectThatStartsWith(Visitor);
+	//	LocalCommands.Add(Name);
+	//});
 
-	LocalCommands.Sort(TLess<FString>());
+	//IConsoleManager::Get().ForEachConsoleObjectThatStartsWith(Visitor, TEXT("*"));
+
+	//LocalCommands.Sort(TLess<FString>());
+
+	AllCommands.Commands.Empty();
+
+	for (auto& Command : LocalCommands)
+	{
+		AllCommands.Commands.Add(FConsoleCommand(Command));
+	}
 
 
 	const FString Path = FPaths::GeneratedConfigDir() + TEXT("Console.txt");
+	
 	FileHelper::DumpAllCommands(Path, LocalCommands);
-
 }
 
 

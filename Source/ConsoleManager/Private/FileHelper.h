@@ -50,7 +50,7 @@ public:
 	 * @param Commands		Set of all commands
 	 * @return				Success
 	*/
-	static bool DumpAllCommands(const FString& Path, const TSet<FString> Commands);
+	static bool DumpAllCommands(const FString& Path, const TArray<FString> Commands);
 
 
 	/**
