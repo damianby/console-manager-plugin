@@ -127,6 +127,42 @@ bool FCommandsManager::ExecuteCommand(const FConsoleCommand& Command)
 	return false; // Execute(Command);
 }
 
+void FCommandsManager::RemoveGroup(int Id)
+{
+	check(CommandGroups.IsValidIndex(Id));
+
+	if (CurrentGroup == &CommandGroups[Id])
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Its the same!"));
+		SetCurrentCommands(ConsoleHistory);
+	}
+
+	CommandGroups.RemoveAt(Id);
+
+}
+
+bool FCommandsManager::RenameGroup(int Id, const FString& NewName)
+{
+	check(CommandGroups.IsValidIndex(Id));
+
+	CommandGroups[Id].Name = NewName;
+	CommandGroups[Id].Id = GetNewIdForGroup(CommandGroups[Id]);
+
+	return true;
+
+}
+
+void FCommandsManager::DuplicateGroup(int Id)
+{
+	check(CommandGroups.IsValidIndex(Id));
+
+	FCommandGroup NewGroup = CommandGroups[Id];
+	NewGroup.Name = NewGroup.Name + "_Copy";
+	NewGroup.Id = GetNewIdForGroup(NewGroup);
+	
+	CommandGroups.Insert(NewGroup, Id + 1);
+}
+
 FString FCommandsManager::GetNewIdForGroup(const FCommandGroup& Group)
 {
 	FString NewGroupId = FString(Group.Name) + "_";

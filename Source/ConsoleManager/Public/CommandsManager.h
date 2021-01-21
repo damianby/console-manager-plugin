@@ -36,6 +36,10 @@ public:
 	bool ExecuteCurrentCommand(int Id);
 	bool ExecuteCommand(const FConsoleCommand& Command);
 
+	void RemoveGroup(int Id);
+	bool RenameGroup(int Id, const FString& NewName);
+	void DuplicateGroup(int Id);
+
 	bool SaveCommands();
 private:
 
@@ -56,7 +60,6 @@ private:
 	void DumpAllCommands();
 
 	FString GetTextSection(const TCHAR*& It);
-
 
 	TSet<FString> AllCommands;
 	FString CurrentGroupId;
