@@ -31,18 +31,10 @@ static const TCHAR* GetSetByTCHAR(EConsoleVariableFlags InSetBy)
 FCommandsManager::FCommandsManager()
 {
 
-	//const FString ConfigPath = FPaths::GeneratedConfigDir() + TEXT("Commands.ini");
-
-	const FString CommandsPath = IPluginManager::Get().FindPlugin("ConsoleManager")->GetBaseDir() / TEXT("Resources") / TEXT("Commands.txt");
-
-
-	FileHelper::ReadCommandFile(CommandsPath, CommandGroups);
-	FileHelper::LoadConsoleHistory(ConsoleHistory);
-
+	Refresh();
 
 	FileHelper::PrintGroups_Debug(CommandGroups);
 
-	CurrentCommands = &ConsoleHistory;
 	SetCurrentCommands(ConsoleHistory);
 }
 
@@ -55,9 +47,20 @@ void FCommandsManager::Refresh()
 {
 	const FString CommandsPath = IPluginManager::Get().FindPlugin("ConsoleManager")->GetBaseDir() / TEXT("Resources") / TEXT("Commands.txt");
 
-
 	FileHelper::ReadCommandFile(CommandsPath, CommandGroups);
 	FileHelper::LoadConsoleHistory(ConsoleHistory);
+	
+	FCommandGroup* CurrentGroupByName = CommandGroups.FindByKey<FString>(CurrentCommandGroupName);
+	if (CurrentGroupByName)
+	{
+		SetCurrentCommands(*CurrentGroupByName);
+	}
+	else
+	{
+		SetCurrentCommands(ConsoleHistory);
+	}
+	
+}
 
 }
 
