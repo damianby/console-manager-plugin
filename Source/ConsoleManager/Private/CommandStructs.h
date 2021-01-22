@@ -10,6 +10,12 @@ enum class EConsoleCommandInputType : uint8
 };
 
 
+enum class EConsoleCommandType : uint8
+{
+	CVar,
+	CCmd
+};
+
 class FConsoleCommand
 {
 public:
@@ -23,11 +29,15 @@ public:
 	FString Type;
 	FString SetBy;
 
+	EConsoleCommandType ObjType;
+
 	bool IsValid = true;
 
 	FORCEINLINE bool operator == (const FString& Other) const {
 		return Name.Equals(Other);
 	};
+
+	//FORCEINLINE const FString& GetExec() { return ExecCommand; };
 
 	void Refresh();
 	FString GetTooltip();
@@ -37,6 +47,8 @@ private:
 	static FString GetTextSection(const TCHAR * &It);
 
 	bool bIsInitiallySet = false;
+
+	//FString ExecCommand;
 
 };
 
