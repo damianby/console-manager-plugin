@@ -32,6 +32,7 @@ public:
 
 	const TArray<TSharedPtr<FConsoleCommand>>& GetCurrentCommandsSharedPtr();
 	FORCEINLINE const TArray<TSharedPtr<FConsoleCommand>>& GetCurrentCommandsSharedPtr_Cache() { return CurrentCommandsShared; }
+	FORCEINLINE const FCommandGroup& GetCurrentCommandGroup() const { return *CurrentGroup; };
 	const TArray<FConsoleCommand>& GetCurrentCommands();
 	const TArray<FString> GetGroupList();
 
