@@ -35,8 +35,10 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 			]
 		]);
 
+	
+
 	HeaderRow->AddColumn(SHeaderRow::Column("Value")
-		.DefaultLabel(FText::FromString("Value"))
+		.DefaultLabel(FText::FromString("Execute Value"))
 	);
 
 	if (InArgs._DisplayCommandValueType)
@@ -71,6 +73,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 
 	HeaderRow->AddColumn(SHeaderRow::Column("Execute")
 		.DefaultLabel(FText::FromString(""))
+		.FixedWidth(50)
 	);
 
 
@@ -80,75 +83,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 		.OnGenerateRow(this, &SConsoleManagerSlateWidget::OnCommandsRowGenerate)
 		.SelectionMode(ESelectionMode::Multi)
 		.HeaderRow(HeaderRow)
-		.OnContextMenuOpening_Lambda(
-			[=]() 
-			{
-				
-
-
-				FMenuBuilder MenuBuilder(true, NULL, TSharedPtr<FExtender>());
-
-				{
-					MenuBuilder.BeginSection("Group", LOCTEXT("GroupContextMenu_Header_Group", "Group"));
-					{
-						FUIAction Action_EditGroup(
-							FExecuteAction::CreateRaw(this, &SConsoleManagerSlateWidget::EditGroup, 0),
-							FCanExecuteAction()
-						);
-
-						MenuBuilder.AddMenuEntry
-						(
-							LOCTEXT("GroupContextMenu_EditGroup", "Edit"),
-							LOCTEXT("GroupContextMenu_EditGroup_Desc", "Edit group"),
-							FSlateIcon(),
-							Action_EditGroup,
-							NAME_None,
-							EUserInterfaceActionType::Button
-						);
-
-
-						FUIAction Action_DuplicateGroup(
-							FExecuteAction::CreateRaw(this, &SConsoleManagerSlateWidget::DuplicateGroup, 0),
-							FCanExecuteAction()
-						);
-
-						MenuBuilder.AddMenuEntry
-						(
-							LOCTEXT("GroupContextMenu_DuplicateGroup", "Duplicate"),
-							LOCTEXT("GroupContextMenu_DuplicateGroup_Desc", "Duplicate group"),
-							FSlateIcon(),
-							Action_DuplicateGroup,
-							NAME_None,
-							EUserInterfaceActionType::Button
-						);
-						FUIAction Action_RemoveGroup(
-							FExecuteAction::CreateRaw(this, &SConsoleManagerSlateWidget::RemoveGroup, 0),
-							FCanExecuteAction()
-						);
-
-						MenuBuilder.AddMenuEntry
-						(
-							LOCTEXT("GroupContextMenu_RemoveGroup", "Remove"),
-							LOCTEXT("GroupContextMenu_RemoveGroup_Desc", "Remove group"),
-							FSlateIcon(),
-							Action_RemoveGroup,
-							NAME_None,
-							EUserInterfaceActionType::Button
-						);
-
-					}
-					MenuBuilder.EndSection();
-				}
-
-				TSharedPtr<SWidget> Widget;
-
-				Widget = MenuBuilder.MakeWidget();
-
-
-
-
-				return Widget;
-			});
+		.OnContextMenuOpening_Raw(this, &SConsoleManagerSlateWidget::GetListViewContextMenu);
 		
 
 	GroupsScrollBox = SNew(SScrollBox);
@@ -166,7 +101,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 			}),
 		FCanExecuteAction());
 
-	
+	//Validate all console commands to check if any existing in AllCommands //git
 	TSharedRef<SWidget> Content = SNew(SVerticalBox)
 		+ SVerticalBox::Slot()
 		.AutoHeight()
@@ -209,7 +144,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 		[
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot()
-			.FillWidth(0.3)
+			.AutoWidth()
 			.Padding(5.0f)
 			[
 				SNew(SVerticalBox)
@@ -219,6 +154,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 					SNew(SButton)
 					.Text(LOCTEXT("HistoryButton", "History"))
 					.OnClicked(FOnClicked::CreateLambda([=]() {
+						bIsAllCommands = false;
 						CommandsManager.Pin()->SetActiveHistory();
 						GenerateCommandsScrollBox();
 						CommandsListView->ScrollToBottom();
@@ -233,8 +169,10 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 					SNew(SButton)
 					.Text(LOCTEXT("ShowAllButton", "Show All"))
 					.OnClicked(FOnClicked::CreateLambda([=]() {
+						bIsAllCommands = true;
 						CommandsManager.Pin()->SetActiveAllCommands();
 						GenerateCommandsScrollBox();
+						
 						CommandsListView->ScrollToBottom();
 						UE_LOG(LogTemp, Warning, TEXT("All commands"));
 						return FReply::Handled();
@@ -349,6 +287,8 @@ void SConsoleManagerSlateWidget::OnAddGroupButtonClicked()
 FReply SConsoleManagerSlateWidget::OnSelectGroupClicked(int Id)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Id: %d"), Id);
+
+	bIsAllCommands = false;
 
 	CommandsManager.Pin()->SetActiveGroup(Id);
 
@@ -505,9 +445,30 @@ void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
 
 void SConsoleManagerSlateWidget::GenerateCommandsScrollBox()
 {
-	
+	if (bIsAllCommands)
+	{
+		CommandsListView->GetHeaderRow()->RemoveColumn("Value");
+	}
+	else
+	{
+
+		if(!CommandsListView->GetHeaderRow()->IsColumnGenerated("Value"))
+		{
+			CommandsListView->GetHeaderRow()->InsertColumn(
+				SHeaderRow::Column("Value")
+				.DefaultLabel(FText::FromString("Execute Value"))
+				,
+				1
+			);
+		}
+		
+	}
+
+
 	CommandsListView->SetListItemsSource(CommandsManager.Pin()->GetCurrentCommandsSharedPtr());
 	CommandsListView->RebuildList();
+
+	
 
 
 	/*for (int i = 0; i < Commands.Num(); i++)
@@ -615,6 +576,211 @@ void SConsoleManagerSlateWidget::EditGroup(int Id)
 	//SGenericDialogWidget::OpenDialog(LOCTEXT("EditGroupDialog_Title", "Edit Group"), Widget, SGenericDialogWidget::FArguments(), true);
 }
 
+TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
+{
+	
+
+	const FCommandGroup& Group = CommandsManager.Pin()->GetCurrentCommandGroup();
+
+	TArray<TSharedPtr<FConsoleCommand>> SelectedCommands;
+	CommandsListView->GetSelectedItems(SelectedCommands);
+
+	
+	// If we right clicked on listview and not any entry
+	if (SelectedCommands.Num() == 0 && Group.bIsEditable)
+	{
+
+		FMenuBuilder MenuBuilder(true, NULL, TSharedPtr<FExtender>());
+		MenuBuilder.BeginSection("Command", LOCTEXT("CommandContextMenu_Header_Command", "Command"));
+		{
+			MenuBuilder.AddMenuEntry
+			(
+				LOCTEXT("CommandContextMenu_AddCommand", "Add new"),
+				LOCTEXT("CommandContextMenu_AddCommand_Desc", "Adds new command"),
+				FSlateIcon(),
+				FUIAction(FExecuteAction::CreateLambda([=]() { UE_LOG(LogTemp, Warning, TEXT("Add new command")); }), FCanExecuteAction()),
+				NAME_None,
+				EUserInterfaceActionType::Button
+			);
+		}
+		MenuBuilder.EndSection();
+		
+
+		return MenuBuilder.MakeWidget();
+	}
+	else if (SelectedCommands.Num() > 0)
+	{
+		FMenuBuilder MenuBuilder(true, NULL, TSharedPtr<FExtender>());
+		{
+			MenuBuilder.BeginSection("Command", LOCTEXT("CommandContextMenu_Header_Command", "Command"));
+			{
+
+				const FText ExecuteName = SelectedCommands.Num() > 1 ? FText::FromString("Execute All") : FText::FromString("Execute");
+
+				MenuBuilder.AddMenuEntry
+				(
+					ExecuteName,
+					LOCTEXT("CommandContextMenu_Execute_Desc", "Execute all selected commands"),
+					FSlateIcon(),
+					FUIAction(FExecuteAction::CreateLambda(
+						[=]()
+						{
+
+							if (bIsAllCommands)
+							{
+								TSharedRef<SVerticalBox> ExecuteWindow = SNew(SVerticalBox);
+
+								for (const auto& SelectedCommand : SelectedCommands)
+								{
+									ExecuteWindow->AddSlot()
+										[
+											SNew(SHorizontalBox)
+											+ SHorizontalBox::Slot()
+											.AutoWidth()
+											[
+												SNew(STextBlock)
+												.Text(FText::FromString(SelectedCommand->Name))
+											]
+											+ SHorizontalBox::Slot()
+											.FillWidth(1.0f)
+											[
+												SNew(SEditableTextBox)
+												.Text(FText::FromString(SelectedCommand->CurrentValue))
+											]
+										];
+								}
+
+								TSharedRef<SCustomDialog> EditDialog = SNew(SCustomDialog)
+									.Title(FText(LOCTEXT("EditGroupDialog_Title", "Edit Group")))
+									.DialogContent(ExecuteWindow)
+									.Buttons({
+										SCustomDialog::FButton(LOCTEXT("OK", "OK"), FSimpleDelegate()),
+										SCustomDialog::FButton(LOCTEXT("Cancel", "Cancel"), FSimpleDelegate())
+										});
+
+
+
+								// returns 0 when OK is pressed, 1 when Cancel is pressed, -1 if the window is closed
+								const int ButtonPressed = EditDialog->ShowModal();
+							}
+							else
+							{
+
+							}
+
+							for (const auto& SelectedCommand : SelectedCommands)
+							{
+								CommandsManager.Pin()->ExecuteCommand(SelectedCommand.ToSharedRef().Get());
+							}
+						}), FCanExecuteAction()),
+					NAME_None,
+					EUserInterfaceActionType::Button
+					);
+
+				if (Group.bIsEditable)
+				{
+					MenuBuilder.AddMenuEntry
+					(
+						LOCTEXT("CommandContextMenu_AddCommand", "Add New"),
+						LOCTEXT("CommandContextMenu_AddCommand_Desc", "Adds new command"),
+						FSlateIcon(),
+						FUIAction(FExecuteAction::CreateLambda([=]() { UE_LOG(LogTemp, Warning, TEXT("Add new command")); }), FCanExecuteAction()),
+						NAME_None,
+						EUserInterfaceActionType::Button
+					);
+
+
+					FUIAction Action_DuplicateGroup(
+						FExecuteAction::CreateRaw(this, &SConsoleManagerSlateWidget::DuplicateGroup, 0),
+						FCanExecuteAction()
+					);
+
+					MenuBuilder.AddMenuEntry
+					(
+						LOCTEXT("GroupContextMenu_DuplicateGroup", "Duplicate"),
+						LOCTEXT("GroupContextMenu_DuplicateGroup_Desc", "Duplicate group"),
+						FSlateIcon(),
+						Action_DuplicateGroup,
+						NAME_None,
+						EUserInterfaceActionType::Button
+					);
+					FUIAction Action_RemoveGroup(
+						FExecuteAction::CreateRaw(this, &SConsoleManagerSlateWidget::RemoveGroup, 0),
+						FCanExecuteAction()
+					);
+
+					MenuBuilder.AddMenuEntry
+					(
+						LOCTEXT("GroupContextMenu_RemoveGroup", "Remove"),
+						LOCTEXT("GroupContextMenu_RemoveGroup_Desc", "Remove group"),
+						FSlateIcon(),
+						Action_RemoveGroup,
+						NAME_None,
+						EUserInterfaceActionType::Button
+					);
+				}
+
+
+
+			}
+			MenuBuilder.EndSection();
+
+			if (SelectedCommands.Num() > 0)
+			{
+				MenuBuilder.BeginSection("Group", LOCTEXT("GroupContextMenu_Header_Group", "Group"));
+
+				FNewMenuDelegate Delegate;
+
+				Delegate.BindLambda([=](FMenuBuilder& SubMenuBuilder) {
+					FUIAction Action_AddCommandToNewGroup(
+						FExecuteAction::CreateRaw(this, &SConsoleManagerSlateWidget::RemoveGroup, 0),
+						FCanExecuteAction()
+					);
+
+					SubMenuBuilder.AddMenuEntry
+					(
+						LOCTEXT("AddToGroupContextSubmenu_NewGroup", "New Group"),
+						LOCTEXT("AddToGroupContextSubmenu_NewGroup_Desc", "Create new group with selected commands"),
+						FSlateIcon(),
+						Action_AddCommandToNewGroup,
+						NAME_None,
+						EUserInterfaceActionType::Button
+					);
+					SubMenuBuilder.AddSeparator();
+
+					auto& CommandGroups = CommandsManager.Pin()->GetCommandGroups();
+
+					for (int i = 0; i < CommandGroups.Num(); i++)
+					{
+
+						SubMenuBuilder.AddMenuEntry
+						(
+							FText::FromString(CommandGroups[i].Name),
+							FText::GetEmpty(),
+							FSlateIcon(),
+							FUIAction(FExecuteAction::CreateLambda([=]() {UE_LOG(LogTemp, Warning, TEXT("Selected %s"), *CommandGroups[i].Name); }), FCanExecuteAction()),
+							NAME_None,
+							EUserInterfaceActionType::Button
+						);
+					}
+
+					});
+
+				MenuBuilder.AddSubMenu(FText::FromString("Add To Group"), FText::FromString("Add to existing or create new group"), Delegate);
+
+
+
+
+				MenuBuilder.EndSection();
+			}
+		}
+
+		return MenuBuilder.MakeWidget();
+	}
+
+	return SNullWidget::NullWidget;
+}
+
 
 TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName& ColumnName)
 {
@@ -622,7 +788,7 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 	if (ColumnName.IsEqual(FName(TEXT("Command"))))
 	{
 		return SNew(STextBlock)
-				.Text(FText::FromString(Item->Command))
+				.Text(FText::FromString(Item->Name))
 				.ToolTipText(FText::FromString(Item->GetTooltip()))
 				.AutoWrapText(true)
 				.WrappingPolicy(ETextWrappingPolicy::AllowPerCharacterWrapping);
@@ -646,7 +812,43 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 
 	if (ColumnName.IsEqual(FName(TEXT("Current Value"))))
 	{
-		return SNew(STextBlock).Text(FText::FromString(Item->CurrentValue));
+
+		TSharedRef<SEditableText> EditBox =
+			SNew(SEditableText)
+			.HintText(FText::FromString(Item->CurrentValue))
+			.OnIsTypedCharValid(FOnIsTypedCharValid::CreateLambda(
+				[=](TCHAR Char) {
+					if (Item->Type.Equals("Int"))
+					{
+						return FString().AppendChar(Char).IsNumeric();
+					}
+					return true;
+				}
+			))
+			.Text(FText::FromString(Item->CurrentValue))
+			.ClearKeyboardFocusOnCommit(false)
+			.AllowContextMenu(false)
+			.SelectAllTextWhenFocused(true)
+			.SelectAllTextOnCommit(true)
+			.OnTextCommitted_Lambda(
+				[=](const FText& NewText, ETextCommit::Type How) {
+					if (How == ETextCommit::Type::OnEnter)
+					{
+						UE_LOG(LogTemp, Warning, TEXT("Commit: %s"), *NewText.ToString());
+					}
+					else
+					{
+
+						//EditBox->SetText(FText::FromString("elo"));
+					}
+					UE_LOG(LogTemp, Warning, TEXT("Item command: %s"), *Item->Command);
+
+					
+				}
+		);
+
+		return EditBox;
+		//return SNew(STextBlock).Text(FText::FromString(Item->CurrentValue));
 	}
 
 	if (ColumnName.IsEqual(FName(TEXT("Execute"))))

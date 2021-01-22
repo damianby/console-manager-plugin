@@ -111,4 +111,9 @@ private:
 	void DuplicateGroup(int Id);
 	void EditGroup(int Id);
 
+
+	TSharedPtr<SWidget> GetListViewContextMenu();
+
+	bool bIsAllCommands = false;
+
 };
