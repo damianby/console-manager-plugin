@@ -154,7 +154,7 @@ FString FConsoleCommand::GetTooltip()
 	}
 	else
 	{
-		HelpString = "Exec commands have no help";
+		HelpString += "Exec commands have no help";
 	}
 
 	return HelpString;
