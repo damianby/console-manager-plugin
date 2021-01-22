@@ -323,6 +323,7 @@ void FCommandsManager::DumpAllCommands()
 	//LocalCommands.Sort(TLess<FString>());
 
 	AllCommands.Commands.Empty();
+	AllCommands.bIsEditable = false;
 
 	for (auto& Command : LocalCommands)
 	{

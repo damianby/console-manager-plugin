@@ -46,6 +46,7 @@ struct FCommandGroup
 	FString Id;
 	TArray<FConsoleCommand> Commands;
 	bool bInitiallySet = false;
+	bool bIsEditable = true;
 
 	FORCEINLINE bool operator == (const FString& Other) const {
 		return Id.Equals(Other);

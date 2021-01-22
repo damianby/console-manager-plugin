@@ -18,6 +18,7 @@ void FileHelper::LoadConsoleHistory(FCommandGroup& OutGroup)
 
 	OutGroup.Name = SectionName;
 	OutGroup.Commands.Empty();
+	OutGroup.bIsEditable = false;
 
 	for (const auto& ConfigPair : Ini)
 	{
