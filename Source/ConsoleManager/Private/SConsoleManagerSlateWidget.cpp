@@ -87,10 +87,9 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 		
 
 	GroupsScrollBox = SNew(SScrollBox);
-	GenerateGroupsScrollBox();
+	
 
 	CommandsScrollBox = SNew(SScrollBox);
-	GenerateCommandsScrollBox();
 
 	//FConsoleManagerCommands::Get().GroupContextMenu = MakeShareable(new FUICommandList);
 
@@ -110,7 +109,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 			+ SHorizontalBox::Slot()
 			.FillWidth(1.0f)
 			[	
-				SNew(SSearchBox)
+				SAssignNew(SearchBox, SSearchBox)
 				.HintText(FText::FromString("Search/Filter"))
 				.OnTextChanged_Lambda(
 						[=](const FText& NewText) {
@@ -223,6 +222,10 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 		[
 			Content
 		];
+
+
+	GenerateGroupsScrollBox();
+	GenerateCommandsScrollBox();
 }
 
 //FReply SConsoleManagerSlateWidget::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
@@ -464,11 +467,31 @@ void SConsoleManagerSlateWidget::GenerateCommandsScrollBox()
 		
 	}
 
-
-	CommandsListView->SetListItemsSource(CommandsManager.Pin()->GetCurrentCommandsSharedPtr());
-	CommandsListView->RebuildList();
-
 	
+	const TArray<TSharedPtr<FConsoleCommand>>& Commands = CommandsManager.Pin()->GetCurrentCommandsSharedPtr();
+
+	FText SearchText = SearchBox->GetText();
+
+	if (SearchText.IsEmpty())
+	{
+		CommandsListView->SetListItemsSource(Commands);
+		CommandsListView->RebuildList();
+		return;
+	}
+
+	FilteredListView.Empty();
+	for (const auto& Command : Commands)
+	{
+		FString Part = SearchText.ToString();
+		if (Command->Name.Contains(Part))
+		{
+			FilteredListView.Add(Command);
+		}
+
+	}
+
+	CommandsListView->SetListItemsSource(FilteredListView);
+	CommandsListView->RebuildList();
 
 
 	/*for (int i = 0; i < Commands.Num(); i++)

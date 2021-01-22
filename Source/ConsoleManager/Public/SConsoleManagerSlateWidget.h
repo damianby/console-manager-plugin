@@ -96,6 +96,9 @@ private:
 
 	TArray<TSharedPtr<FConsoleCommand>> FilteredListView;
 
+
+	TSharedPtr<SSearchBox> SearchBox;
+
 	void OnAddGroupButtonClicked();
 
 	FReply OnSelectGroupClicked(int Id);
