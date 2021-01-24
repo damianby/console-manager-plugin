@@ -171,8 +171,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 						bIsAllCommands = true;
 						CommandsManager.Pin()->SetActiveAllCommands();
 						GenerateCommandsScrollBox();
-						
-						CommandsListView->ScrollToBottom();
+
 						UE_LOG(LogTemp, Warning, TEXT("All commands"));
 						return FReply::Handled();
 						}))
