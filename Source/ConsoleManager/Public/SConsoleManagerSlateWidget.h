@@ -17,21 +17,91 @@
 
 
 
+class DragNDrop : public FDragDropOperation
+{
+public:
+	DRAG_DROP_OPERATOR_TYPE(DragNDrop, FDragDropOperation)
+
+	int32 Id = 0;
+	TSharedPtr<FConsoleCommand> Command;
+	TSharedPtr<FCommandsManager> Manager;
+};
+
+
 class SConsoleCommandListRow : public SMultiColumnTableRow<TSharedPtr<FConsoleCommand>>
 {
 public:
 
     SLATE_BEGIN_ARGS(SConsoleCommandListRow) {}
-	SLATE_ARGUMENT(TSharedPtr<FConsoleCommand>, Item)
+		SLATE_ARGUMENT(TSharedPtr<FConsoleCommand>, Item)
 		SLATE_ARGUMENT(bool, bIsValid)
-        SLATE_END_ARGS()
+	//	SLATE_ARGUMENT(int32, Id)
+    SLATE_END_ARGS()
+
 
 public:
+
+	void SetOnDragDetected(FOnDragDetected Delegate)
+	{
+		OnDragDetectedDelegate = Delegate;
+	}
+
+	void SetOnDrop(FOnDrop Delegate)
+	{
+		OnDropDelegate = Delegate;
+	}
+
+	virtual FReply OnDrop(const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent) override
+	{
+		if (OnDropDelegate.IsBound())
+		{
+			return OnDropDelegate.Execute(MyGeometry, DragDropEvent);
+		}
+		return FReply::Unhandled();
+	}
+
+	virtual void OnDragEnter(const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent) override
+	{
+		TSharedPtr<DragNDrop> DragConnectionOp = DragDropEvent.GetOperationAs<DragNDrop>();
+
+		if (DragConnectionOp.IsValid())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Dragged obj: %s with ID: %d ||| Over: %s"), *DragConnectionOp->Command->Name, DragConnectionOp->Id, *Item->Name);
+		}
+
+		
+		
+		//SetOnMouseButtonDown
+
+		UE_LOG(LogTemp, Warning, TEXT(""));
+		
+	}
+
+	virtual FReply OnDragDetected(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
+	{
+		if (OnDragDetectedDelegate.IsBound())
+		{
+			return OnDragDetectedDelegate.Execute(MyGeometry, MouseEvent);
+		}
+
+		return FReply::Unhandled();
+
+
+		//UE_LOG(LogTemp, Warning, TEXT("Drag DETECTED"));
+
+		//TSharedRef<DragNDrop> DragOp = MakeShareable(new DragNDrop);
+
+		////DragOp->Manager = 
+
+
+		//return FReply::Handled().BeginDragDrop(DragOp);
+	}
 
     void Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView)
     {
         Item = InArgs._Item;
 		bIsValid = InArgs._bIsValid;
+		//Id = InArgs._Id;
 
 		//SNew(SBorder)
 		//	.BorderBackgroundColor(bIsValid ? FSlateColor(FLinearColor(255, 0, 0)) : FSlateColor(FLinearColor(255, 255, 255)))
@@ -52,6 +122,10 @@ public:
 protected:
     TSharedPtr<FConsoleCommand> Item;
 	bool bIsValid;
+	int32 Id;
+
+	FOnDrop OnDropDelegate;
+	FOnDragDetected OnDragDetectedDelegate;
 };
 
 

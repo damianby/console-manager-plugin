@@ -87,6 +87,8 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 		.OnContextMenuOpening_Raw(this, &SConsoleManagerSlateWidget::GetListViewContextMenu);
 		
 
+
+
 	GroupsScrollBox = SNew(SScrollBox);
 
 	CommandsScrollBox = SNew(SScrollBox);
@@ -365,13 +367,54 @@ FReply SConsoleManagerSlateWidget::OnSelectCommandClicked(int Id)
 	return FReply::Handled();
 }
 
+
+
+
 TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedPtr<FConsoleCommand> Item, const TSharedRef<STableViewBase>& OwnerTable)
 {
 	Item->Refresh();
 
+	//OwnerTable->scrolloff
+
+
+	TSharedRef<SConsoleCommandListRow> Row = SNew(SConsoleCommandListRow, OwnerTable).Item(Item).bIsValid(Item->IsValid);
+
+	Row->SetOnDragDetected(FOnDragDetected::CreateLambda(
+		[=](const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
+			TSharedRef<DragNDrop> DragOp = MakeShareable(new DragNDrop);
+
+			DragOp->Manager = CommandsManager.Pin();
+			DragOp->Command = Item;
+			DragOp->Id = CommandsManager.Pin()->GetCurrentCommandsSharedPtr_Cache().Find(Item);
+
+
+			return FReply::Handled().BeginDragDrop(DragOp);
+		}
+	));
+
+	Row->SetOnDrop(FOnDrop::CreateLambda(
+		[=](const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent)
+		{
+
+			UE_LOG(LogTemp, Warning, TEXT("Dropped on %s with ID: %d"), *Item->Command, CommandsManager.Pin()->GetCurrentCommandsSharedPtr_Cache().Find(Item))
+
+			return FReply::Unhandled();
+		}
+	));
+
+	Row->SetOnMouseButtonDown(FPointerEventHandler::CreateLambda(
+		[=](const FGeometry& Geometry, const FPointerEvent& MouseEvent)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Mouse btn down"));
+			
+			return FReply::Handled().DetectDrag(SharedThis(this), FKey(""));
+
+		}
+	));
+
 	
 
-	return SNew(SConsoleCommandListRow, OwnerTable).Item(Item).bIsValid(Item->IsValid);
+	return Row;
 }
 
 void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
