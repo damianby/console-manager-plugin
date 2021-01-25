@@ -385,7 +385,20 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 
 			DragOp->Manager = CommandsManager.Pin();
 			DragOp->Command = Item;
+
+			auto t1 = std::chrono::high_resolution_clock::now();
+		
+		
+
 			DragOp->Id = CommandsManager.Pin()->GetCurrentCommandsSharedPtr_Cache().Find(Item);
+
+			auto t2 = std::chrono::high_resolution_clock::now();
+
+			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+
+			
+			uint64 = duration;
+			FString Time;
 
 
 			return FReply::Handled().BeginDragDrop(DragOp);
