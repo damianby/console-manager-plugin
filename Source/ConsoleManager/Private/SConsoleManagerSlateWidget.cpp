@@ -888,10 +888,21 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 
 				FNewMenuDelegate Delegate;
 
-				Delegate.BindLambda([=](FMenuBuilder& SubMenuBuilder) {
+				Delegate.BindLambda([=](FMenuBuilder& SubMenuBuilder) 
+				{
+
 					FUIAction Action_AddCommandToNewGroup(
-						FExecuteAction::CreateRaw(this, &SConsoleManagerSlateWidget::RemoveGroup, 0),
-						FCanExecuteAction()
+					FExecuteAction::CreateLambda(
+						[=]() 
+						{
+							FCommandGroup* NewGroup = HandleNewGroup();
+
+							if (NewGroup)
+							{
+								CommandsManager.Pin()->AddCommandsToGroup(NewGroup, SelectedCommands);
+							}
+						}),
+					FCanExecuteAction()
 					);
 
 					SubMenuBuilder.AddMenuEntry
@@ -915,13 +926,24 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 							FText::FromString(CommandGroups[i].Name),
 							FText::GetEmpty(),
 							FSlateIcon(),
-							FUIAction(FExecuteAction::CreateLambda([=]() {UE_LOG(LogTemp, Warning, TEXT("Selected %s"), *CommandGroups[i].Name); }), FCanExecuteAction()),
+							FUIAction(FExecuteAction::CreateLambda(
+								[=]() 
+								{
+									FCommandGroup* FoundGroup = CommandsManager.Pin()->GetGroupById(CommandGroups[i].Id);
+									if (FoundGroup)
+									{
+										CommandsManager.Pin()->AddCommandsToGroup(FoundGroup, SelectedCommands);
+										UE_LOG(LogTemp, Warning, TEXT("Add %d commands to %s"), SelectedCommands.Num(), *CommandGroups[i].Name);
+									}
+									
+								}), 
+							FCanExecuteAction()),
 							NAME_None,
 							EUserInterfaceActionType::Button
 						);
 					}
 
-					});
+				});
 
 				MenuBuilder.AddSubMenu(FText::FromString("Add To Group"), FText::FromString("Add to existing or create new group"), Delegate);
 
