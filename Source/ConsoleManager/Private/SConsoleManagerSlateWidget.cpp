@@ -7,6 +7,7 @@
 
 #include "Widgets/Layout/SScrollBox.h"
 
+#include "Widgets/Layout/SGridPanel.h"
 #include "Dialogs/Dialogs.h"
 #include "Dialogs/CustomDialog.h"
 
@@ -598,6 +599,63 @@ void SConsoleManagerSlateWidget::EditGroup(int Id)
 	//SGenericDialogWidget::OpenDialog(LOCTEXT("EditGroupDialog_Title", "Edit Group"), Widget, SGenericDialogWidget::FArguments(), true);
 }
 
+bool SConsoleManagerSlateWidget::OpenExecMultipleDialog(TArray<TSharedPtr<FConsoleCommand>> Commands)
+{
+	TSharedPtr<SWidget> WidgetToFocus;
+
+	TSharedRef<SGridPanel> GridPanel = SNew(SGridPanel);
+
+	for (int i = 0; i < Commands.Num(); i++)
+	{
+		const auto& SelectedCommand = Commands[i];
+
+		TSharedRef<SEditableTextBox> EditText =
+			SNew(SEditableTextBox)
+			.Text(FText::FromString(SelectedCommand->CurrentValue))
+			.MinDesiredWidth(100);
+
+
+		if (i == 0)
+		{
+			WidgetToFocus = EditText;
+		}
+
+		GridPanel->AddSlot(0, i)
+			.Padding(FMargin(0.0f, 5.0f, 10.0f, 5.f))
+			.VAlign(EVerticalAlignment::VAlign_Center)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(SelectedCommand->Name))
+			];
+
+		GridPanel->AddSlot(1, i)
+			.Padding(FMargin(0.0f, 5.0f, 0.0f, 5.0f))
+			.VAlign(EVerticalAlignment::VAlign_Center)
+			[
+				EditText
+			];
+	}
+
+	TSharedRef<SCustomDialog> ExecuteCommands = SNew(SCustomDialog)
+		.Title(FText(LOCTEXT("ExecuteCommands_Title", "Execute Multiple")))
+		.DialogContent(GridPanel)
+		.Buttons({
+			SCustomDialog::FButton(LOCTEXT("OK", "OK"), FSimpleDelegate()),
+			SCustomDialog::FButton(LOCTEXT("Cancel", "Cancel"), FSimpleDelegate())
+			});
+
+	ExecuteCommands->SetWidgetToFocusOnActivate(WidgetToFocus);
+
+	// returns 0 when OK is pressed, 1 when Cancel is pressed, -1 if the window is closed
+	const int ButtonPressed = ExecuteCommands->ShowModal();
+	if (ButtonPressed == 0)
+	{
+		return true;
+	}
+
+	return false;
+}
+
 TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 {
 	
@@ -650,40 +708,8 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 
 							if (bIsAllCommands)
 							{
-								TSharedRef<SVerticalBox> ExecuteWindow = SNew(SVerticalBox);
 
-								for (const auto& SelectedCommand : SelectedCommands)
-								{
-									ExecuteWindow->AddSlot()
-										[
-											SNew(SHorizontalBox)
-											+ SHorizontalBox::Slot()
-											.AutoWidth()
-											[
-												SNew(STextBlock)
-												.Text(FText::FromString(SelectedCommand->Name))
-											]
-											+ SHorizontalBox::Slot()
-											.FillWidth(1.0f)
-											[
-												SNew(SEditableTextBox)
-												.Text(FText::FromString(SelectedCommand->CurrentValue))
-											]
-										];
-								}
-
-								TSharedRef<SCustomDialog> EditDialog = SNew(SCustomDialog)
-									.Title(FText(LOCTEXT("EditGroupDialog_Title", "Edit Group")))
-									.DialogContent(ExecuteWindow)
-									.Buttons({
-										SCustomDialog::FButton(LOCTEXT("OK", "OK"), FSimpleDelegate()),
-										SCustomDialog::FButton(LOCTEXT("Cancel", "Cancel"), FSimpleDelegate())
-										});
-
-
-
-								// returns 0 when OK is pressed, 1 when Cancel is pressed, -1 if the window is closed
-								const int ButtonPressed = EditDialog->ShowModal();
+								bool ShouldExecute = OpenExecMultipleDialog(SelectedCommands);
 							}
 							else
 							{

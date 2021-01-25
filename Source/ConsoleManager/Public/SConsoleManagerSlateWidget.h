@@ -114,6 +114,8 @@ private:
 	void DuplicateGroup(int Id);
 	void EditGroup(int Id);
 
+	bool OpenExecMultipleDialog(TArray<TSharedPtr<FConsoleCommand>> Commands);
+
 
 	TSharedPtr<SWidget> GetListViewContextMenu();
 
