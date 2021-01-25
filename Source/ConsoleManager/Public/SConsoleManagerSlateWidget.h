@@ -119,6 +119,8 @@ private:
 
 	TSharedPtr<SWidget> GetListViewContextMenu();
 
+	void HandleNewGroup();
+
 	bool bIsAllCommands = false;
 
 };
