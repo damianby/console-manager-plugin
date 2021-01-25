@@ -106,10 +106,12 @@ void FCommandsManager::SetActiveAllCommands()
 	SetCurrentCommands(AllCommands);
 }
 
-void FCommandsManager::AddNewGroup(const FString& Name)
+FCommandGroup* FCommandsManager::AddNewGroup(const FString& Name)
 {
 	FCommandGroup& NewGroup = CommandGroups.AddDefaulted_GetRef();
 	NewGroup.Name = Name;
+
+	return &NewGroup;
 }
 
 void FCommandsManager::AddCommandsToCurrentGroup(TArray<TSharedPtr<FConsoleCommand>> Commands)

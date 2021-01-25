@@ -43,7 +43,7 @@ public:
 	void SetActiveHistory();
 	void SetActiveAllCommands();
 
-	void AddNewGroup(const FString& Name);
+	FCommandGroup* AddNewGroup(const FString& Name);
 
 	void AddCommandsToCurrentGroup(TArray<TSharedPtr<FConsoleCommand>> Commands);
 	void AddCommandsToGroup(FCommandGroup* Group, TArray<TSharedPtr<FConsoleCommand>> Commands);
