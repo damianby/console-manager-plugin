@@ -1021,16 +1021,42 @@ FCommandGroup* SConsoleManagerSlateWidget::HandleNewGroup()
 }
 
 
+
+
 TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName& ColumnName)
 {
 	
 	if (ColumnName.IsEqual(FName(TEXT("Command"))))
 	{
-		return SNew(STextBlock)
+
+		TSharedRef<SBorder> Border =
+			SNew(SBorder)
+			.HAlign(EHorizontalAlignment::HAlign_Fill)
+			.BorderBackgroundColor(FSlateColor(FLinearColor(0, 255, 0)))
+			//.OnMouseButtonDown(FPointerEventHandler::CreateLambda(
+			//	[=](const FGeometry& Geometry, const FPointerEvent& MouseEvent)
+			//	{
+			//		FReply Reply = FReply::Handled();
+
+			//		TSharedPtr<DragNDrop> Drag = TSharedPtr<DragNDrop>(new DragNDrop);
+
+			//		UE_LOG(LogTemp, Warning, TEXT("Mouse btn down"));
+			//		
+			//		return Reply.BeginDragDrop(Drag.ToSharedRef());
+
+
+			//	}
+			//))
+			[
+				SNew(STextBlock)
 				.Text(FText::FromString(Item->Name))
 				.ToolTipText(FText::FromString(Item->GetTooltip()))
 				.AutoWrapText(true)
-				.WrappingPolicy(ETextWrappingPolicy::AllowPerCharacterWrapping);
+				.WrappingPolicy(ETextWrappingPolicy::AllowPerCharacterWrapping)
+			];
+
+
+		return Border;
 
 			
 	}
@@ -1051,11 +1077,10 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 
 	if (ColumnName.IsEqual(FName(TEXT("Current Value"))))
 	{
-
-		TSharedRef<SEditableText> EditBox =
-			SNew(SEditableText)
+		TSharedRef<SEditableTextBox> EditBox =
+			SNew(SEditableTextBox)
 			.HintText(FText::FromString(Item->CurrentValue))
-			.OnIsTypedCharValid(FOnIsTypedCharValid::CreateLambda(
+			/*.OnIsTypedCharValid(FOnIsTypedCharValid::CreateLambda(
 				[=](TCHAR Char) {
 					if (Item->Type.Equals("Int"))
 					{
@@ -1063,7 +1088,7 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 					}
 					return true;
 				}
-			))
+			))*/
 			.Text(FText::FromString(Item->CurrentValue))
 			.ClearKeyboardFocusOnCommit(false)
 			.AllowContextMenu(false)
