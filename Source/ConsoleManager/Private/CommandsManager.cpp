@@ -112,6 +112,39 @@ void FCommandsManager::AddNewGroup(const FString& Name)
 	NewGroup.Name = Name;
 }
 
+void FCommandsManager::AddCommandsToCurrentGroup(TArray<TSharedPtr<FConsoleCommand>> Commands)
+{
+	AddCommandsToGroup(CurrentGroup, Commands);
+}
+
+void FCommandsManager::AddCommandsToGroup(FCommandGroup* Group, TArray<TSharedPtr<FConsoleCommand>> Commands)
+{
+	check(Group);
+
+	if (Group->bIsEditable)
+	{
+		for (const auto& Command : Commands)
+		{
+			Group->Commands.Add(*Command.Get());
+			FConsoleCommand& NewCommand = Group->Commands.Last();
+
+			if (NewCommand.Value.IsEmpty())
+			{
+				NewCommand.Value = NewCommand.CurrentValue;
+			}
+		}
+	}
+}
+
+FCommandGroup* FCommandsManager::GetGroupById(const FString& Id)
+{
+	FCommandGroup* FoundGroup = CommandGroups.FindByKey<FString>(Id);
+
+	check(FoundGroup);
+
+	return FoundGroup;
+}
+
 const FConsoleCommand& FCommandsManager::GetConsoleCommand(int Id)
 {
 	return CurrentGroup->Commands[Id];

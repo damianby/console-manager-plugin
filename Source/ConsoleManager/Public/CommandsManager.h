@@ -45,6 +45,11 @@ public:
 
 	void AddNewGroup(const FString& Name);
 
+	void AddCommandsToCurrentGroup(TArray<TSharedPtr<FConsoleCommand>> Commands);
+	void AddCommandsToGroup(FCommandGroup* Group, TArray<TSharedPtr<FConsoleCommand>> Commands);
+
+	FCommandGroup* GetGroupById(const FString& Id);
+
 	const FConsoleCommand& GetConsoleCommand(int Id);
 
 	bool ExecuteCurrentCommand(int Id);
