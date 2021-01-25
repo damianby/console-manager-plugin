@@ -694,8 +694,15 @@ bool SConsoleManagerSlateWidget::OpenExecMultipleDialog(TArray<TSharedPtr<FConso
 			];
 	}
 
+	FText ExecuteTitle = FText::FromString("Execute");
+
+	if (Commands.Num() > 1)
+	{
+		ExecuteTitle = FText::FromString("Execute Mutliple");
+	}
+
 	TSharedRef<SCustomDialog> ExecuteCommands = SNew(SCustomDialog)
-		.Title(FText(LOCTEXT("ExecuteCommands_Title", "Execute Multiple")))
+		.Title(ExecuteTitle)
 		.DialogContent(GridPanel)
 		.Buttons({
 			SCustomDialog::FButton(LOCTEXT("OK", "OK"), FSimpleDelegate()),
