@@ -193,7 +193,7 @@ private:
 
 	TSharedPtr<SWidget> GetListViewContextMenu();
 
-	void HandleNewGroup();
+	FCommandGroup* HandleNewGroup();
 
 	bool bIsAllCommands = false;
 

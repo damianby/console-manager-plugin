@@ -960,7 +960,7 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 	return SNullWidget::NullWidget;
 }
 
-void SConsoleManagerSlateWidget::HandleNewGroup()
+FCommandGroup* SConsoleManagerSlateWidget::HandleNewGroup()
 {
 	const TArray<FString> Groups = CommandsManager.Pin()->GetGroupList();
 
@@ -1005,15 +1005,19 @@ void SConsoleManagerSlateWidget::HandleNewGroup()
 
 	// returns 0 when OK is pressed, 1 when Cancel is pressed, -1 if the window is closed
 	const int ButtonPressed = NewGroupDialog->ShowModal();
+	
+	FCommandGroup* NewGroup = nullptr;
 
 	switch (ButtonPressed)
 	{
 	case 0:
-		CommandsManager.Pin()->AddNewGroup(Widget->GetText().ToString());
+		NewGroup = CommandsManager.Pin()->AddNewGroup(Widget->GetText().ToString());
 		break;
 	}
 
 	GenerateGroupsScrollBox();
+
+	return NewGroup;
 }
 
 
