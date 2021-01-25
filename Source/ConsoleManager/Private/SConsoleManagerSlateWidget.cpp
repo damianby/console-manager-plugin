@@ -608,7 +608,8 @@ void SConsoleManagerSlateWidget::EditGroup(int Id)
 
 	TSharedRef<SEditableTextBox> Widget =
 		SNew(SEditableTextBox)
-		.HintText(FText::FromString("New Name"))
+		.SelectAllTextWhenFocused(true)
+		.HintText(FText::FromString("New name"))
 		.Text(FText::FromString(Groups[Id]));
 
 	TSharedRef<SWidget> ContentWidget =
@@ -642,7 +643,7 @@ void SConsoleManagerSlateWidget::EditGroup(int Id)
 			SCustomDialog::FButton(LOCTEXT("Cancel", "Cancel"), FSimpleDelegate())
 			});
 
-	
+	EditDialog->SetWidgetToFocusOnActivate(Widget);
 
 	// returns 0 when OK is pressed, 1 when Cancel is pressed, -1 if the window is closed
 	const int ButtonPressed = EditDialog->ShowModal();
@@ -730,7 +731,7 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 	TArray<TSharedPtr<FConsoleCommand>> SelectedCommands;
 	CommandsListView->GetSelectedItems(SelectedCommands);
 
-	
+
 	// If we right clicked on listview and not any entry
 	if (SelectedCommands.Num() == 0 && Group.bIsEditable)
 	{
@@ -935,7 +936,7 @@ void SConsoleManagerSlateWidget::HandleNewGroup()
 			SCustomDialog::FButton(LOCTEXT("Cancel", "Cancel"), FSimpleDelegate())
 			});
 
-
+	NewGroupDialog->SetWidgetToFocusOnActivate(Widget);
 
 	// returns 0 when OK is pressed, 1 when Cancel is pressed, -1 if the window is closed
 	const int ButtonPressed = NewGroupDialog->ShowModal();
