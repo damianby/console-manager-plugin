@@ -82,16 +82,7 @@ const TArray<FString> FCommandsManager::GetGroupList()
 
 void FCommandsManager::SetActiveGroup(int NewId)
 {
-	//index here should always be valid
-	//check(!(NewId > 0 && NewId < CommandGroups.Num()));
-
-	//const bool bValidIndex = NewId > 0 && NewId < CommandGroups.Num();
-	//if (!bValidIndex)
-	//{
-	//	return;
-	//}
-	
-	
+	check(CommandGroups.IsValidIndex(NewId));
 	
 	SetCurrentCommands(CommandGroups[NewId]);
 }
