@@ -186,7 +186,7 @@ void FCommandsManager::RemoveGroup(int Id)
 	if (CurrentGroup == &CommandGroups[Id])
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Its the same!"));
-		SetCurrentCommands(ConsoleHistory);
+		SetCurrentCommands(AllCommands);
 	}
 
 	CommandGroups.RemoveAt(Id, 1, false);
