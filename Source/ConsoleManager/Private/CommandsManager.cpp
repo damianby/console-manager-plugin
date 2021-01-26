@@ -96,6 +96,30 @@ void FCommandsManager::SetActiveGroup(int NewId)
 	SetCurrentCommands(CommandGroups[NewId]);
 }
 
+void FCommandsManager::ReorderCommandInCurrentGroup(int32 CurrentId, int32 NewId)
+{
+	check(CurrentGroup);
+
+	if (CurrentId == NewId)
+	{
+		return;
+	}
+
+	TArray<FConsoleCommand>& Commands = CurrentGroup->Commands;
+	if (NewId > CurrentId)
+	{
+		//Initialize after insert to avoid crash with relocalization
+		Commands.InsertZeroed_GetRef(NewId) = Commands[CurrentId];
+		Commands.RemoveAt(CurrentId);
+	}
+	else
+	{
+		FConsoleCommand Cpy = Commands[CurrentId];
+		Commands.RemoveAt(CurrentId, 1, false);
+		Commands.Insert(Cpy, NewId);
+	}
+}
+
 void FCommandsManager::SetActiveHistory()
 {
 	SetCurrentCommands(ConsoleHistory);

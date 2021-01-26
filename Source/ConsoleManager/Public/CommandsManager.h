@@ -40,6 +40,8 @@ public:
 
 	void SetActiveGroup(int NewId);
 
+	void ReorderCommandInCurrentGroup(int32 CurrentId, int32 NewId);
+
 	void SetActiveHistory();
 	void SetActiveAllCommands();
 

@@ -35,6 +35,11 @@ class SConsoleCommandListRow : public SMultiColumnTableRow<TSharedPtr<FConsoleCo
 public:
 
     SLATE_BEGIN_ARGS(SConsoleCommandListRow) {}
+
+		SLATE_EVENT(FOnDragDetected, OnDragDetected)
+		SLATE_EVENT(FOnTableRowDragEnter, OnDragEnter)
+		SLATE_EVENT(FOnTableRowDragLeave, OnDragLeave)
+		SLATE_EVENT(FOnTableRowDrop, OnDrop)
 		SLATE_ARGUMENT(TSharedPtr<FConsoleCommand>, Item)
 		SLATE_ARGUMENT(bool, bIsValid)
 	//	SLATE_ARGUMENT(int32, Id)
@@ -45,73 +50,45 @@ public:
 
 	void SetOnDragDetected(FOnDragDetected Delegate)
 	{
-		OnDragDetectedDelegate = Delegate;
+		OnDragDetected_Handler = Delegate;
 	}
 
-	void SetOnDrop(FOnDrop Delegate)
+	void SetOnTableRowDrop(FOnTableRowDrop Delegate)
 	{
-		OnDropDelegate = Delegate;
+		OnDrop_Handler = Delegate;
 	}
 
-	virtual FReply OnDrop(const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent) override
+	void SetOnCanAcceptDrop(FOnCanAcceptDrop Delegate)
 	{
-		if (OnDropDelegate.IsBound())
-		{
-			return OnDropDelegate.Execute(MyGeometry, DragDropEvent);
-		}
-		return FReply::Unhandled();
+		OnCanAcceptDrop = Delegate;
 	}
 
-	virtual void OnDragEnter(const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent) override
+	void SetOnAcceptDrop(FOnAcceptDrop Delegate)
 	{
-		TSharedPtr<DragNDrop> DragConnectionOp = DragDropEvent.GetOperationAs<DragNDrop>();
-
-		if (DragConnectionOp.IsValid())
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Dragged obj: %s with ID: %d ||| Over: %s"), *DragConnectionOp->Command->Name, DragConnectionOp->Id, *Item->Name);
-		}
-
-		
-		
-		//SetOnMouseButtonDown
-
-		UE_LOG(LogTemp, Warning, TEXT(""));
-		
-	}
-
-	virtual FReply OnDragDetected(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
-	{
-		if (OnDragDetectedDelegate.IsBound())
-		{
-			return OnDragDetectedDelegate.Execute(MyGeometry, MouseEvent);
-		}
-
-		return FReply::Unhandled();
-
-
-		//UE_LOG(LogTemp, Warning, TEXT("Drag DETECTED"));
-
-		//TSharedRef<DragNDrop> DragOp = MakeShareable(new DragNDrop);
-
-		////DragOp->Manager = 
-
-
-		//return FReply::Handled().BeginDragDrop(DragOp);
+		OnAcceptDrop = Delegate;
 	}
 
     void Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView)
     {
         Item = InArgs._Item;
 		bIsValid = InArgs._bIsValid;
-		//Id = InArgs._Id;
+		
+		//static FTableRowStyle NewStyle = FCoreStyle::Get().GetWidgetStyle<FTableRowStyle>("TableView.Row");
+		//NewStyle.DropIndicator_Onto = NewStyle.;
 
-		//SNew(SBorder)
-		//	.BorderBackgroundColor(bIsValid ? FSlateColor(FLinearColor(255, 0, 0)) : FSlateColor(FLinearColor(255, 255, 255)))
-		//	[
+		FTableRowArgs Args;
+		//Args.Style(&NewStyle);
 
-		//	];
-		SMultiColumnTableRow<TSharedPtr<FConsoleCommand> >::Construct(FSuperRowType::FArguments(), InOwnerTableView);
+		SMultiColumnTableRow<TSharedPtr<FConsoleCommand> >::Construct(Args, InOwnerTableView);
 
+		OnCanAcceptDrop = FOnCanAcceptDrop::CreateLambda(
+			[=](const FDragDropEvent& DragDrop, EItemDropZone Zone, TSharedPtr<FConsoleCommand> Item)
+			{
+				TOptional<EItemDropZone> DropZone(Zone);
+				
+				return DropZone;
+			}
+		);
     }
 
     /**
@@ -125,9 +102,6 @@ protected:
     TSharedPtr<FConsoleCommand> Item;
 	bool bIsValid;
 	int32 Id;
-
-	FOnDrop OnDropDelegate;
-	FOnDragDetected OnDragDetectedDelegate;
 };
 
 

@@ -378,6 +378,12 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 
 
 	TSharedRef<SConsoleCommandListRow> Row = SNew(SConsoleCommandListRow, OwnerTable).Item(Item).bIsValid(Item->IsValid);
+	
+	//Do not allow to reorder elements in all commands
+	if (bIsAllCommands)
+	{
+		return Row;
+	}
 
 	Row->SetOnDragDetected(FOnDragDetected::CreateLambda(
 		[=](const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
@@ -394,34 +400,46 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 
 			auto t2 = std::chrono::high_resolution_clock::now();
 
-			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+			auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count();
 
 			
-			uint64 = duration;
-			FString Time;
+			int64 Time = duration;
+			
+			UE_LOG(LogTemp, Warning, TEXT("Time taken: %lld"), Time);
+
+			
 
 
 			return FReply::Handled().BeginDragDrop(DragOp);
 		}
 	));
 
-	Row->SetOnDrop(FOnDrop::CreateLambda(
-		[=](const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent)
+
+	Row->SetOnAcceptDrop(STableRow<TSharedPtr<FConsoleCommand>>::FOnAcceptDrop::CreateLambda(
+		[=](const FDragDropEvent& DragDropEvent, EItemDropZone Zone, TSharedPtr<FConsoleCommand> Item)
 		{
 
-			UE_LOG(LogTemp, Warning, TEXT("Dropped on %s with ID: %d"), *Item->Command, CommandsManager.Pin()->GetCurrentCommandsSharedPtr_Cache().Find(Item))
+			TSharedPtr<DragNDrop> DragConnectionOp = DragDropEvent.GetOperationAs<DragNDrop>();
 
-			return FReply::Unhandled();
-		}
-	));
+			if (DragConnectionOp.IsValid())
+			{
+				CommandsManager.Pin()->GetCurrentCommands();
 
-	Row->SetOnMouseButtonDown(FPointerEventHandler::CreateLambda(
-		[=](const FGeometry& Geometry, const FPointerEvent& MouseEvent)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Mouse btn down"));
-			
-			return FReply::Handled().DetectDrag(SharedThis(this), FKey(""));
+				int32 NewPosition = CommandsManager.Pin()->GetCurrentCommandsSharedPtr_Cache().Find(Item);
 
+				if (Zone != EItemDropZone::AboveItem)
+				{
+					NewPosition += 1;
+				}
+
+				CommandsManager.Pin()->ReorderCommandInCurrentGroup(DragConnectionOp->Id, NewPosition);
+
+				GenerateCommandsScrollBox();
+
+				UE_LOG(LogTemp, Warning, TEXT("Dragged obj: %s with ID: %d ||| Over: %s"), *DragConnectionOp->Command->Name, DragConnectionOp->Id, *Item->Name);
+			}
+
+			return FReply::Handled();
 		}
 	));
 
@@ -562,6 +580,7 @@ void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
 
 void SConsoleManagerSlateWidget::GenerateCommandsScrollBox()
 {
+	CommandsListView->ClearSelection();
 	if (bIsAllCommands)
 	{
 		CommandsListView->GetHeaderRow()->RemoveColumn("Value");
@@ -780,8 +799,6 @@ bool SConsoleManagerSlateWidget::OpenExecMultipleDialog(TArray<TSharedPtr<FConso
 
 TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 {
-	
-
 	const FCommandGroup& Group = CommandsManager.Pin()->GetCurrentCommandGroup();
 
 	TArray<TSharedPtr<FConsoleCommand>> SelectedCommands;
