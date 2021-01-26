@@ -42,6 +42,7 @@ public:
 		SLATE_EVENT(FOnTableRowDrop, OnDrop)
 		SLATE_ARGUMENT(TSharedPtr<FConsoleCommand>, Item)
 		SLATE_ARGUMENT(bool, bIsValid)
+		SLATE_ARGUMENT(bool, bIsEditable)
 	//	SLATE_ARGUMENT(int32, Id)
     SLATE_END_ARGS()
 
@@ -72,6 +73,7 @@ public:
     {
         Item = InArgs._Item;
 		bIsValid = InArgs._bIsValid;
+		bIsEditable = InArgs._bIsEditable;
 		
 		//static FTableRowStyle NewStyle = FCoreStyle::Get().GetWidgetStyle<FTableRowStyle>("TableView.Row");
 		//NewStyle.DropIndicator_Onto = NewStyle.;
@@ -101,6 +103,7 @@ public:
 protected:
     TSharedPtr<FConsoleCommand> Item;
 	bool bIsValid;
+	bool bIsEditable;
 	int32 Id;
 };
 

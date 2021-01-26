@@ -376,11 +376,12 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 
 	//OwnerTable->scrolloff
 
+	const FCommandGroup& CurrentGroup = CommandsManager.Pin()->GetCurrentCommandGroup();
 
-	TSharedRef<SConsoleCommandListRow> Row = SNew(SConsoleCommandListRow, OwnerTable).Item(Item).bIsValid(Item->IsValid);
+	TSharedRef<SConsoleCommandListRow> Row = SNew(SConsoleCommandListRow, OwnerTable).Item(Item).bIsValid(Item->IsValid).bIsEditable(CurrentGroup.bIsEditable);
 	
 	//Do not allow to reorder elements in all commands
-	if (bIsAllCommands)
+	if (!CurrentGroup.bIsEditable)
 	{
 		return Row;
 	}
@@ -394,7 +395,8 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 
 			auto t1 = std::chrono::high_resolution_clock::now();
 		
-		
+			CommandsListView->ClearSelection();
+			CommandsListView->SetSelection(Item, ESelectInfo::Direct);
 
 			DragOp->Id = CommandsManager.Pin()->GetCurrentCommandsSharedPtr_Cache().Find(Item);
 
