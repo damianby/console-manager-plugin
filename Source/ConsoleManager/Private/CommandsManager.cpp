@@ -5,6 +5,9 @@
 
 #include "Misc/MessageDialog.h"
 
+#include "Widgets/Notifications/SNotificationList.h"
+#include "Framework/Notifications/NotificationManager.h"
+
 #define LOCTEXT_NAMESPACE "FConsoleManagerModule"
 
 FCommandsManager::FCommandsManager()
@@ -111,6 +114,30 @@ void FCommandsManager::ReorderCommandInCurrentGroup(int32 CurrentId, int32 NewId
 	}
 }
 
+void FCommandsManager::DuplicateCommand(int32 Id)
+{
+	FConsoleCommand Cpy = CurrentGroup->Commands[Id];
+	CurrentGroup->Commands.Insert(Cpy, Id + 1);
+
+}
+
+void FCommandsManager::RemoveCommands(TArray<int32> Ids)
+{
+	Ids.Sort();
+
+	TArray<FConsoleCommand>& Commands = CurrentGroup->Commands;
+
+	UE_LOG(LogTemp, Warning, TEXT("Commands num: %d"), Commands.Num());
+	UE_LOG(LogTemp, Warning, TEXT("IDS num: %d"), Ids.Num());
+
+
+	//Start removing from end of array disallowing shrinking
+	for (int i = Ids.Num() - 1; i >= 0; i--)
+	{
+		Commands.RemoveAt(Ids[i], 1, false);
+	}
+}
+
 void FCommandsManager::SetActiveHistory()
 {
 	SetCurrentCommands(ConsoleHistory);
@@ -145,12 +172,19 @@ void FCommandsManager::AddCommandsToGroup(FCommandGroup* Group, TArray<TSharedPt
 			Group->Commands.Add(*Command.Get());
 			FConsoleCommand& NewCommand = Group->Commands.Last();
 
-			if (NewCommand.Value.IsEmpty())
+			if (NewCommand.GetValue().IsEmpty())
 			{
-				NewCommand.Value = NewCommand.CurrentValue;
+				NewCommand.SetValue(NewCommand.GetCurrentValue());
 			}
 		}
 	}
+}
+
+void FCommandsManager::ReplaceCommandInCurrentGroup(int32 Id, FConsoleCommand& NewCommand)
+{
+	check(CurrentGroup->Commands.IsValidIndex(Id));
+
+	CurrentGroup->Commands[Id] = NewCommand;
 }
 
 FCommandGroup* FCommandsManager::GetGroupById(const FString& Id)
@@ -167,16 +201,83 @@ const FConsoleCommand& FCommandsManager::GetConsoleCommand(int Id)
 	return CurrentGroup->Commands[Id];
 }
 
-
-
-bool FCommandsManager::ExecuteCurrentCommand(int Id)
+bool FCommandsManager::ExecuteCommand(FConsoleCommand& Command)
 {
-	return Execute(CurrentGroup->Commands[Id]);
+	bool SuccessExecuting = Execute(Command);
+
+	const FString& ExecCommand = Command.GetExec();
+
+	FString ExecStateDisplay = SuccessExecuting ? FString("executed succesfully!") : FString("failed!");
+
+	FNotificationInfo Info(FText::FromString(FString::Printf(TEXT("%s %s"), *ExecCommand, *ExecStateDisplay)));
+	Info.bFireAndForget = true;
+	Info.ExpireDuration = 3.0f;
+	Info.FadeOutDuration = 2.0f;
+	Info.FadeInDuration = 0.5f;
+	Info.bUseSuccessFailIcons = true;
+	//Info.HyperlinkText = FText::FromString(FString("Go to element"));
+	//Info.Hyperlink = FSimpleDelegate::CreateLambda(
+	//	[=]()
+	//	{
+	//		UE_LOG(LogTemp, Warning, TEXT("Go to item!"));
+	//	}
+	//);
+
+	TSharedPtr<SNotificationItem> NotificationItem = FSlateNotificationManager::Get().AddNotification(Info);
+	NotificationItem->SetCompletionState(SuccessExecuting ? SNotificationItem::ECompletionState::CS_Success : SNotificationItem::ECompletionState::CS_Fail);
+	//OperationInProgressNotification = FSlateNotificationManager::Get().AddNotification(Info);
+
+
+	return SuccessExecuting;
 }
 
-bool FCommandsManager::ExecuteCommand(const FConsoleCommand& Command)
+void FCommandsManager::ExecuteMultipleCommands(TArray<TSharedPtr<FConsoleCommand>> Commands)
 {
-	return false; // Execute(Command);
+	TArray<FString> Errors;
+	for (const auto& Command : Commands)
+	{
+		if (!Execute(Command.ToSharedRef().Get()))
+		{
+			Errors.Add(Command->GetExec());
+		}
+	}
+
+	if (Errors.Num() > 0)
+	{
+
+		FString Result;
+
+		for (const FString& Error : Errors)
+		{
+			Result.Append(Error);
+			Result.Append(LINE_TERMINATOR);
+
+		}
+
+		FNotificationInfo Info(FText::FromString(FString::Printf(TEXT("%d/%d commands executed succesfully!\nCommands failed:\n%s"), Commands.Num() - Errors.Num(), Commands.Num(), *Result)));
+		Info.bFireAndForget = true;
+		Info.ExpireDuration = 3.0f;
+		Info.FadeOutDuration = 2.0f;
+		Info.FadeInDuration = 0.5f;
+		Info.bUseSuccessFailIcons = true;
+
+		TSharedPtr<SNotificationItem> NotificationItem = FSlateNotificationManager::Get().AddNotification(Info);
+		NotificationItem->SetCompletionState(SNotificationItem::ECompletionState::CS_None);
+	}
+	else
+	{
+
+		FNotificationInfo Info(FText::FromString(FString::Printf(TEXT("%d commands executed succesfully!"), Commands.Num())));
+		Info.bFireAndForget = true;
+		Info.ExpireDuration = 3.0f;
+		Info.FadeOutDuration = 2.0f;
+		Info.FadeInDuration = 0.5f;
+		Info.bUseSuccessFailIcons = true;
+
+		TSharedPtr<SNotificationItem> NotificationItem = FSlateNotificationManager::Get().AddNotification(Info);
+		NotificationItem->SetCompletionState(SNotificationItem::ECompletionState::CS_Success);
+	}
+
 }
 
 void FCommandsManager::RemoveGroup(int Id)
@@ -247,21 +348,23 @@ bool FCommandsManager::Execute(FConsoleCommand& Command)
 	//IConsoleCommandExecutor& CmdExec = IModularFeatures::Get().GetModularFeature<IConsoleCommandExecutor>("ConsoleCommandExecutor");
 
 	//CmdExec.Exec()
+	const FString& ExecCommand = Command.GetExec();
 
-	if (GEngine->Exec(GEngine->GetWorldContexts().Last().World(), *Command.Command, *GLog))
+	bool SuccessExecuting = GEngine->Exec(GEngine->GetWorldContexts().Last().World(), *ExecCommand, *GLog);
+
+	Command.SetIsValid(SuccessExecuting);
+
+	if (SuccessExecuting)
 	{
-		IConsoleManager::Get().AddConsoleHistoryEntry(TEXT(""), *Command.Command);
-		ConsoleHistory.Commands.Add(FConsoleCommand(Command.Command));
+		IConsoleManager::Get().AddConsoleHistoryEntry(TEXT(""), *ExecCommand);
+		ConsoleHistory.Commands.Add(FConsoleCommand(ExecCommand));
+	}
+	else
+	{
 
-		Command.IsValid = true;
-
-		return true;
 	}
 
-	Command.IsValid = false;
-
-	UE_LOG(LogTemp, Warning, TEXT("Wrong command! %s"), *Command.Command);
-	return false;
+	return SuccessExecuting;
 
 	//HERE Exec from FConsoleCommandExecutor
 	/*
@@ -339,7 +442,7 @@ void FCommandsManager::ValidateCommands(TArray<FConsoleCommand>& Commands)
 	{
 		if (!AllCommands.Commands.FindByKey<FString>(Command.Name))
 		{
-			Command.IsValid = false;
+			Command.SetIsValid(false);
 		}
 	}
 }

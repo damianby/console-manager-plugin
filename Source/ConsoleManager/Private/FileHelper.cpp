@@ -169,8 +169,8 @@ bool FileHelper::SaveCommandFile(const FString& Path, const TArray<FCommandGroup
 		Text.Appendf(TEXT("[%s]") LINE_TERMINATOR, *Group.Name);
 
 		for (const FConsoleCommand& Command : Group.Commands)
-		{
-			Text.Appendf(TEXT("%s") LINE_TERMINATOR, *Command.Command);
+		{	
+			Text.Appendf(TEXT("%s") LINE_TERMINATOR, *Command.GetExec());
 		}
 		//For nice formatting add terminator at end of section
 		Text.Append(LINE_TERMINATOR);
@@ -195,7 +195,7 @@ void FileHelper::PrintGroups_Debug(const TArray<FCommandGroup>& Groups)
 		int i = 1;
 		for (const FConsoleCommand& Command : Group.Commands)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("%d. %s"), i, *Command.Command);
+			UE_LOG(LogTemp, Warning, TEXT("%d. %s"), i, *Command.GetExec());
 			i++;
 		}
 	}

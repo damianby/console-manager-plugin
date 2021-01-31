@@ -30,6 +30,10 @@ public:
 };
 
 
+DECLARE_DELEGATE_RetVal_OneParam(bool, FOnExecuteCommand, TSharedPtr<FConsoleCommand>)
+DECLARE_DELEGATE_OneParam(FOnSimpleCommand, TSharedPtr<FConsoleCommand>)
+DECLARE_DELEGATE_TwoParams(FOnCommandValueEdit, TSharedPtr<FConsoleCommand>, int32)
+
 class SConsoleCommandListRow : public SMultiColumnTableRow<TSharedPtr<FConsoleCommand>>
 {
 public:
@@ -40,12 +44,15 @@ public:
 		SLATE_EVENT(FOnTableRowDragEnter, OnDragEnter)
 		SLATE_EVENT(FOnTableRowDragLeave, OnDragLeave)
 		SLATE_EVENT(FOnTableRowDrop, OnDrop)
+		SLATE_EVENT(FOnExecuteCommand, OnExecuteCommand)
+		SLATE_EVENT(FOnSimpleCommand, OnEngineValueEditing)
+		SLATE_EVENT(FOnCommandValueEdit, OnCommandValueEditing)
 		SLATE_ARGUMENT(TSharedPtr<FConsoleCommand>, Item)
 		SLATE_ARGUMENT(bool, bIsValid)
 		SLATE_ARGUMENT(bool, bIsEditable)
 	//	SLATE_ARGUMENT(int32, Id)
     SLATE_END_ARGS()
-
+			 
 
 public:
 
@@ -69,6 +76,21 @@ public:
 		OnAcceptDrop = Delegate;
 	}
 
+	void SetOnExecuteCommand(FOnExecuteCommand Delegate)
+	{
+		OnExecuteCommand = Delegate;
+	}
+
+	void SetOnEngineValueEditing(FOnSimpleCommand Delegate)
+	{
+		OnEngineValueEditing = Delegate;
+	}
+
+	void SetOnCommandValueEdit(FOnCommandValueEdit Delegate)
+	{
+		OnCommandValueEdit = Delegate;
+	}
+
     void Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView)
     {
         Item = InArgs._Item;
@@ -79,9 +101,15 @@ public:
 		//NewStyle.DropIndicator_Onto = NewStyle.;
 
 		FTableRowArgs Args;
+		Args.Padding(FMargin(0, 2.0f));
+		
+		bContainsValueColumn = InOwnerTableView->GetHeaderRow()->IsColumnGenerated("Value");
+		
 		//Args.Style(&NewStyle);
 
 		SMultiColumnTableRow<TSharedPtr<FConsoleCommand> >::Construct(Args, InOwnerTableView);
+
+		//SetBorderBackgroundColor(FLinearColor(255, 0, 0));
 
 		OnCanAcceptDrop = FOnCanAcceptDrop::CreateLambda(
 			[=](const FDragDropEvent& DragDrop, EItemDropZone Zone, TSharedPtr<FConsoleCommand> Item)
@@ -101,10 +129,18 @@ public:
     virtual TSharedRef<SWidget> GenerateWidgetForColumn(const FName& ColumnName) override;
 
 protected:
+	FOnExecuteCommand OnExecuteCommand;
+
+	FOnSimpleCommand OnEngineValueEditing;
+	FOnCommandValueEdit OnCommandValueEdit;
+
     TSharedPtr<FConsoleCommand> Item;
 	bool bIsValid;
 	bool bIsEditable;
 	int32 Id;
+
+	bool bContainsValueColumn = true;
+
 };
 
 
@@ -132,13 +168,21 @@ public:
 	/** Constructs this widget with InArgs */
 	void Construct(const FArguments& InArgs);
 
-	void RefreshListView() { CommandsListView->RebuildList(); };
+	void RefreshListView() { 
+		if (bNeedsRefresh)
+		{
+			//CommandsListView->RequestListRefresh();
+			CommandsListView->RebuildList();
+		}
+	};
 
 protected:
 	//virtual FReply OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 
 
 private:
+
+	bool bNeedsRefresh = true;
 
 	TWeakPtr<FCommandsManager> CommandsManager;
 
@@ -155,7 +199,6 @@ private:
 	void OnAddGroupButtonClicked();
 
 	FReply OnSelectGroupClicked(int Id);
-	FReply OnSelectCommandClicked(int Id);
 
 	TSharedRef< ITableRow > OnCommandsRowGenerate(TSharedPtr<FConsoleCommand> Item, const TSharedRef< STableViewBase >& OwnerTable);
 
@@ -173,7 +216,10 @@ private:
 	TSharedPtr<SWidget> GetListViewContextMenu();
 
 	FCommandGroup* HandleNewGroup();
+	void HandleNewCommands();
 
 	bool bIsAllCommands = false;
+
+	SHeaderRow::FColumn::FArguments HeaderValue = SHeaderRow::FColumn::FArguments();
 
 };

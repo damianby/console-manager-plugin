@@ -10,6 +10,8 @@
 #include "Widgets/Layout/SGridPanel.h"
 #include "Dialogs/Dialogs.h"
 #include "Dialogs/CustomDialog.h"
+#include "Widgets/Views/SListView.h"
+#include "Widgets/Input/SMultiLineEditableTextBox.h"
 
 #define LOCTEXT_NAMESPACE "FConsoleManagerModule"
 
@@ -26,26 +28,26 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 	
 
 	HeaderRow->AddColumn(SHeaderRow::Column("Command")
-		[
-			SNew(SBorder)
-			.Padding(5)
-			.Content()
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString("Command"))
-			]
-		]);
+		.DefaultLabel(FText::FromString("Command"))
+		.FillWidth(2.0f)
+		.HAlignCell(EHorizontalAlignment::HAlign_Fill)
+		.HAlignHeader(EHorizontalAlignment::HAlign_Fill)
+		.VAlignCell(EVerticalAlignment::VAlign_Center));
 
-	
 
-	HeaderRow->AddColumn(SHeaderRow::Column("Value")
-		.DefaultLabel(FText::FromString("Execute Value"))
-	);
+	HeaderValue.ColumnId("Value");
+	HeaderValue.DefaultTooltip(FText::FromString("The value with which the command will be executed"));
+	HeaderValue.DefaultLabel(FText::FromString("Execute Value"));
+	HeaderValue.HAlignCell(EHorizontalAlignment::HAlign_Fill);
+	HeaderValue.HAlignHeader(EHorizontalAlignment::HAlign_Center);
+	HeaderValue.VAlignCell(EVerticalAlignment::VAlign_Center);
+
 
 	if (InArgs._DisplayCommandValueType)
 	{
 		HeaderRow->AddColumn(SHeaderRow::Column("Type")
 			.DefaultLabel(FText::FromString("Type"))
+			.DefaultTooltip(FText::FromString("Variable Type"))
 			.HAlignCell(EHorizontalAlignment::HAlign_Center)
 			.HAlignHeader(EHorizontalAlignment::HAlign_Center)
 			.VAlignCell(EVerticalAlignment::VAlign_Center)
@@ -53,10 +55,27 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 		);
 
 	}
+	
+	FString SetByDescription = TEXT(
+		"Represents where variable was set, description below in order from lowest priority to highest:" LINE_TERMINATOR LINE_TERMINATOR
+		"Constructor:			Lowest priority (default after console variable creation)" LINE_TERMINATOR 
+		"Scalability:			From Scalability.ini (lower priority than game settings so it's easier to override partially)" LINE_TERMINATOR 
+		"GameSetting:			(in game UI or from file)" LINE_TERMINATOR 
+		"ProjectSetting:		Project settings (editor UI or from file, higher priority than game setting to allow to enforce some setting fro this project)" LINE_TERMINATOR 
+		"SystemSettingsIni:		Per project setting (ini file e.g. Engine.ini or Game.ini)" LINE_TERMINATOR 
+		"DeviceProfile:			Per device setting (e.g. specific iOS device, higher priority than per project to do device specific settings)" LINE_TERMINATOR 
+		"ConsoleVariablesIni:	Consolevariables.ini (for multiple projects)" LINE_TERMINATOR 
+		"Commandline:			A minus command e.g. -VSync (very high priority to enforce the setting for the application)" LINE_TERMINATOR 
+		"Code:					Least useful, likely a hack, maybe better to find the correct SetBy..." LINE_TERMINATOR 
+		"Console:				Editor UI or console in game or editor" 
+	);
+
+
 	if (InArgs._DisplaySetByValue)
 	{
 		HeaderRow->AddColumn(SHeaderRow::Column("SetBy")
-			.DefaultLabel(FText::FromString("SetBy"))
+			.DefaultLabel(FText::FromString("Set By"))
+			.DefaultTooltip(FText::FromString(SetByDescription))
 			.HAlignCell(EHorizontalAlignment::HAlign_Center)
 			.HAlignHeader(EHorizontalAlignment::HAlign_Center)
 			.VAlignCell(EVerticalAlignment::VAlign_Center)
@@ -65,29 +84,36 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 
 	}
 	HeaderRow->AddColumn(SHeaderRow::Column("Current Value")
-		.DefaultLabel(FText::FromString("Current Value"))
-		.HAlignCell(EHorizontalAlignment::HAlign_Center)
+		.DefaultLabel(FText::FromString("Current Engine Value"))
+		.DefaultTooltip(FText::FromString("Value that is currently set in Engine" LINE_TERMINATOR "Modifying it instantly executes command with that value!"))
+		.HAlignCell(EHorizontalAlignment::HAlign_Fill)
 		.HAlignHeader(EHorizontalAlignment::HAlign_Center)
 		.VAlignCell(EVerticalAlignment::VAlign_Center)
 	);
 		
 
-	HeaderRow->AddColumn(SHeaderRow::Column("Execute")
-		.DefaultLabel(FText::FromString(""))
-		.FixedWidth(50)
-	);
-
 
 	CommandsListView = SNew(SListView< TSharedPtr<FConsoleCommand> >)
 		.ListItemsSource(&CommandsManager.Pin()->GetCurrentCommandsSharedPtr())
-		.ItemHeight(20.0f)
+		.ItemHeight(25.0f)
 		.OnGenerateRow(this, &SConsoleManagerSlateWidget::OnCommandsRowGenerate)
 		.SelectionMode(ESelectionMode::Multi)
 		.HeaderRow(HeaderRow)
 		.OnContextMenuOpening_Raw(this, &SConsoleManagerSlateWidget::GetListViewContextMenu);
 		
 
+	//CommandsListView->SetOnEntryInitialized(SListView<TSharedPtr<FConsoleCommand>>::FOnEntryInitialized::CreateLambda(
+	//	[=](TSharedPtr<FConsoleCommand> Item, const TSharedRef<ITableRow> Row) {
 
+	//		
+	//		
+
+	//		bool IsGen = CommandsListView->GetHeaderRow()->IsColumnGenerated("Command");
+	//		FVector2D MaxSize = Row->GetRowSizeForColumn("Command");
+	//		UE_LOG(LogTemp, Warning, TEXT("%s : %f : %f"), *MaxSize.ToString(), CommandsListView->GetHeaderRow()->GetColumns()[0].GetWidth(), MaxSize.X);
+	//		//CommandsListView->GetHeaderRow()->SetColumnWidth("Command", MaxSize.X);
+
+	//	}));
 
 	GroupsScrollBox = SNew(SScrollBox);
 
@@ -205,6 +231,9 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 						CommandsManager.Pin()->SetActiveHistory();
 						GenerateCommandsScrollBox();
 						CommandsListView->ScrollToBottom();
+						
+						
+
 						UE_LOG(LogTemp, Warning, TEXT("History"));
 						return FReply::Handled();
 					}))
@@ -219,6 +248,8 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 						bIsAllCommands = true;
 						CommandsManager.Pin()->SetActiveAllCommands();
 						GenerateCommandsScrollBox();
+
+						CommandsListView->ScrollToTop();
 
 						UE_LOG(LogTemp, Warning, TEXT("All commands"));
 						return FReply::Handled();
@@ -249,20 +280,15 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 			]
 			+ SHorizontalBox::Slot()
 			.FillWidth(1)
-			.Padding(5.0f)
+			.Padding(5.0f, 5.0f, 5.0f, 0)
 			[
 				SNew(SVerticalBox)
 				+ SVerticalBox::Slot()
 				.FillHeight(1)
+				.Padding(0,0,0, 0.0f)
 				[
 					CommandsListView.ToSharedRef()
 					//CommandsScrollBox.ToSharedRef()
-				]
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				[
-					SNew(STextBlock)
-					.Text(FText::FromString("here command input"))
 				]
 			]
 		];
@@ -355,31 +381,43 @@ FReply SConsoleManagerSlateWidget::OnSelectGroupClicked(int Id)
 	return FReply::Handled();
 }
 
-FReply SConsoleManagerSlateWidget::OnSelectCommandClicked(int Id)
-{
-	const FConsoleCommand& Command = CommandsManager.Pin()->GetConsoleCommand(Id);
-
-	if (!CommandsManager.Pin()->ExecuteCurrentCommand(Id))
-	{
-		//GenerateCommandsScrollBox();
-	}
-
-	return FReply::Handled();
-}
-
-
-
 
 TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedPtr<FConsoleCommand> Item, const TSharedRef<STableViewBase>& OwnerTable)
 {
 	Item->Refresh();
 
-	//OwnerTable->scrolloff
-
 	const FCommandGroup& CurrentGroup = CommandsManager.Pin()->GetCurrentCommandGroup();
 
-	TSharedRef<SConsoleCommandListRow> Row = SNew(SConsoleCommandListRow, OwnerTable).Item(Item).bIsValid(Item->IsValid).bIsEditable(CurrentGroup.bIsEditable);
+	TSharedRef<SConsoleCommandListRow> Row = SNew(SConsoleCommandListRow, OwnerTable).Item(Item).bIsValid(Item->IsValid()).bIsEditable(CurrentGroup.bIsEditable);
+
+
+	Row->SetOnCommandValueEdit(FOnCommandValueEdit::CreateLambda(
+		[=](TSharedPtr<FConsoleCommand> Command, int32 Index)
+		{
+			CommandsManager.Pin()->ReplaceCommandInCurrentGroup(Index, Command.ToSharedRef().Get());
+		}
+	));
+
+	Row->SetOnExecuteCommand(FOnExecuteCommand::CreateLambda(
+		[=](TSharedPtr<FConsoleCommand> Command)
+		{
+			bNeedsRefresh = false;
+			bool Success = CommandsManager.Pin()->ExecuteCommand(Command.ToSharedRef().Get());
+			bNeedsRefresh = true;
+
+			return Success;
+		}
+	));
+
+	Row->SetOnEngineValueEditing(FOnSimpleCommand::CreateLambda(
+		[=](TSharedPtr<FConsoleCommand> Command)
+		{
+			CommandsListView->SetSelection(Command);
+		}
+	));
+
 	
+
 	//Do not allow to reorder elements in all commands
 	if (!CurrentGroup.bIsEditable)
 	{
@@ -388,6 +426,7 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 
 	Row->SetOnDragDetected(FOnDragDetected::CreateLambda(
 		[=](const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
+
 			TSharedRef<DragNDrop> DragOp = MakeShareable(new DragNDrop);
 
 			DragOp->Manager = CommandsManager.Pin();
@@ -410,8 +449,6 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 			UE_LOG(LogTemp, Warning, TEXT("Time taken: %lld"), Time);
 
 			
-
-
 			return FReply::Handled().BeginDragDrop(DragOp);
 		}
 	));
@@ -592,12 +629,7 @@ void SConsoleManagerSlateWidget::GenerateCommandsScrollBox()
 
 		if(!CommandsListView->GetHeaderRow()->IsColumnGenerated("Value"))
 		{
-			CommandsListView->GetHeaderRow()->InsertColumn(
-				SHeaderRow::Column("Value")
-				.DefaultLabel(FText::FromString("Execute Value"))
-				,
-				1
-			);
+			CommandsListView->GetHeaderRow()->InsertColumn(HeaderValue, 1);
 		}
 		
 	}
@@ -624,10 +656,12 @@ void SConsoleManagerSlateWidget::GenerateCommandsScrollBox()
 		}
 
 	}
-
+	
 	CommandsListView->SetListItemsSource(FilteredListView);
 	CommandsListView->RebuildList();
+	
 
+	
 
 	/*for (int i = 0; i < Commands.Num(); i++)
 	{*/
@@ -741,15 +775,19 @@ bool SConsoleManagerSlateWidget::OpenExecMultipleDialog(TArray<TSharedPtr<FConso
 
 	TSharedRef<SGridPanel> GridPanel = SNew(SGridPanel);
 
+	TArray<TSharedPtr<SEditableTextBox>> TextBoxes;
+	TextBoxes.Reserve(Commands.Num());
+
 	for (int i = 0; i < Commands.Num(); i++)
 	{
 		const auto& SelectedCommand = Commands[i];
 
 		TSharedRef<SEditableTextBox> EditText =
 			SNew(SEditableTextBox)
-			.Text(FText::FromString(SelectedCommand->CurrentValue))
+			.Text(FText::FromString(SelectedCommand->GetCurrentValue()))
 			.MinDesiredWidth(100);
 
+		TextBoxes.Add(EditText);
 
 		if (i == 0)
 		{
@@ -791,8 +829,14 @@ bool SConsoleManagerSlateWidget::OpenExecMultipleDialog(TArray<TSharedPtr<FConso
 
 	// returns 0 when OK is pressed, 1 when Cancel is pressed, -1 if the window is closed
 	const int ButtonPressed = ExecuteCommands->ShowModal();
+
 	if (ButtonPressed == 0)
 	{
+		for (int i = 0; i < Commands.Num(); i++)
+		{
+			Commands[i]->SetValue(TextBoxes[i]->GetText().ToString());
+		}
+
 		return true;
 	}
 
@@ -816,10 +860,10 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 		{
 			MenuBuilder.AddMenuEntry
 			(
-				LOCTEXT("CommandContextMenu_AddCommand", "Add new"),
+				LOCTEXT("CommandContextMenu_AddCommand", "Add New"),
 				LOCTEXT("CommandContextMenu_AddCommand_Desc", "Adds new command"),
 				FSlateIcon(),
-				FUIAction(FExecuteAction::CreateLambda([=]() { UE_LOG(LogTemp, Warning, TEXT("Add new command")); }), FCanExecuteAction()),
+				FUIAction(FExecuteAction::CreateLambda([=]() { HandleNewCommands(); }), FCanExecuteAction()),
 				NAME_None,
 				EUserInterfaceActionType::Button
 			);
@@ -847,20 +891,28 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 						[=]()
 						{
 
+							bool ShouldExecute = true;
+
 							if (bIsAllCommands)
 							{
-
-								bool ShouldExecute = OpenExecMultipleDialog(SelectedCommands);
+								ShouldExecute = OpenExecMultipleDialog(SelectedCommands);
 							}
-							else
+
+							if (ShouldExecute)
 							{
-
+								if (SelectedCommands.Num() > 1)
+								{
+									CommandsManager.Pin()->ExecuteMultipleCommands(SelectedCommands);
+								}
+								else
+								{
+									for (const auto& SelectedCommand : SelectedCommands)
+									{
+										CommandsManager.Pin()->ExecuteCommand(SelectedCommand.ToSharedRef().Get());
+									}
+								}
 							}
-
-							for (const auto& SelectedCommand : SelectedCommands)
-							{
-								CommandsManager.Pin()->ExecuteCommand(SelectedCommand.ToSharedRef().Get());
-							}
+						
 						}), FCanExecuteAction()),
 					NAME_None,
 					EUserInterfaceActionType::Button
@@ -873,37 +925,70 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 						LOCTEXT("CommandContextMenu_AddCommand", "Add New"),
 						LOCTEXT("CommandContextMenu_AddCommand_Desc", "Adds new command"),
 						FSlateIcon(),
-						FUIAction(FExecuteAction::CreateLambda([=]() { UE_LOG(LogTemp, Warning, TEXT("Add new command")); }), FCanExecuteAction()),
+						FUIAction(FExecuteAction::CreateLambda([=]() {
+
+							HandleNewCommands();
+
+							
+							}), FCanExecuteAction()),
 						NAME_None,
 						EUserInterfaceActionType::Button
 					);
 
+					if (SelectedCommands.Num() == 1)
+					{
+						FUIAction Action_DuplicateCommand(
+							FExecuteAction::CreateLambda(
+								[=]()
+								{
+									CommandsManager.Pin()->DuplicateCommand(CommandsManager.Pin()->GetCurrentCommandsSharedPtr_Cache().Find(SelectedCommands[0]));
+									GenerateCommandsScrollBox();
 
-					FUIAction Action_DuplicateGroup(
-						FExecuteAction::CreateRaw(this, &SConsoleManagerSlateWidget::DuplicateGroup, 0),
+									CommandsListView->SetSelection(SelectedCommands[0]);
+								}
+							),
+							FCanExecuteAction()
+						);
+
+						MenuBuilder.AddMenuEntry
+						(
+							LOCTEXT("GroupContextMenu_DuplicateCommand", "Duplicate"),
+							LOCTEXT("GroupContextMenu_DuplicateCommand_Desc", "Duplicate command"),
+							FSlateIcon(),
+							Action_DuplicateCommand,
+							NAME_None,
+							EUserInterfaceActionType::Button
+						);
+					}
+					
+					FUIAction Action_RemoveCommands(
+						FExecuteAction::CreateLambda(
+							[=]()
+							{
+								TArray<int32> Ids;
+
+								const TArray<TSharedPtr<FConsoleCommand>>& Commands = CommandsManager.Pin()->GetCurrentCommandsSharedPtr_Cache();
+
+								for (int i = 0; i < SelectedCommands.Num(); i++)
+								{
+									Ids.Add(Commands.Find(SelectedCommands[i]));
+									UE_LOG(LogTemp, Warning, TEXT("Id to be removed: %d"), Commands.Find(SelectedCommands[i]));
+								}
+
+								CommandsManager.Pin()->RemoveCommands(Ids);
+
+								GenerateCommandsScrollBox();
+							}
+						),
 						FCanExecuteAction()
 					);
 
 					MenuBuilder.AddMenuEntry
 					(
-						LOCTEXT("GroupContextMenu_DuplicateGroup", "Duplicate"),
-						LOCTEXT("GroupContextMenu_DuplicateGroup_Desc", "Duplicate group"),
+						LOCTEXT("GroupContextMenu_RemoveCommands", "Remove"),
+						LOCTEXT("GroupContextMenu_RemoveCommands_Desc", "Remove commands"),
 						FSlateIcon(),
-						Action_DuplicateGroup,
-						NAME_None,
-						EUserInterfaceActionType::Button
-					);
-					FUIAction Action_RemoveGroup(
-						FExecuteAction::CreateRaw(this, &SConsoleManagerSlateWidget::RemoveGroup, 0),
-						FCanExecuteAction()
-					);
-
-					MenuBuilder.AddMenuEntry
-					(
-						LOCTEXT("GroupContextMenu_RemoveGroup", "Remove"),
-						LOCTEXT("GroupContextMenu_RemoveGroup_Desc", "Remove group"),
-						FSlateIcon(),
-						Action_RemoveGroup,
+						Action_RemoveCommands,
 						NAME_None,
 						EUserInterfaceActionType::Button
 					);
@@ -1052,33 +1137,104 @@ FCommandGroup* SConsoleManagerSlateWidget::HandleNewGroup()
 	return NewGroup;
 }
 
+void SConsoleManagerSlateWidget::HandleNewCommands()
+{
+	TSharedRef<SMultiLineEditableTextBox> MultiLineEditText =
+		SNew(SMultiLineEditableTextBox)
+		.HintText(FText::FromString("New commands"))
+		.Text(FText::GetEmpty());
+
+	TSharedRef<SWidget> ContentWidget =
+		SNew(SBox)
+		.Padding(FMargin(0.f, 15.f, 0.f, 0.f))
+		.WidthOverride(250)
+		[
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+		.AutoHeight()
+		.Padding(FMargin(0.f, 0.f, 0.f, 10.f))
+		[
+			SNew(STextBlock)
+			.Text(FText::FromString(FString::Printf(TEXT("Add new commands, every line is a single command"))))
+		.AutoWrapText(true)
+		.WrappingPolicy(ETextWrappingPolicy::AllowPerCharacterWrapping)
+		]
+	+ SVerticalBox::Slot()
+		.AutoHeight()
+		[
+			MultiLineEditText
+		]
+		];
 
 
+	TSharedRef<SCustomDialog> NewCommandDialog = SNew(SCustomDialog)
+		.Title(FText(LOCTEXT("NewCommandDialog_Title", "New Commands")))
+		.DialogContent(ContentWidget)
+		.Buttons({
+			SCustomDialog::FButton(LOCTEXT("OK", "OK"), FSimpleDelegate()),
+			SCustomDialog::FButton(LOCTEXT("Cancel", "Cancel"), FSimpleDelegate())
+			});
+
+	NewCommandDialog->SetWidgetToFocusOnActivate(MultiLineEditText);
+
+	// returns 0 when OK is pressed, 1 when Cancel is pressed, -1 if the window is closed
+	const int ButtonPressed = NewCommandDialog->ShowModal();
+
+
+
+	switch (ButtonPressed)
+	{
+	case 0:
+		TArray<TSharedPtr<FConsoleCommand>> NewCommands;
+
+		TArray<FString> ParsedCommands;
+		MultiLineEditText->GetText().ToString().ParseIntoArrayLines(ParsedCommands);
+
+		for (const auto& StringCommand : ParsedCommands)
+		{
+			NewCommands.Add(MakeShareable(new FConsoleCommand(StringCommand)));
+		}
+
+		CommandsManager.Pin()->AddCommandsToCurrentGroup(NewCommands);
+		GenerateCommandsScrollBox();
+		CommandsListView->ScrollToBottom();
+		break;
+	}
+}
+
+
+#include "Widgets/Text/SRichTextBlock.h"
 
 TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName& ColumnName)
 {
 	
 	if (ColumnName.IsEqual(FName(TEXT("Command"))))
 	{
-
-		TSharedRef<SBorder> Border =
-			SNew(SBorder)
-			.HAlign(EHorizontalAlignment::HAlign_Fill)
-			.BorderBackgroundColor(FSlateColor(FLinearColor(0, 255, 0)))
-			//.OnMouseButtonDown(FPointerEventHandler::CreateLambda(
-			//	[=](const FGeometry& Geometry, const FPointerEvent& MouseEvent)
-			//	{
-			//		FReply Reply = FReply::Handled();
-
-			//		TSharedPtr<DragNDrop> Drag = TSharedPtr<DragNDrop>(new DragNDrop);
-
-			//		UE_LOG(LogTemp, Warning, TEXT("Mouse btn down"));
-			//		
-			//		return Reply.BeginDragDrop(Drag.ToSharedRef());
+		TSharedPtr<SWidget> ErrorWidget;
+		if (!Item->IsValid())
+		{
+			
+			ErrorWidget = SNew(SImage)
+				.Image(FCoreStyle::Get().GetBrush("Icons.Error"))
+				.ToolTipText(FText::FromString("This command was not found, however it doesnt mean its invalid!"));
+		}
+		else
+		{
+			ErrorWidget = SNullWidget::NullWidget;
+		}
+		
 
 
-			//	}
-			//))
+		TSharedRef<SHorizontalBox> CommandWidget =
+			SNew(SHorizontalBox)
+			
+			+SHorizontalBox::Slot()
+			.AutoWidth()
+			[
+				ErrorWidget.ToSharedRef()
+			]
+			+SHorizontalBox::Slot()
+			.FillWidth(1.0f)
 			[
 				SNew(STextBlock)
 				.Text(FText::FromString(Item->Name))
@@ -1086,15 +1242,77 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 				.AutoWrapText(true)
 				.WrappingPolicy(ETextWrappingPolicy::AllowPerCharacterWrapping)
 			];
+	
 
-
-		return Border;
-
-			
+		return CommandWidget;
+	
 	}
 	if (ColumnName.IsEqual(FName(TEXT("Value"))))
 	{
-		return SNew(STextBlock).Text(FText::FromString(Item->Value));
+		TSharedPtr<FConsoleCommand> LocalCmd = Item;
+
+		TAttribute<FSlateColor> BorderColor = TAttribute<FSlateColor>::Create(TAttribute<FSlateColor>::FGetter::CreateLambda([LocalCmd]() {
+
+			return LocalCmd->GetValue().Equals(LocalCmd->GetCurrentValue()) ? FLinearColor(0, 255,0) : FLinearColor(255,0,0);
+		}));
+
+		TAttribute<FText> ValueText = TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateLambda([LocalCmd]() {
+			return FText::FromString(LocalCmd->GetValue());
+		}));
+
+		
+
+		TSharedRef<SEditableText> EditText = SNew(SEditableText)
+		.HintText(ValueText)
+		.OnIsTypedCharValid(FOnIsTypedCharValid::CreateLambda(
+			[=](TCHAR Char) {
+				if (Item->Type.Equals("Int") || Item->Type.Equals("Float"))
+				{
+					return FString().AppendChar(Char).IsNumeric();
+				}
+				return true;
+			}
+		))
+		.Text(FText::FromString(Item->GetValue()))
+		.ClearKeyboardFocusOnCommit(false)
+		.AllowContextMenu(false)
+		.SelectAllTextWhenFocused(true)
+		.SelectAllTextOnCommit(true)
+		.RevertTextOnEscape(true)
+		.Justification(ETextJustify::Center)
+		.Text(ValueText)
+		.OnTextCommitted_Lambda
+		(
+			[=](const FText& NewText, ETextCommit::Type How) 
+			{
+				if (How == ETextCommit::Type::OnEnter)
+				{
+					Item->SetValue(NewText.ToString());
+
+					if (OnCommandValueEdit.IsBound())
+					{
+						OnCommandValueEdit.Execute(Item, IndexInList);
+
+					}
+				}
+				else if( How == ETextCommit::OnCleared)
+				{
+					
+					//EditBox->SetText(FText::FromString("elo"));
+				}
+				UE_LOG(LogTemp, Warning, TEXT("ValueEdited: %s"), *Item->GetExec());
+
+			}
+		);
+
+
+		TSharedRef<SBorder> ValueBorder = SNew(SBorder)
+			.BorderBackgroundColor(Item->ObjType == EConsoleCommandType::CVar ? BorderColor : FLinearColor(0,0,0,0))
+			[
+				EditText
+			];
+
+		return ValueBorder;
 	}
 
 	if (ColumnName.IsEqual(FName(TEXT("Type"))))
@@ -1109,60 +1327,93 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 
 	if (ColumnName.IsEqual(FName(TEXT("Current Value"))))
 	{
-		TSharedRef<SEditableTextBox> EditBox =
-			SNew(SEditableTextBox)
-			.HintText(FText::FromString(Item->CurrentValue))
-			/*.OnIsTypedCharValid(FOnIsTypedCharValid::CreateLambda(
-				[=](TCHAR Char) {
-					if (Item->Type.Equals("Int"))
-					{
-						return FString().AppendChar(Char).IsNumeric();
-					}
-					return true;
+
+		TSharedPtr<SWidget> CurrentValueCell;
+		
+		TSharedPtr<FConsoleCommand> LocalCmd = Item;
+
+		TAttribute<FText> CurrentValueText = TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateLambda([LocalCmd]() {
+			return FText::FromString(LocalCmd->GetCurrentValue());
+		}));
+
+		FText EditTextValue = FText::FromString(Item->GetCurrentValue());
+
+		TSharedRef<SEditableText> EditText = SNew(SEditableText)
+		.HintText(CurrentValueText)
+		.OnIsTypedCharValid(FOnIsTypedCharValid::CreateLambda(
+			[=](TCHAR Char) {
+				if (Item->Type.Equals("Int") || Item->Type.Equals("Float"))
+				{
+					return FString().AppendChar(Char).IsNumeric();
 				}
-			))*/
-			.Text(FText::FromString(Item->CurrentValue))
-			.ClearKeyboardFocusOnCommit(false)
-			.AllowContextMenu(false)
-			.SelectAllTextWhenFocused(true)
-			.SelectAllTextOnCommit(true)
-			.OnTextCommitted_Lambda(
-				[=](const FText& NewText, ETextCommit::Type How) {
-					if (How == ETextCommit::Type::OnEnter)
-					{
-						UE_LOG(LogTemp, Warning, TEXT("Commit: %s"), *NewText.ToString());
-					}
-					else
-					{
+				return true;
+			}
+		))
+		.Text(FText::FromString(Item->GetCurrentValue()))
+		.ClearKeyboardFocusOnCommit(false)
+		.AllowContextMenu(false)
+		.SelectAllTextWhenFocused(true)
+		.SelectAllTextOnCommit(true)
+		.RevertTextOnEscape(true)
+		.Justification(ETextJustify::Center)
+		.Text(CurrentValueText)
+		.OnTextCommitted_Lambda
+		(
+			[=](const FText& NewText, ETextCommit::Type How) 
+			{
+				if (How == ETextCommit::Type::OnEnter)
+				{
+					Item->SetValue(NewText.ToString());
 
-						//EditBox->SetText(FText::FromString("elo"));
-					}
-					UE_LOG(LogTemp, Warning, TEXT("Item command: %s"), *Item->Command);
+					if (OnExecuteCommand.IsBound())
+					{
+						bool Success = OnExecuteCommand.Execute(Item);
 
+						Item->Refresh();
+					}
+
+					UE_LOG(LogTemp, Warning, TEXT("Commit: %s"), *NewText.ToString());
+				}
+				else if( How == ETextCommit::OnCleared)
+				{
 					
+					//EditBox->SetText(FText::FromString("elo"));
 				}
+				UE_LOG(LogTemp, Warning, TEXT("Item command: %s"), *Item->GetExec());
+
+			}
 		);
 
-		return EditBox;
-		//return SNew(STextBlock).Text(FText::FromString(Item->CurrentValue));
-	}
+		bool bContainsValueColumn_Copy = bContainsValueColumn;
+		TAttribute<FSlateColor> BorderColor = TAttribute<FSlateColor>::Create(TAttribute<FSlateColor>::FGetter::CreateLambda([LocalCmd, bContainsValueColumn_Copy]() {
 
-	if (ColumnName.IsEqual(FName(TEXT("Execute"))))
-	{
-		return SNew(SButton).Text(FText::FromString("Execute"))
-			.OnClicked(FOnClicked::CreateLambda([=]() {
-			UE_LOG(LogTemp, Warning, TEXT("Value of click:%s"), *Item->Value);
+			if (!bContainsValueColumn_Copy)
+			{
+				return FLinearColor(0, 255, 0);
+			}
 
-			//auto Widget = OwnerTablePtr.Pin()->WidgetFromItem(Item);
-
-			//if (Widget)
-			//{
-			//	Widget->ResetRow();
-			//}
+			const bool AreValuesEqual = LocalCmd->GetValue().Equals(LocalCmd->GetCurrentValue());
+			const FLinearColor RetColor = AreValuesEqual ? FLinearColor(0, 255, 0) : FLinearColor(255, 0, 0);
 
 
-			return FReply::Unhandled();
-				}));
+			return RetColor;
+			}));
+
+		CurrentValueCell = SNew(SBorder)
+			.HAlign(EHorizontalAlignment::HAlign_Fill)
+			.BorderBackgroundColor(Item->ObjType == EConsoleCommandType::CVar ? BorderColor : FLinearColor(0, 0, 0, 0))
+			[
+				EditText	
+			];
+
+
+		if (Item->ObjType != EConsoleCommandType::CVar)
+		{
+			CurrentValueCell->SetVisibility(EVisibility::Hidden);
+		}
+
+
+		return CurrentValueCell.ToSharedRef();
 	}
 
 	return SNullWidget::NullWidget;

@@ -19,6 +19,11 @@ public:
 	void operator() (void*) {};
 };
 
+struct FCommandTransaction
+{
+	
+};
+
 
 class CONSOLEMANAGER_API FCommandsManager
 {
@@ -41,6 +46,8 @@ public:
 	void SetActiveGroup(int NewId);
 
 	void ReorderCommandInCurrentGroup(int32 CurrentId, int32 NewId);
+	void DuplicateCommand(int32 Id);
+	void RemoveCommands(TArray<int32> Ids);
 
 	void SetActiveHistory();
 	void SetActiveAllCommands();
@@ -50,12 +57,14 @@ public:
 	void AddCommandsToCurrentGroup(TArray<TSharedPtr<FConsoleCommand>> Commands);
 	void AddCommandsToGroup(FCommandGroup* Group, TArray<TSharedPtr<FConsoleCommand>> Commands);
 
+	void ReplaceCommandInCurrentGroup(int32 Id, FConsoleCommand& NewCommand);
+
 	FCommandGroup* GetGroupById(const FString& Id);
 
 	const FConsoleCommand& GetConsoleCommand(int Id);
 
-	bool ExecuteCurrentCommand(int Id);
-	bool ExecuteCommand(const FConsoleCommand& Command);
+	bool ExecuteCommand(FConsoleCommand& Command);
+	void ExecuteMultipleCommands(TArray<TSharedPtr<FConsoleCommand>> Commands);
 
 	void RemoveGroup(int Id);
 	bool RenameGroup(int Id, const FString& NewName);
@@ -85,4 +94,5 @@ private:
 
 	FCommandGroup AllCommands;
 	FString CurrentGroupId;
+
 };
