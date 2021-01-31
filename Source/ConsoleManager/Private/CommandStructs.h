@@ -23,29 +23,48 @@ public:
 
 	FString Name;
 	EConsoleCommandInputType InputType;
-	FString Command;
 	FString Value;
-	FString CurrentValue;
+
 	FString Type;
 	FString SetBy;
 
 	EConsoleCommandType ObjType;
 
-	bool IsValid = true;
 
+
+	void SetIsValid(bool NewValid) { bIsValid = NewValid; };
+	bool IsValid() { return bIsValid; };
 	FORCEINLINE bool operator == (const FString& Other) const {
 		return Name.Equals(Other);
 	};
 
-	//FORCEINLINE const FString& GetExec() { return ExecCommand; };
+	FORCEINLINE const FString& GetExec() const
+	{ 
+		return ExecCommand; 
+	};
+
+	FORCEINLINE void SetValue(const FString& NewValue)
+	{
+		Value = NewValue;
+		RefreshExec();
+	};
+	const FString& GetValue() { return Value; };
+
+	const FString& GetCurrentValue() { return CurrentValue; };
 
 	void Refresh();
 	FString GetTooltip();
 	
 private:
 
+	FORCEINLINE void RefreshExec() { ExecCommand = Name + " " + Value; };
+
+	FString ExecCommand;
+	FString CurrentValue;
+
 	static FString GetTextSection(const TCHAR * &It);
 
+	bool bIsValid = true;
 	bool bIsInitiallySet = false;
 
 	//FString ExecCommand;

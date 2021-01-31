@@ -33,12 +33,29 @@ FConsoleCommand::FConsoleCommand(FString _Command)
 	FString Param1 = GetTextSection(It);
 	if (Param1.IsEmpty())
 	{
-		IsValid = false;
+		bIsValid = false;
 	}
 
-	Command = _Command;
 	Name = Param1;
 	Value = _Command.Mid(Param1.Len() + 1);
+
+	FString FoundName;
+
+	IConsoleManager::Get().ForEachConsoleObjectThatContains(FConsoleObjectVisitor::CreateLambda(
+		[Param1, &FoundName](const TCHAR* CurrentObjName, IConsoleObject* CurrentObj) {
+			if (Param1.Equals(CurrentObjName, ESearchCase::IgnoreCase))
+			{
+				FoundName = FString(CurrentObjName);
+			}
+		}),
+		*Name);
+		
+	if (!FoundName.IsEmpty())
+	{
+		Name = FoundName;
+	}
+
+	RefreshExec();
 
 	//bool Found = false;
 	//FConsoleObjectVisitor Visitor;
@@ -77,6 +94,8 @@ void FConsoleCommand::Refresh()
 		IConsoleObject* Obj = IConsoleManager::Get().FindConsoleObject(*Name);
 		if (Obj)
 		{
+			//IConsoleManager::Get().find
+
 			//Object exists so its safe to assume it has any kind of value
 			InputType = EConsoleCommandInputType::Value;
 
@@ -87,6 +106,11 @@ void FConsoleCommand::Refresh()
 			if (CVar)
 			{
 				CurrentValue = CVar->GetString();
+				ObjType = EConsoleCommandType::CVar;
+			}
+			else if (CCmd)
+			{
+				ObjType = EConsoleCommandType::CCmd;
 			}
 
 			if (Obj->TestFlags(ECVF_Unregistered))
@@ -94,11 +118,11 @@ void FConsoleCommand::Refresh()
 				//Handle unregistered!
 				UE_LOG(LogTemp, Warning, TEXT("No test flag"));
 
-				IsValid = false;
+				bIsValid = false;
 			}
 			else
 			{
-				IsValid = true;
+				bIsValid = true;
 			}
 		}
 		else
@@ -106,6 +130,8 @@ void FConsoleCommand::Refresh()
 			//Its engine command?
 			InputType = EConsoleCommandInputType::None;
 		}
+
+		bIsInitiallySet = true;
 
 	}
 }
@@ -123,11 +149,11 @@ FString FConsoleCommand::GetTooltip()
 
 		if (CCmd)
 		{
-			HelpString = "Console Command:\n" + Command + "\n\n";
+			HelpString = "Console Command:\n" + ExecCommand + "\n\n";
 		}
 		else if (CVar)
 		{
-			HelpString = "Console Variable:\n" + Command + "\n\n";
+			HelpString = "Console Variable:\n" + ExecCommand + "\n\n";
 
 			CurrentValue = CVar->GetString();
 
