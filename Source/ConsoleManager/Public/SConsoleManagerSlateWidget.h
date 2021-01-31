@@ -30,7 +30,7 @@ public:
 };
 
 
-DECLARE_DELEGATE_RetVal_OneParam(bool, FOnExecuteCommand, TSharedPtr<FConsoleCommand>)
+DECLARE_DELEGATE_OneParam(FOnExecuteCommand, const FConsoleCommand&)
 DECLARE_DELEGATE_OneParam(FOnSimpleCommand, TSharedPtr<FConsoleCommand>)
 DECLARE_DELEGATE_TwoParams(FOnCommandValueEdit, TSharedPtr<FConsoleCommand>, int32)
 

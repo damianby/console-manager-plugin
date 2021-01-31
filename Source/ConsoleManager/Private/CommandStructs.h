@@ -20,6 +20,7 @@ class FConsoleCommand
 {
 public:
 	FConsoleCommand(FString _Command);
+	FConsoleCommand(const FConsoleCommand& Copy);
 
 	FString Name;
 	EConsoleCommandInputType InputType;

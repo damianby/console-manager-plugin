@@ -73,6 +73,14 @@ FConsoleCommand::FConsoleCommand(FString _Command)
 
 }
 
+FConsoleCommand::FConsoleCommand(const FConsoleCommand& Copy)
+{
+	Name = Copy.Name;
+	Value = Copy.Value;
+	RefreshExec();
+}
+
+
 void FConsoleCommand::Refresh()
 {
 	if (bIsInitiallySet)

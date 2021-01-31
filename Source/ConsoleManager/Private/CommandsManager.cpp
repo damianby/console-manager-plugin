@@ -180,6 +180,11 @@ void FCommandsManager::AddCommandsToGroup(FCommandGroup* Group, TArray<TSharedPt
 	}
 }
 
+void FCommandsManager::UpdateCurrentEngineValue(const FConsoleCommand& Command)
+{
+	bool SuccessExecuting = Execute(Command);
+}
+
 void FCommandsManager::ReplaceCommandInCurrentGroup(int32 Id, FConsoleCommand& NewCommand)
 {
 	check(CurrentGroup->Commands.IsValidIndex(Id));

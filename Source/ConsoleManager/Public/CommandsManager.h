@@ -57,6 +57,8 @@ public:
 	void AddCommandsToCurrentGroup(TArray<TSharedPtr<FConsoleCommand>> Commands);
 	void AddCommandsToGroup(FCommandGroup* Group, TArray<TSharedPtr<FConsoleCommand>> Commands);
 
+	void UpdateCurrentEngineValue(const FConsoleCommand& Command);
+
 	void ReplaceCommandInCurrentGroup(int32 Id, FConsoleCommand& NewCommand);
 
 	FCommandGroup* GetGroupById(const FString& Id);

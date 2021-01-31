@@ -399,13 +399,12 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 	));
 
 	Row->SetOnExecuteCommand(FOnExecuteCommand::CreateLambda(
-		[=](TSharedPtr<FConsoleCommand> Command)
+		[=](const FConsoleCommand& Command)
 		{
 			bNeedsRefresh = false;
-			bool Success = CommandsManager.Pin()->ExecuteCommand(Command.ToSharedRef().Get());
+			CommandsManager.Pin()->UpdateCurrentEngineValue(Command);
 			bNeedsRefresh = true;
 
-			return Success;
 		}
 	));
 
@@ -1363,11 +1362,13 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 			{
 				if (How == ETextCommit::Type::OnEnter)
 				{
-					Item->SetValue(NewText.ToString());
+					FConsoleCommand TempCommand(Item.ToSharedRef().Get());
+
+					TempCommand.SetValue(NewText.ToString());
 
 					if (OnExecuteCommand.IsBound())
 					{
-						bool Success = OnExecuteCommand.Execute(Item);
+						OnExecuteCommand.Execute(TempCommand);
 
 						Item->Refresh();
 					}
