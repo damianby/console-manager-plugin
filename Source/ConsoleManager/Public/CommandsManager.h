@@ -86,7 +86,7 @@ private:
 
 	FCommandGroup* CurrentGroup;
 
-	bool Execute(FConsoleCommand& Command);
+	bool Execute(const FConsoleCommand& Command);
 
 	void ValidateCommands(TArray<FConsoleCommand>& Commands);
 

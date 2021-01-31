@@ -210,6 +210,8 @@ bool FCommandsManager::ExecuteCommand(FConsoleCommand& Command)
 {
 	bool SuccessExecuting = Execute(Command);
 
+	Command.SetIsValid(SuccessExecuting);
+
 	const FString& ExecCommand = Command.GetExec();
 
 	FString ExecStateDisplay = SuccessExecuting ? FString("executed succesfully!") : FString("failed!");
@@ -344,7 +346,7 @@ bool FCommandsManager::SaveCommands()
 }
 
 //It will not add wrong command to history
-bool FCommandsManager::Execute(FConsoleCommand& Command)
+bool FCommandsManager::Execute(const FConsoleCommand& Command)
 {
 
 
@@ -357,7 +359,7 @@ bool FCommandsManager::Execute(FConsoleCommand& Command)
 
 	bool SuccessExecuting = GEngine->Exec(GEngine->GetWorldContexts().Last().World(), *ExecCommand, *GLog);
 
-	Command.SetIsValid(SuccessExecuting);
+	
 
 	if (SuccessExecuting)
 	{
