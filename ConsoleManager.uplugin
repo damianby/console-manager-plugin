@@ -2,9 +2,9 @@
 	"FileVersion": 3,
 	"Version": 1,
 	"VersionName": "1.0",
-	"FriendlyName": "ConsoleManager",
+	"FriendlyName": "Console Manager",
 	"Description": "",
-	"Category": "Other",
+	"Category": "Editor",
 	"CreatedBy": "Damian Baldyga",
 	"CreatedByURL": "funkyfox.studio",
 	"DocsURL": "",
@@ -18,7 +18,8 @@
 		{
 			"Name": "ConsoleManager",
 			"Type": "Editor",
-			"LoadingPhase": "PostEngineInit"
+			"LoadingPhase": "PostEngineInit",
+			"WhitelistPlatforms": [ "Win64", "Win32" ]
 		}
 	]
 }
