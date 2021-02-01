@@ -37,25 +37,26 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 	HeaderExec.ColumnId("Execute");
 	HeaderExec.DefaultLabel(FText::FromString(""));
 	HeaderExec.FixedWidth(40.0f);
-	HeaderExec.HAlignCell(EHorizontalAlignment::HAlign_Fill);
+	HeaderExec.HAlignCell(EHorizontalAlignment::HAlign_Center);
 	HeaderExec.HAlignHeader(EHorizontalAlignment::HAlign_Fill);
 	HeaderExec.VAlignCell(EVerticalAlignment::VAlign_Center);
 
 
 	HeaderValue.ColumnId("Value");
 	HeaderValue.DefaultTooltip(FText::FromString("The value with which the command will be executed"));
-	HeaderValue.DefaultLabel(FText::FromString("Execute Value"));
+	HeaderValue.DefaultLabel(FText::FromString("Preset Value"));
 	HeaderValue.HAlignCell(EHorizontalAlignment::HAlign_Fill);
 	HeaderValue.HAlignHeader(EHorizontalAlignment::HAlign_Center);
 	HeaderValue.VAlignCell(EVerticalAlignment::VAlign_Center);
 
+	
 	if (InArgs._DisplayCommandType)
 	{
 		HeaderRow->AddColumn(SHeaderRow::Column("CommandType")
 			.DefaultLabel(FText::FromString("Type"))
 			.FixedWidth(100.0f)
-			.HAlignCell(EHorizontalAlignment::HAlign_Fill)
-			.HAlignHeader(EHorizontalAlignment::HAlign_Fill)
+			.HAlignCell(EHorizontalAlignment::HAlign_Center)
+			.HAlignHeader(EHorizontalAlignment::HAlign_Center)
 			.VAlignCell(EVerticalAlignment::VAlign_Center));
 
 	}
@@ -64,7 +65,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 	if (InArgs._DisplayCommandValueType)
 	{
 		HeaderRow->AddColumn(SHeaderRow::Column("Type")
-			.DefaultLabel(FText::FromString("Type"))
+			.DefaultLabel(FText::FromString("Param Type"))
 			.DefaultTooltip(FText::FromString("Variable Type"))
 			.HAlignCell(EHorizontalAlignment::HAlign_Center)
 			.HAlignHeader(EHorizontalAlignment::HAlign_Center)
@@ -889,12 +890,7 @@ bool SConsoleManagerSlateWidget::OpenExecMultipleDialog(TArray<TSharedPtr<FConso
 			];
 	}
 
-	FText ExecuteTitle = FText::FromString("Execute");
-
-	if (Commands.Num() > 1)
-	{
-		ExecuteTitle = FText::FromString("Execute Mutliple");
-	}
+	FText ExecuteTitle = FText::FromString("Execute Selected");
 
 	TSharedRef<SCustomDialog> ExecuteCommands = SNew(SCustomDialog)
 		.Title(ExecuteTitle)
@@ -1330,10 +1326,13 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 	else if (ColumnName.IsEqual(FName(TEXT("Execute"))))
 	{
 		TSharedRef<SWidget> ExecButton = SNew(SBox)
-			.Padding(FMargin(5.0f, 0.0f, 5.0f, 0.0f))
+			.Padding(FMargin(1.0f, 1.0f, 1.0f, 0.0f))
+			.MaxDesiredWidth(20)
+			.MaxDesiredHeight(20)
 			[
 				SNew(SButton)
 				.ButtonStyle(FCoreStyle::Get(), "NoBorder")
+				.ContentPadding(0)
 				.Content()
 				[
 					SNew(SImage)
@@ -1415,6 +1414,8 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 
 
 		TSharedRef<SBorder> ValueBorder = SNew(SBorder)
+			.VAlign(EVerticalAlignment::VAlign_Fill)
+			.HAlign(EHorizontalAlignment::HAlign_Fill)
 			.BorderBackgroundColor(Item->GetObjType() == EConsoleCommandType::CVar ? BorderColor : FLinearColor(0,0,0,0))
 			[
 				EditText
@@ -1505,10 +1506,11 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 
 
 			return RetColor;
-			}));
+		}));
 
 		CurrentValueCell = SNew(SBorder)
 			.HAlign(EHorizontalAlignment::HAlign_Fill)
+			.VAlign(EVerticalAlignment::VAlign_Fill)
 			.BorderBackgroundColor(Item->GetObjType() == EConsoleCommandType::CVar ? BorderColor : FLinearColor(0, 0, 0, 0))
 			[
 				EditText	
