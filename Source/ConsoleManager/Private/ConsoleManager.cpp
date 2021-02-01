@@ -187,8 +187,12 @@ void FConsoleManagerModule::AskForDefaultGroup()
 
 TSharedRef<class SDockTab> FConsoleManagerModule::OnSpawnPluginTab(const FSpawnTabArgs& SpawnTabArgs)
 {
-	CommandsManager->Refresh();
 
+	//If there isnt any group created on window open ask user if he wants to create new with all variables
+	if (CommandsManager->GetCommandGroups().Num() == 0)
+	{
+		AskForDefaultGroup();
+	}
 
 	TSharedRef<SConsoleManagerSlateWidget> UI = BuildUI();
 
@@ -218,14 +222,6 @@ TSharedRef<class SDockTab> FConsoleManagerModule::OnSpawnPluginTab(const FSpawnT
 		});
 
 	DockTab->SetOnTabClosed(ClosedTabDelegate);
-
-
-	//If there isnt any group created on window open ask user if he wants to create new with all variables
-	if (CommandsManager->GetCommandGroups().Num() == 0)
-	{
-		AskForDefaultGroup();
-	}
-
 
 	return DockTab;
 }
