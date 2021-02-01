@@ -64,7 +64,6 @@ const TArray<TSharedPtr<FConsoleCommand>>& FCommandsManager::GetCurrentCommandsS
 
 const TArray<FConsoleCommand>& FCommandsManager::GetCurrentCommands()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Test"));
 	return CurrentGroup->Commands;
 }
 
@@ -132,10 +131,6 @@ void FCommandsManager::RemoveCommands(TArray<int32> Ids)
 	Ids.Sort();
 
 	TArray<FConsoleCommand>& Commands = CurrentGroup->Commands;
-
-	UE_LOG(LogTemp, Warning, TEXT("Commands num: %d"), Commands.Num());
-	UE_LOG(LogTemp, Warning, TEXT("IDS num: %d"), Ids.Num());
-
 
 	//Start removing from end of array disallowing shrinking
 	for (int i = Ids.Num() - 1; i >= 0; i--)
@@ -320,7 +315,6 @@ void FCommandsManager::RemoveGroup(int Id)
 
 	if (CurrentGroup == &CommandGroups[Id])
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Its the same!"));
 		SetCurrentCommands(AllCommands);
 	}
 

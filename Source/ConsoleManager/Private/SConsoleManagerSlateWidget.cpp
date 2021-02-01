@@ -20,12 +20,9 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
 void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 {
-
-	UE_LOG(LogTemp, Warning, TEXT("Construct slate widget"));
 	CommandsManager = InArgs._CommandsManager;
 
 	TSharedPtr< SHeaderRow > HeaderRow = SNew(SHeaderRow);
-	
 
 	HeaderRow->AddColumn(SHeaderRow::Column("Command")
 		.DefaultLabel(FText::FromString("Command"))
@@ -183,15 +180,6 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 			return FReply::Unhandled();
 			
 		});
-
-
-
-	FConsoleManagerCommands::Get().GroupContextMenu->MapAction(
-		FConsoleManagerCommands::Get().NewGroupCommand,
-		FExecuteAction::CreateLambda([=]() {
-			UE_LOG(LogTemp, Warning, TEXT("LAmbda"))
-			}),
-		FCanExecuteAction());
 
 	//Validate all console commands to check if any existing in AllCommands //git
 	TSharedRef<SWidget> Content = SNew(SVerticalBox)
@@ -454,7 +442,6 @@ void SConsoleManagerSlateWidget::FilterList()
 		}
 	}
 	
-
 	CommandsListView->SetListItemsSource(FilteredListView);
 	CommandsListView->RebuildList();
 
@@ -462,8 +449,6 @@ void SConsoleManagerSlateWidget::FilterList()
 
 void SConsoleManagerSlateWidget::OnAddGroupButtonClicked()
 {
-	UE_LOG(LogTemp, Warning, TEXT("CLICKED ADD GROUP"));
-
 	CommandsManager.Pin()->AddNewGroup("NewGroup");
 
 	GenerateGroupsScrollBox();
@@ -516,7 +501,7 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 
 	
 
-	//Do not allow to reorder elements in all commands
+	//Do not allow to reorder elements in all commands nor history
 	if (!CurrentGroup.bIsEditable)
 	{
 		return Row;
@@ -530,21 +515,20 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 			DragOp->Manager = CommandsManager.Pin();
 			DragOp->Command = Item;
 
-			auto t1 = std::chrono::high_resolution_clock::now();
+			//auto t1 = std::chrono::high_resolution_clock::now();
 		
 			CommandsListView->ClearSelection();
 			CommandsListView->SetSelection(Item, ESelectInfo::Direct);
 
 			DragOp->Id = CommandsManager.Pin()->GetCurrentCommandsSharedPtr_Cache().Find(Item);
 
-			auto t2 = std::chrono::high_resolution_clock::now();
+			//auto t2 = std::chrono::high_resolution_clock::now();
 
-			auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count();
-
-			
-			int64 Time = duration;
-			
-			UE_LOG(LogTemp, Warning, TEXT("Time taken: %lld"), Time);
+			//auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count();
+			//
+			//int64 Time = duration;
+			//
+			//UE_LOG(LogTemp, Warning, TEXT("Time taken: %lld"), Time);
 
 			
 			return FReply::Handled().BeginDragDrop(DragOp);
@@ -572,8 +556,6 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 				CommandsManager.Pin()->ReorderCommandInCurrentGroup(DragConnectionOp->Id, NewPosition);
 
 				GenerateCommandsScrollBox();
-
-				UE_LOG(LogTemp, Warning, TEXT("Dragged obj: %s with ID: %d ||| Over: %s"), *DragConnectionOp->Command->Name, DragConnectionOp->Id, *Item->Name);
 			}
 
 			return FReply::Handled();
@@ -616,14 +598,9 @@ void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
 
 			
 
-		//FPointerEventHandler MouseButtonDownHandler;
-		//MouseButtonDownHandler.BindLambda
-
 		Button->RightClickDelegate.BindLambda(
 			[=](const FGeometry& Geometry, const FPointerEvent& MouseEvent) 
 			{
-
-				UE_LOG(LogTemp, Warning, TEXT("Group clicked!"));
 				FMenuBuilder MenuBuilder(true, NULL, TSharedPtr<FExtender>());
 
 				{
@@ -726,7 +703,6 @@ void SConsoleManagerSlateWidget::GenerateCommandsScrollBox()
 	}
 	else
 	{
-
 		if(!CommandsListView->GetHeaderRow()->IsColumnGenerated("Value"))
 		{
 			CommandsListView->GetHeaderRow()->InsertColumn(HeaderExec, 1);
@@ -735,35 +711,7 @@ void SConsoleManagerSlateWidget::GenerateCommandsScrollBox()
 		
 	}
 
-	
-	const TArray<TSharedPtr<FConsoleCommand>>& Commands = CommandsManager.Pin()->GetCurrentCommandsSharedPtr();
-
 	FilterList();
-	
-
-	
-
-	/*for (int i = 0; i < Commands.Num(); i++)
-	{*/
-		////////crash!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		//const FConsoleCommand& Command = Commands[i];
-		//UE_LOG(LogTemp, Warning, TEXT("Command: %s %s %s %s"), *Command.Command, *Command.SetBy, *Command.Type, *Command.Value);
-
-		//TAttribute<FSlateColor> Value = TAttribute<FSlateColor>::Create(TAttribute<FSlateColor>::FGetter::CreateLambda([&Command]() {
-		//	if (!Command.IsValid)
-		//	{
-		//		return FSlateColor(FLinearColor(255, 0, 0, 255));
-		//	}
-		//	return FSlateColor(FLinearColor(255, 255, 255, 255));
-		//	}));
-		//
-
-		//TAttribute<FText> CommandValue = TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateLambda([&Command]() {
-		//	return FText::FromString(Command.Value);
-		//	}));
-
-	//}
-
 }
 
 void SConsoleManagerSlateWidget::RemoveGroup(int Id)
@@ -1048,7 +996,6 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 								for (int i = 0; i < SelectedCommands.Num(); i++)
 								{
 									Ids.Add(Commands.Find(SelectedCommands[i]));
-									UE_LOG(LogTemp, Warning, TEXT("Id to be removed: %d"), Commands.Find(SelectedCommands[i]));
 								}
 
 								CommandsManager.Pin()->RemoveCommands(Ids);
@@ -1126,7 +1073,6 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 									if (FoundGroup)
 									{
 										CommandsManager.Pin()->AddCommandsToGroup(FoundGroup, SelectedCommands);
-										UE_LOG(LogTemp, Warning, TEXT("Add %d commands to %s"), SelectedCommands.Num(), *CommandGroups[i].Name);
 									}
 									
 								}), 
@@ -1283,7 +1229,6 @@ void SConsoleManagerSlateWidget::HandleNewCommands()
 
 TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName& ColumnName)
 {
-	
 	if (ColumnName.IsEqual(FName(TEXT("Command"))))
 	{
 		TSharedPtr<SWidget> ErrorWidget;
@@ -1404,10 +1349,7 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 				}
 				else if( How == ETextCommit::OnCleared)
 				{
-					
-					//EditBox->SetText(FText::FromString("elo"));
 				}
-				UE_LOG(LogTemp, Warning, TEXT("ValueEdited: %s"), *Item->GetExec());
 
 			}
 		);
@@ -1479,15 +1421,12 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 
 						Item->Refresh();
 					}
-
-					UE_LOG(LogTemp, Warning, TEXT("Commit: %s"), *NewText.ToString());
 				}
 				else if( How == ETextCommit::OnCleared)
 				{
 					
 					//EditBox->SetText(FText::FromString("elo"));
 				}
-				UE_LOG(LogTemp, Warning, TEXT("Item command: %s"), *Item->GetExec());
 
 			}
 		);
@@ -1521,7 +1460,7 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 		{
 			CurrentValueCell->SetVisibility(EVisibility::Hidden);
 		}
-
+		
 
 		return CurrentValueCell.ToSharedRef();
 	}

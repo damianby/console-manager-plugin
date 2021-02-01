@@ -82,6 +82,7 @@ void FConsoleManagerModule::StartupModule()
 	FConsoleManagerStyle::SetMatchingValuesColor(MatchingValuesColor);
 	FConsoleManagerStyle::SetNotMachingValuesColor(NotMatchingValuesColor);
 
+
 }
 
 void FConsoleManagerModule::ShutdownModule()
@@ -91,9 +92,6 @@ void FConsoleManagerModule::ShutdownModule()
 
 
 	CommandsManager->SaveCommands();
-
-	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
-	// we call this function before unloading the module.
 
 	UToolMenus::UnRegisterStartupCallback(this);
 
