@@ -22,6 +22,14 @@ public:
 	UPROPERTY(EditAnywhere, config, Category = UI)
 		bool DisplaySetByValue = true;
 
+	/** The color used to visualize same values */
+	UPROPERTY(EditAnywhere, config, Category = Colors, meta = (DisplayName = "Matching values color"))
+		FLinearColor MatchingValuesColor;
+
+	/** The color used to visualize difference between values */
+	UPROPERTY(EditAnywhere, config, Category = Colors, meta = (DisplayName = "Different values color"))
+		FLinearColor NotMatchingValuesColor;
+
 };
 
 

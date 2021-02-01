@@ -1356,14 +1356,12 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 
 		TAttribute<FSlateColor> BorderColor = TAttribute<FSlateColor>::Create(TAttribute<FSlateColor>::FGetter::CreateLambda([LocalCmd]() {
 
-			return LocalCmd->GetValue().Equals(LocalCmd->GetCurrentValue()) ? FLinearColor(0, 255,0) : FLinearColor(255,0,0);
+			return LocalCmd->GetValue().Equals(LocalCmd->GetCurrentValue()) ? FConsoleManagerStyle::Get().GetSlateColor("MatchingValues") : FConsoleManagerStyle::Get().GetSlateColor("NotMatchingValues");
 		}));
 
 		TAttribute<FText> ValueText = TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateLambda([LocalCmd]() {
 			return FText::FromString(LocalCmd->GetValue());
 		}));
-
-		
 
 		TSharedRef<SEditableText> EditText = SNew(SEditableText)
 		.HintText(ValueText)
@@ -1486,16 +1484,17 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 			}
 		);
 
-		bool bContainsValueColumn_Copy = bContainsValueColumn;
+
+		const bool bContainsValueColumn_Copy = bContainsValueColumn;
 		TAttribute<FSlateColor> BorderColor = TAttribute<FSlateColor>::Create(TAttribute<FSlateColor>::FGetter::CreateLambda([LocalCmd, bContainsValueColumn_Copy]() {
 
 			if (!bContainsValueColumn_Copy)
 			{
-				return FLinearColor(0, 255, 0);
+				return FConsoleManagerStyle::Get().GetSlateColor("MatchingValues");
 			}
 
 			const bool AreValuesEqual = LocalCmd->GetValue().Equals(LocalCmd->GetCurrentValue());
-			const FLinearColor RetColor = AreValuesEqual ? FLinearColor(0, 255, 0) : FLinearColor(255, 0, 0);
+			const FSlateColor RetColor = AreValuesEqual ? FConsoleManagerStyle::Get().GetSlateColor("MatchingValues") : FConsoleManagerStyle::Get().GetSlateColor("NotMatchingValues");
 
 
 			return RetColor;

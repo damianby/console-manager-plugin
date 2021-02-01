@@ -51,6 +51,14 @@ void FConsoleManagerModule::StartupModule()
 		.SetMenuType(ETabSpawnerMenuType::Hidden);
 
 	CommandsManager = TSharedPtr<FCommandsManager>(new FCommandsManager());
+
+
+	FLinearColor MatchingValuesColor = GetMutableDefault<UConsoleManagerSettings>()->MatchingValuesColor;
+	FLinearColor NotMatchingValuesColor = GetMutableDefault<UConsoleManagerSettings>()->NotMatchingValuesColor;
+
+	FConsoleManagerStyle::SetMatchingValuesColor(MatchingValuesColor);
+	FConsoleManagerStyle::SetNotMachingValuesColor(NotMatchingValuesColor);
+
 }
 
 void FConsoleManagerModule::ShutdownModule()
