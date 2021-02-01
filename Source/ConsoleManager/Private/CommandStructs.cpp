@@ -40,12 +40,14 @@ FConsoleCommand::FConsoleCommand(FString _Command)
 	Value = _Command.Mid(Param1.Len() + 1);
 
 	FString FoundName;
+	IConsoleObject* Obj = nullptr;
 
 	IConsoleManager::Get().ForEachConsoleObjectThatContains(FConsoleObjectVisitor::CreateLambda(
-		[Param1, &FoundName](const TCHAR* CurrentObjName, IConsoleObject* CurrentObj) {
+		[=, &FoundName, &Obj](const TCHAR* CurrentObjName, IConsoleObject* CurrentObj) {
 			if (Param1.Equals(CurrentObjName, ESearchCase::IgnoreCase))
 			{
-				FoundName = FString(CurrentObjName);
+				FoundName = FString(CurrentObjName);	
+				Obj = CurrentObj;
 			}
 		}),
 		*Name);
@@ -55,22 +57,8 @@ FConsoleCommand::FConsoleCommand(FString _Command)
 		Name = FoundName;
 	}
 
+	InitialParse(Obj);
 	RefreshExec();
-
-	//bool Found = false;
-	//FConsoleObjectVisitor Visitor;
-	//Visitor.BindLambda([Param1, &Found](const TCHAR* Name, IConsoleObject* Obj) {
-
-	//	if (Param1.Equals(Name))
-	//	{
-	//		Found = true;
-	//	}
-	//	});
-	//
-
-	//IConsoleManager::Get().ForEachConsoleObjectThatStartsWith(Visitor, *Name);
-	//UE_LOG(LogTemp, Warning, TEXT("Found command %s with %d"), *Name, Found);
-
 }
 
 FConsoleCommand::FConsoleCommand(const FConsoleCommand& Copy)
@@ -83,87 +71,30 @@ FConsoleCommand::FConsoleCommand(const FConsoleCommand& Copy)
 
 void FConsoleCommand::Refresh()
 {
-	if (bIsInitiallySet)
-	{
-		IConsoleObject* Obj = IConsoleManager::Get().FindConsoleObject(*Name);
-		if (Obj)
-		{
-			SetBy = GetSetByTCHAR(Obj->GetFlags());
-
-			IConsoleVariable* CVar = Obj->AsVariable();
-			if (CVar)
-			{
-				CurrentValue = CVar->GetString();
-			}
-		}
-	}
-	else
-	{
-		IConsoleObject* Obj = IConsoleManager::Get().FindConsoleObject(*Name);
-		if (Obj)
-		{
-			//IConsoleManager::Get().find
-
-			//Object exists so its safe to assume it has any kind of value
-			InputType = EConsoleCommandInputType::Value;
-
-			SetBy = GetSetByTCHAR(Obj->GetFlags());
-
-			IConsoleCommand* CCmd = Obj->AsCommand();
-			IConsoleVariable* CVar = Obj->AsVariable();
-			if (CVar)
-			{
-				CurrentValue = CVar->GetString();
-				ObjType = EConsoleCommandType::CVar;
-			}
-			else if (CCmd)
-			{
-				ObjType = EConsoleCommandType::CCmd;
-			}
-
-			if (Obj->TestFlags(ECVF_Unregistered))
-			{
-				//Handle unregistered!
-				UE_LOG(LogTemp, Warning, TEXT("No test flag"));
-
-				bIsValid = false;
-			}
-			else
-			{
-				bIsValid = true;
-			}
-		}
-		else
-		{
-			//Its engine command?
-			InputType = EConsoleCommandInputType::None;
-		}
-
-		bIsInitiallySet = true;
-
-	}
-}
-
-
-FString FConsoleCommand::GetTooltip()
-{
-	FString HelpString;
-
 	IConsoleObject* Obj = IConsoleManager::Get().FindConsoleObject(*Name);
 	if (Obj)
 	{
+		SetBy = GetSetByTCHAR(Obj->GetFlags());
+
 		IConsoleVariable* CVar = Obj->AsVariable();
-		IConsoleCommand* CCmd = Obj->AsCommand();
-
-		if (CCmd)
+		if (CVar)
 		{
-			HelpString = "Console Command:\n" + ExecCommand + "\n\n";
-		}
-		else if (CVar)
-		{
-			HelpString = "Console Variable:\n" + ExecCommand + "\n\n";
-
 			CurrentValue = CVar->GetString();
+		}
+	}
+}
+void FConsoleCommand::InitialParse(IConsoleObject* Obj)
+{
+	if (Obj)
+	{
+		SetBy = GetSetByTCHAR(Obj->GetFlags());
+
+		IConsoleCommand* CCmd = Obj->AsCommand();
+		IConsoleVariable* CVar = Obj->AsVariable();
+		if (CVar)
+		{
+			CurrentValue = CVar->GetString();
+			ObjType = EConsoleCommandType::CVar;
 
 			if (CVar->IsVariableBool())
 			{
@@ -182,9 +113,50 @@ FString FConsoleCommand::GetTooltip()
 				Type = "String";
 			}
 		}
+		else if (CCmd)
+		{
+			ObjType = EConsoleCommandType::CCmd;
+		}
+
+		if (Obj->TestFlags(ECVF_Unregistered))
+		{
+			//Handle unregistered!
+			UE_LOG(LogTemp, Warning, TEXT("No test flag"));
+
+			bIsValid = false;
+		}
+		else
+		{
+			bIsValid = true;
+		}
+	}
+	else
+	{
+		//Its engine command?
+		ObjType = EConsoleCommandType::Exec;
+	}
+}
+
+FString FConsoleCommand::GetTooltip()
+{
+	FString HelpString;
+
+	IConsoleObject* Obj = IConsoleManager::Get().FindConsoleObject(*Name);
+	if (Obj)
+	{
+		IConsoleVariable* CVar = Obj->AsVariable();
+		IConsoleCommand* CCmd = Obj->AsCommand();
+
+		if (CCmd)
+		{
+			HelpString = "Console Command:\n" + ExecCommand + "\n\n";
+		}
+		else if (CVar)
+		{
+			HelpString = "Console Variable:\n" + ExecCommand + "\n\n";
+		}
 
 		HelpString += Obj->GetHelp();
-
 	}
 	else
 	{

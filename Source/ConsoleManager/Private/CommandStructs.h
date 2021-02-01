@@ -13,7 +13,8 @@ enum class EConsoleCommandInputType : uint8
 enum class EConsoleCommandType : uint8
 {
 	CVar,
-	CCmd
+	CCmd,
+	Exec
 };
 
 class FConsoleCommand
@@ -36,7 +37,7 @@ public:
 	void SetIsValid(bool NewValid) { bIsValid = NewValid; };
 	bool IsValid() { return bIsValid; };
 	FORCEINLINE bool operator == (const FString& Other) const {
-		return Name.Equals(Other);
+		return Name.Equals(Other, ESearchCase::IgnoreCase);
 	};
 
 	FORCEINLINE const FString& GetExec() const
@@ -60,14 +61,15 @@ private:
 
 	FORCEINLINE void RefreshExec() { ExecCommand = Name + " " + Value; };
 
+	void InitialParse(IConsoleObject* Obj);
+
 	FString ExecCommand;
 	FString CurrentValue;
 
 	static FString GetTextSection(const TCHAR * &It);
 
 	bool bIsValid = true;
-	bool bIsInitiallySet = false;
-
+	bool bIsInitiallyParsed = false;
 	//FString ExecCommand;
 
 };
