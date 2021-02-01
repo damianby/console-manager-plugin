@@ -227,5 +227,6 @@ private:
 	bool bIsAllCommands = false;
 
 	SHeaderRow::FColumn::FArguments HeaderValue = SHeaderRow::FColumn::FArguments();
+	SHeaderRow::FColumn::FArguments HeaderExec = SHeaderRow::FColumn::FArguments();
 
 };

@@ -34,6 +34,13 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 		.HAlignHeader(EHorizontalAlignment::HAlign_Fill)
 		.VAlignCell(EVerticalAlignment::VAlign_Center));
 
+	HeaderExec.ColumnId("Execute");
+	HeaderExec.DefaultLabel(FText::FromString(""));
+	HeaderExec.FixedWidth(40.0f);
+	HeaderExec.HAlignCell(EHorizontalAlignment::HAlign_Fill);
+	HeaderExec.HAlignHeader(EHorizontalAlignment::HAlign_Fill);
+	HeaderExec.VAlignCell(EVerticalAlignment::VAlign_Center);
+
 
 	HeaderValue.ColumnId("Value");
 	HeaderValue.DefaultTooltip(FText::FromString("The value with which the command will be executed"));
@@ -707,13 +714,16 @@ void SConsoleManagerSlateWidget::GenerateCommandsScrollBox()
 	if (bIsAllCommands)
 	{
 		CommandsListView->GetHeaderRow()->RemoveColumn("Value");
+		CommandsListView->GetHeaderRow()->RemoveColumn("Execute");
+
 	}
 	else
 	{
 
 		if(!CommandsListView->GetHeaderRow()->IsColumnGenerated("Value"))
 		{
-			CommandsListView->GetHeaderRow()->InsertColumn(HeaderValue, 1);
+			CommandsListView->GetHeaderRow()->InsertColumn(HeaderExec, 1);
+			CommandsListView->GetHeaderRow()->InsertColumn(HeaderValue, 2);
 		}
 		
 	}
@@ -1310,7 +1320,37 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 		return CommandWidget;
 	
 	}
-	if (ColumnName.IsEqual(FName(TEXT("Value"))))
+	else if (ColumnName.IsEqual(FName(TEXT("Execute"))))
+	{
+		TSharedRef<SWidget> ExecButton = SNew(SBox)
+			.Padding(FMargin(5.0f, 0.0f, 5.0f, 0.0f))
+			[
+				SNew(SButton)
+				.ButtonStyle(FCoreStyle::Get(), "NoBorder")
+				.Content()
+				[
+					SNew(SImage)
+					.Image(FConsoleManagerStyle::Get().GetBrush("ConsoleManager.ExecAction"))
+					.ToolTipText(FText::FromString("Execute command"))
+				]
+				.OnClicked_Lambda(
+					[=]() 
+					{
+						if (OnExecuteCommand.IsBound())
+						{
+							OnExecuteCommand.Execute(Item.ToSharedRef().Get());
+
+							Item->Refresh();
+						}
+
+						return FReply::Handled();
+					}
+				)
+			];
+
+		return ExecButton;
+	} 
+	else if (ColumnName.IsEqual(FName(TEXT("Value"))))
 	{
 		TSharedPtr<FConsoleCommand> LocalCmd = Item;
 
