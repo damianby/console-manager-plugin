@@ -65,6 +65,12 @@ FConsoleCommand::FConsoleCommand(const FConsoleCommand& Copy)
 {
 	Name = Copy.Name;
 	Value = Copy.Value;
+	CurrentValue = Copy.CurrentValue;
+	ObjType = Copy.ObjType;
+	Type = Copy.Type;
+	bIsValid = Copy.bIsValid;
+	bIsInitiallyParsed = Copy.bIsInitiallyParsed;
+
 	RefreshExec();
 }
 
