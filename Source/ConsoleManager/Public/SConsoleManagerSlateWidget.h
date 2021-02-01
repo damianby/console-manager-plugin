@@ -182,6 +182,10 @@ protected:
 
 private:
 
+	bool bShowExec = true;
+	bool bShowCVar = true;
+	bool bShowCCmd = true;
+
 	bool bNeedsRefresh = true;
 
 	TWeakPtr<FCommandsManager> CommandsManager;
@@ -193,6 +197,8 @@ private:
 
 	TArray<TSharedPtr<FConsoleCommand>> FilteredListView;
 
+	FString FilterString;
+	void FilterList();
 
 	TSharedPtr<SSearchBox> SearchBox;
 

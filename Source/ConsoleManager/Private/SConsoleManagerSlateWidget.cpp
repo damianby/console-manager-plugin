@@ -187,27 +187,8 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 				.HintText(FText::FromString("Search/Filter"))
 				.OnTextChanged_Lambda(
 						[=](const FText& NewText) {
-							const TArray<TSharedPtr<FConsoleCommand>>&  Commands = CommandsManager.Pin()->GetCurrentCommandsSharedPtr();
-							
-							if (NewText.IsEmpty())
-							{
-								CommandsListView->SetListItemsSource(Commands);
-								CommandsListView->RebuildList();
-								return;
-							}
-
-							FilteredListView.Empty();
-							for (const auto& Command : Commands)
-							{
-								FString Part = NewText.ToString();
-								if (Command->Name.Contains(Part))
-								{
-									FilteredListView.Add(Command);
-								}
-								
-							}
-							CommandsListView->SetListItemsSource(FilteredListView);
-							CommandsListView->RebuildList();
+							FilterString = NewText.ToString();	
+							FilterList();
 						}
 					)
 			]
@@ -284,6 +265,66 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 			[
 				SNew(SVerticalBox)
 				+ SVerticalBox::Slot()
+				.Padding(0.0f, 5.0f, 0.0f, 5.0f)
+				.AutoHeight()
+				[
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+					.Padding(0, 0, 5.0f, 0)
+					.AutoWidth()
+					[
+						SNew(SCheckBox)
+						.IsChecked(ECheckBoxState::Checked)
+						.OnCheckStateChanged_Lambda([=](ECheckBoxState State) {
+
+							bShowCVar = (bool)State;
+
+							FilterList();
+						})
+						.Content()
+						[
+							SNew(STextBlock)
+							.Text(FText::FromString("Show variables"))
+						]
+					]
+					+ SHorizontalBox::Slot()
+					.Padding(0, 0, 5.0f, 0)
+					.AutoWidth()
+					[
+						SNew(SCheckBox)
+						.IsChecked(ECheckBoxState::Checked)
+						.OnCheckStateChanged_Lambda([=](ECheckBoxState State) {
+							bShowCCmd = (bool)State;
+							FilterList();
+						})
+						.Content()
+						[
+							SNew(STextBlock)
+							.Text(FText::FromString("Show commands"))
+						]
+					]
+					+ SHorizontalBox::Slot()
+					.Padding(0, 0, 5.0f, 0)
+					.AutoWidth()
+					[
+						SNew(SCheckBox)
+						.IsChecked(ECheckBoxState::Checked)
+						.OnCheckStateChanged_Lambda([=](ECheckBoxState State) {
+
+							bShowExec = (bool)State;
+							
+							FilterList();
+
+						})
+						.Content()
+						[
+							SNew(STextBlock)
+							.Text(FText::FromString("Show exec commands"))
+						]
+					]
+				]
+
+				+ SVerticalBox::Slot()
 				.FillHeight(1)
 				.Padding(0,0,0, 0.0f)
 				[
@@ -357,6 +398,50 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 //
 //
 //}
+
+void SConsoleManagerSlateWidget::FilterList()
+{
+	const TArray<TSharedPtr<FConsoleCommand>>& Commands = CommandsManager.Pin()->GetCurrentCommandsSharedPtr();
+
+	bool bShowAll = bShowCCmd && bShowCVar && bShowExec;
+	if (FilterString.IsEmpty() && bShowAll)
+	{
+		CommandsListView->SetListItemsSource(Commands);
+		CommandsListView->RebuildList();
+		return;
+	}
+
+	FilteredListView.Empty();
+	for (const auto& Command : Commands)
+	{
+		bool bShouldBeDisplayed = true;
+		if (Command->GetObjType() == EConsoleCommandType::CVar)
+		{
+			bShouldBeDisplayed = bShowCVar;
+		}
+		else if(Command->GetObjType() == EConsoleCommandType::CCmd)
+		{
+			bShouldBeDisplayed = bShowCCmd;
+		}
+		else if(Command->GetObjType() == EConsoleCommandType::Exec)
+		{
+			bShouldBeDisplayed = bShowExec;
+		}
+
+		// If its empty no need to check if string contains empty string
+		bool bContainFilterString = FilterString.IsEmpty() || Command->GetName().Contains(FilterString);
+
+		if (bContainFilterString && bShouldBeDisplayed)
+		{
+			FilteredListView.Add(Command);
+		}
+	}
+	
+
+	CommandsListView->SetListItemsSource(FilteredListView);
+	CommandsListView->RebuildList();
+
+}
 
 void SConsoleManagerSlateWidget::OnAddGroupButtonClicked()
 {
@@ -636,28 +721,7 @@ void SConsoleManagerSlateWidget::GenerateCommandsScrollBox()
 	
 	const TArray<TSharedPtr<FConsoleCommand>>& Commands = CommandsManager.Pin()->GetCurrentCommandsSharedPtr();
 
-	FText SearchText = SearchBox->GetText();
-
-	if (SearchText.IsEmpty())
-	{
-		CommandsListView->SetListItemsSource(Commands);
-		CommandsListView->RebuildList();
-		return;
-	}
-
-	FilteredListView.Empty();
-	for (const auto& Command : Commands)
-	{
-		FString Part = SearchText.ToString();
-		if (Command->Name.Contains(Part))
-		{
-			FilteredListView.Add(Command);
-		}
-
-	}
-	
-	CommandsListView->SetListItemsSource(FilteredListView);
-	CommandsListView->RebuildList();
+	FilterList();
 	
 
 	
