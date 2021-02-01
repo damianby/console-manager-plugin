@@ -23,17 +23,6 @@ public:
 	FConsoleCommand(FString _Command);
 	FConsoleCommand(const FConsoleCommand& Copy);
 
-	FString Name;
-	EConsoleCommandInputType InputType;
-	FString Value;
-
-	FString Type;
-	FString SetBy;
-
-	EConsoleCommandType ObjType;
-
-
-
 	void SetIsValid(bool NewValid) { bIsValid = NewValid; };
 	bool IsValid() { return bIsValid; };
 	FORCEINLINE bool operator == (const FString& Other) const {
@@ -50,7 +39,13 @@ public:
 		Value = NewValue;
 		RefreshExec();
 	};
-	const FString& GetValue() { return Value; };
+	const FString& GetValue() const { return Value; };
+
+	FORCEINLINE const FString& GetName() const { return Name; }
+	FORCEINLINE const FString& GetSetBy() const { return SetBy; }
+	FORCEINLINE const FString& GetType() const { return Type; }
+	FORCEINLINE const EConsoleCommandType& GetObjType() const { return ObjType; }
+
 
 	const FString& GetCurrentValue() { return CurrentValue; };
 
@@ -65,6 +60,15 @@ private:
 
 	FString ExecCommand;
 	FString CurrentValue;
+	FString Value;
+
+	// These values are initialized on object creation and not changed later 
+
+	FString Name;
+	EConsoleCommandType ObjType;
+	FString Type;
+	FString SetBy;
+	//
 
 	static FString GetTextSection(const TCHAR * &It);
 

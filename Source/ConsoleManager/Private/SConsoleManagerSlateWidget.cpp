@@ -798,7 +798,7 @@ bool SConsoleManagerSlateWidget::OpenExecMultipleDialog(TArray<TSharedPtr<FConso
 			.VAlign(EVerticalAlignment::VAlign_Center)
 			[
 				SNew(STextBlock)
-				.Text(FText::FromString(SelectedCommand->Name))
+				.Text(FText::FromString(SelectedCommand->GetName()))
 			];
 
 		GridPanel->AddSlot(1, i)
@@ -1236,7 +1236,7 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 			.FillWidth(1.0f)
 			[
 				SNew(STextBlock)
-				.Text(FText::FromString(Item->Name))
+				.Text(FText::FromString(Item->GetName()))
 				.ToolTipText(FText::FromString(Item->GetTooltip()))
 				.AutoWrapText(true)
 				.WrappingPolicy(ETextWrappingPolicy::AllowPerCharacterWrapping)
@@ -1265,7 +1265,7 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 		.HintText(ValueText)
 		.OnIsTypedCharValid(FOnIsTypedCharValid::CreateLambda(
 			[=](TCHAR Char) {
-				if (Item->Type.Equals("Int") || Item->Type.Equals("Float"))
+				if (Item->GetType().Equals("Int") || Item->GetType().Equals("Float"))
 				{
 					return FString().AppendChar(Char).IsNumeric();
 				}
@@ -1306,25 +1306,22 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 
 
 		TSharedRef<SBorder> ValueBorder = SNew(SBorder)
-			.BorderBackgroundColor(Item->ObjType == EConsoleCommandType::CVar ? BorderColor : FLinearColor(0,0,0,0))
+			.BorderBackgroundColor(Item->GetObjType() == EConsoleCommandType::CVar ? BorderColor : FLinearColor(0,0,0,0))
 			[
 				EditText
 			];
-
+		
 		return ValueBorder;
 	}
-
-	if (ColumnName.IsEqual(FName(TEXT("Type"))))
+	else if (ColumnName.IsEqual(FName(TEXT("Type"))))
 	{
-		return SNew(STextBlock).Text(FText::FromString(Item->Type));
+		return SNew(STextBlock).Text(FText::FromString(Item->GetType()));
 	}
-
-	if (ColumnName.IsEqual(FName(TEXT("SetBy"))))
+	else if (ColumnName.IsEqual(FName(TEXT("SetBy"))))
 	{
-		return SNew(STextBlock).Text(FText::FromString(Item->SetBy));
+		return SNew(STextBlock).Text(FText::FromString(Item->GetSetBy()));
 	}
-
-	if (ColumnName.IsEqual(FName(TEXT("Current Value"))))
+	else if (ColumnName.IsEqual(FName(TEXT("Current Value"))))
 	{
 
 		TSharedPtr<SWidget> CurrentValueCell;
@@ -1341,7 +1338,7 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 		.HintText(CurrentValueText)
 		.OnIsTypedCharValid(FOnIsTypedCharValid::CreateLambda(
 			[=](TCHAR Char) {
-				if (Item->Type.Equals("Int") || Item->Type.Equals("Float"))
+				if (Item->GetType().Equals("Int") || Item->GetType().Equals("Float"))
 				{
 					return FString().AppendChar(Char).IsNumeric();
 				}
@@ -1402,13 +1399,13 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 
 		CurrentValueCell = SNew(SBorder)
 			.HAlign(EHorizontalAlignment::HAlign_Fill)
-			.BorderBackgroundColor(Item->ObjType == EConsoleCommandType::CVar ? BorderColor : FLinearColor(0, 0, 0, 0))
+			.BorderBackgroundColor(Item->GetObjType() == EConsoleCommandType::CVar ? BorderColor : FLinearColor(0, 0, 0, 0))
 			[
 				EditText	
 			];
 
 
-		if (Item->ObjType != EConsoleCommandType::CVar)
+		if (Item->GetObjType() != EConsoleCommandType::CVar)
 		{
 			CurrentValueCell->SetVisibility(EVisibility::Hidden);
 		}

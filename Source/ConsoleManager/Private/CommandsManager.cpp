@@ -447,7 +447,7 @@ void FCommandsManager::ValidateCommands(TArray<FConsoleCommand>& Commands)
 {
 	for (auto& Command : Commands)
 	{
-		if (!AllCommands.Commands.FindByKey<FString>(Command.Name))
+		if (!AllCommands.Commands.FindByKey<FString>(Command.GetName()))
 		{
 			Command.SetIsValid(false);
 		}
