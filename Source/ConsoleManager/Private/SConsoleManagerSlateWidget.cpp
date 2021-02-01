@@ -51,7 +51,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 	{
 		HeaderRow->AddColumn(SHeaderRow::Column("CommandType")
 			.DefaultLabel(FText::FromString("Type"))
-			.FixedWidth(100.0f)
+			.ManualWidth(60.0f)
 			.HAlignCell(EHorizontalAlignment::HAlign_Center)
 			.HAlignHeader(EHorizontalAlignment::HAlign_Center)
 			.VAlignCell(EVerticalAlignment::VAlign_Center));
@@ -67,7 +67,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 			.HAlignCell(EHorizontalAlignment::HAlign_Center)
 			.HAlignHeader(EHorizontalAlignment::HAlign_Center)
 			.VAlignCell(EVerticalAlignment::VAlign_Center)
-			.FixedWidth(80)
+			.ManualWidth(80)
 		);
 
 	}
@@ -95,7 +95,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 			.HAlignCell(EHorizontalAlignment::HAlign_Center)
 			.HAlignHeader(EHorizontalAlignment::HAlign_Center)
 			.VAlignCell(EVerticalAlignment::VAlign_Center)
-			.FixedWidth(130)
+			.ManualWidth(130)
 		);
 
 	}
@@ -184,6 +184,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 	//Validate all console commands to check if any existing in AllCommands //git
 	TSharedRef<SWidget> Content = SNew(SVerticalBox)
 		+ SVerticalBox::Slot()
+		.Padding(FMargin(6.0f, 6.0f, 6.0f, 0))
 		.AutoHeight()
 		[
 			SNew(SHorizontalBox)
