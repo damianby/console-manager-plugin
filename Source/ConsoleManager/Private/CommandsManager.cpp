@@ -192,6 +192,11 @@ void FCommandsManager::ReplaceCommandInCurrentGroup(int32 Id, FConsoleCommand& N
 	CurrentGroup->Commands[Id] = NewCommand;
 }
 
+const FCommandGroup* FCommandsManager::GetAllCommands()
+{
+	return &AllCommands;
+}
+
 FCommandGroup* FCommandsManager::GetGroupById(const FString& Id)
 {
 	FCommandGroup* FoundGroup = CommandGroups.FindByKey<FString>(Id);

@@ -61,6 +61,7 @@ public:
 
 	void ReplaceCommandInCurrentGroup(int32 Id, FConsoleCommand& NewCommand);
 
+	const FCommandGroup* GetAllCommands();
 	FCommandGroup* GetGroupById(const FString& Id);
 
 	const FConsoleCommand& GetConsoleCommand(int Id);
