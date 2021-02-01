@@ -107,6 +107,55 @@ void FConsoleManagerModule::RegisterMenus()
 	}
 }
 
+void FConsoleManagerModule::AskForDefaultGroup()
+{
+	TSharedRef<SWidget> ContentWidget =
+		SNew(SBox)
+		.Padding(FMargin(0.f, 15.f, 0.f, 0.f))
+		[
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+		.AutoHeight()
+		.Padding(FMargin(0.f, 0.f, 0.f, 10.f))
+		[
+			SNew(STextBlock)
+			.Text(FText::FromString(FString::Printf(TEXT("Would you like to create snapshot of all variables?"))))
+		]
+		];
+
+
+	TSharedRef<SCustomDialog> EditDialog = SNew(SCustomDialog)
+		.Title(FText(LOCTEXT("EditGroupDialog_Title", "Edit Group")))
+		.DialogContent(ContentWidget)
+		.Buttons({
+			SCustomDialog::FButton(LOCTEXT("OK", "OK"), FSimpleDelegate()),
+			SCustomDialog::FButton(LOCTEXT("Cancel", "Cancel"), FSimpleDelegate())
+			});
+
+	// returns 0 when OK is pressed, 1 when Cancel is pressed, -1 if the window is closed
+	const int ButtonPressed = EditDialog->ShowModal();
+
+	switch (ButtonPressed)
+	{
+	case 0:
+		FCommandGroup* NewGroup = CommandsManager->AddNewGroup("Default");
+		const FCommandGroup* AllCommands = CommandsManager->GetAllCommands();
+
+		for (const FConsoleCommand& Command : AllCommands->Commands)
+		{
+			
+			if (Command.GetObjType() == EConsoleCommandType::CVar)
+			{
+				FConsoleCommand& NewCommand = NewGroup->Commands.Add_GetRef(Command);
+				NewCommand.SetValue(NewCommand.GetCurrentValue());
+			}
+		}
+
+		break;
+	}
+
+}
+
 TSharedRef<class SDockTab> FConsoleManagerModule::OnSpawnPluginTab(const FSpawnTabArgs& SpawnTabArgs)
 {
 	CommandsManager->Refresh();
@@ -140,6 +189,14 @@ TSharedRef<class SDockTab> FConsoleManagerModule::OnSpawnPluginTab(const FSpawnT
 		});
 
 	DockTab->SetOnTabClosed(ClosedTabDelegate);
+
+
+	//If there isnt any group created on window open ask user if he wants to create new with all variables
+	if (CommandsManager->GetCommandGroups().Num() == 0)
+	{
+		AskForDefaultGroup();
+	}
+
 
 	return DockTab;
 }
