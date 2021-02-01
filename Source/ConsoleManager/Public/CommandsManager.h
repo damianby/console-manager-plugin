@@ -43,14 +43,14 @@ public:
 
 	FORCEINLINE const TArray<FCommandGroup>& GetCommandGroups() { return CommandGroups; };
 
-	void SetActiveGroup(int NewId);
+	bool SetActiveGroup(int NewId);
 
 	void ReorderCommandInCurrentGroup(int32 CurrentId, int32 NewId);
 	void DuplicateCommand(int32 Id);
 	void RemoveCommands(TArray<int32> Ids);
 
-	void SetActiveHistory();
-	void SetActiveAllCommands();
+	bool SetActiveHistory();
+	bool SetActiveAllCommands();
 
 	FCommandGroup* AddNewGroup(const FString& Name, EGroupType Type);
 	FCommandGroup* AddNewGroup(const FString& Name);

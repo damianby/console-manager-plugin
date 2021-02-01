@@ -226,14 +226,12 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 					SNew(SButton)
 					.Text(LOCTEXT("HistoryButton", "History"))
 					.OnClicked(FOnClicked::CreateLambda([=]() {
-						bIsAllCommands = false;
-						CommandsManager.Pin()->SetActiveHistory();
-						GenerateCommandsScrollBox();
-						CommandsListView->ScrollToBottom();
+						if(CommandsManager.Pin()->SetActiveHistory())
+						{
+							GenerateCommandsScrollBox();
+							CommandsListView->ScrollToBottom();
+						}
 						
-						
-
-						UE_LOG(LogTemp, Warning, TEXT("History"));
 						return FReply::Handled();
 					}))
 				]
@@ -244,13 +242,13 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 					SNew(SButton)
 					.Text(LOCTEXT("ShowAllButton", "Show All"))
 					.OnClicked(FOnClicked::CreateLambda([=]() {
-						bIsAllCommands = true;
-						CommandsManager.Pin()->SetActiveAllCommands();
-						GenerateCommandsScrollBox();
+						if(CommandsManager.Pin()->SetActiveAllCommands())
+						{
+							GenerateCommandsScrollBox();
 
-						CommandsListView->ScrollToTop();
-
-						UE_LOG(LogTemp, Warning, TEXT("All commands"));
+							CommandsListView->ScrollToTop();
+						}
+			
 						return FReply::Handled();
 						}))
 				]
@@ -473,13 +471,10 @@ void SConsoleManagerSlateWidget::OnAddGroupButtonClicked()
 
 FReply SConsoleManagerSlateWidget::OnSelectGroupClicked(int Id)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Id: %d"), Id);
-
-	bIsAllCommands = false;
-
-	CommandsManager.Pin()->SetActiveGroup(Id);
-
-	GenerateCommandsScrollBox();
+	if (CommandsManager.Pin()->SetActiveGroup(Id))
+	{
+		GenerateCommandsScrollBox();
+	}
 
 	return FReply::Handled();
 }

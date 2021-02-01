@@ -83,11 +83,17 @@ const TArray<FString> FCommandsManager::GetGroupList()
 
 
 
-void FCommandsManager::SetActiveGroup(int NewId)
+bool FCommandsManager::SetActiveGroup(int NewId)
 {
 	check(CommandGroups.IsValidIndex(NewId));
 	
-	SetCurrentCommands(CommandGroups[NewId]);
+	if (!CurrentGroup->Id.Equals(CommandGroups[NewId].Id))
+	{
+		SetCurrentCommands(CommandGroups[NewId]);
+		return true;
+	}
+
+	return false;
 }
 
 void FCommandsManager::ReorderCommandInCurrentGroup(int32 CurrentId, int32 NewId)
@@ -138,14 +144,24 @@ void FCommandsManager::RemoveCommands(TArray<int32> Ids)
 	}
 }
 
-void FCommandsManager::SetActiveHistory()
+bool FCommandsManager::SetActiveHistory()
 {
-	SetCurrentCommands(ConsoleHistory);
+	if (CurrentGroup != &ConsoleHistory)
+	{
+		SetCurrentCommands(ConsoleHistory);
+		return true;
+	}
+	return false;
 }
 
-void FCommandsManager::SetActiveAllCommands()
+bool FCommandsManager::SetActiveAllCommands()
 {
-	SetCurrentCommands(AllCommands);
+	if (CurrentGroup != &AllCommands)
+	{
+		SetCurrentCommands(AllCommands);
+		return true;
+	}
+	return false;
 }
 
 FCommandGroup* FCommandsManager::AddNewGroup(const FString& Name, EGroupType Type)
