@@ -49,6 +49,17 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 	HeaderValue.HAlignHeader(EHorizontalAlignment::HAlign_Center);
 	HeaderValue.VAlignCell(EVerticalAlignment::VAlign_Center);
 
+	if (InArgs._DisplayCommandType)
+	{
+		HeaderRow->AddColumn(SHeaderRow::Column("CommandType")
+			.DefaultLabel(FText::FromString("Type"))
+			.FixedWidth(100.0f)
+			.HAlignCell(EHorizontalAlignment::HAlign_Fill)
+			.HAlignHeader(EHorizontalAlignment::HAlign_Fill)
+			.VAlignCell(EVerticalAlignment::VAlign_Center));
+
+	}
+	
 
 	if (InArgs._DisplayCommandValueType)
 	{
@@ -1516,6 +1527,27 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 
 		return CurrentValueCell.ToSharedRef();
 	}
+	else if (ColumnName.IsEqual(FName(TEXT("CommandType"))))
+	{
+		FString Type;
+		if (Item->GetObjType() == EConsoleCommandType::CCmd)
+		{
+			Type = "CCmd";
+		}
+		else if (Item->GetObjType() == EConsoleCommandType::CVar)
+		{
+			Type = "CVar";
+		}
+		else if (Item->GetObjType() == EConsoleCommandType::Exec)
+		{
+			Type = "Exec";
+		}
+
+		return SNew(STextBlock)
+			.Text(FText::FromString(Type));
+	}
+
+
 
 	return SNullWidget::NullWidget;
 }

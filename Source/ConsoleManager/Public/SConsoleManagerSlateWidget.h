@@ -161,6 +161,7 @@ public:
 	SLATE_ARGUMENT(TWeakPtr<FCommandsManager>, CommandsManager);
 	SLATE_ARGUMENT(bool, DisplayCommandValueType);
 	SLATE_ARGUMENT(bool, DisplaySetByValue);
+	SLATE_ARGUMENT(bool, DisplayCommandType);
 
 
 	SLATE_END_ARGS()

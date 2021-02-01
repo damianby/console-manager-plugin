@@ -216,9 +216,14 @@ TSharedRef<class SConsoleManagerSlateWidget> FConsoleManagerModule::BuildUI()
 {
 	bool DisplayCommandValueType = GetMutableDefault<UConsoleManagerSettings>()->DisplayCommandValueType;
 	bool DisplaySetByValue = GetMutableDefault<UConsoleManagerSettings>()->DisplaySetByValue;
+	bool DisplayCommandType = GetMutableDefault<UConsoleManagerSettings>()->DisplayCommandType;
 
 
-	return SNew(SConsoleManagerSlateWidget).CommandsManager(CommandsManager).DisplayCommandValueType(DisplayCommandValueType).DisplaySetByValue(DisplaySetByValue);
+	return SNew(SConsoleManagerSlateWidget)
+		.CommandsManager(CommandsManager)
+		.DisplayCommandValueType(DisplayCommandValueType)
+		.DisplaySetByValue(DisplaySetByValue)
+		.DisplayCommandType(DisplayCommandType);
 }
 
 #undef LOCTEXT_NAMESPACE

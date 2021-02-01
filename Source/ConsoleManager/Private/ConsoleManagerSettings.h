@@ -22,6 +22,13 @@ public:
 	UPROPERTY(EditAnywhere, config, Category = UI)
 		bool DisplaySetByValue = true;
 
+	/**
+	 * Should type(CVar, CCmd, Exec) be displayed
+	*/
+	UPROPERTY(EditAnywhere, config, Category = UI)
+		bool DisplayCommandType = false;
+
+
 	/** The color used to visualize same values */
 	UPROPERTY(EditAnywhere, config, Category = Colors, meta = (DisplayName = "Matching values color"))
 		FLinearColor MatchingValuesColor;
