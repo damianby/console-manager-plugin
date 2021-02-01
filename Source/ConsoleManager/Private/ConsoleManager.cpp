@@ -73,6 +73,8 @@ void FConsoleManagerModule::StartupModule()
 
 	CommandsManager = TSharedPtr<FCommandsManager>(new FCommandsManager());
 
+	CommandsManager->Refresh();
+
 
 	FLinearColor MatchingValuesColor = GetMutableDefault<UConsoleManagerSettings>()->MatchingValuesColor;
 	FLinearColor NotMatchingValuesColor = GetMutableDefault<UConsoleManagerSettings>()->NotMatchingValuesColor;
