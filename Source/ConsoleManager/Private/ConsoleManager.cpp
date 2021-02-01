@@ -14,6 +14,7 @@
 
 #include "Dialogs/Dialogs.h"
 #include "Dialogs/CustomDialog.h"
+#include "ISettingsSection.h"
 
 static const FName ConsoleManagerTabName("ConsoleManager");
 
@@ -21,15 +22,32 @@ static const FName ConsoleManagerTabName("ConsoleManager");
 
 void FConsoleManagerModule::StartupModule()
 {
-	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
-
-	if (ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings")) {
-		SettingsModule->RegisterSettings("Editor", "Plugins", "Console Manager",
+	if (ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings")) 
+	{
+		TSharedPtr<ISettingsSection> Section = SettingsModule->RegisterSettings("Editor", "Plugins", "Console Manager",
 			LOCTEXT("ConsoleManagerName", "Console Manager"),
 			LOCTEXT("ConsoleManagerNameDesc",
 				"Configure display options of commands"),
 			GetMutableDefault<UConsoleManagerSettings>()
 		);
+
+		Section->OnModified().BindLambda([=]() {
+
+			FLinearColor MatchingValuesColor = GetMutableDefault<UConsoleManagerSettings>()->MatchingValuesColor;
+			FLinearColor NotMatchingValuesColor = GetMutableDefault<UConsoleManagerSettings>()->NotMatchingValuesColor;
+
+			FConsoleManagerStyle::SetMatchingValuesColor(MatchingValuesColor);
+			FConsoleManagerStyle::SetNotMachingValuesColor(NotMatchingValuesColor);
+
+			TSharedPtr<SDockTab> Tab = FGlobalTabmanager::Get()->FindExistingLiveTab(ConsoleManagerTabName);
+
+			if (Tab.IsValid())
+			{
+				Tab->SetContent(BuildUI());
+			}
+
+			return true;
+			});
 	}
 
 
