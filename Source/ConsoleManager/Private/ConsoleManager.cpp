@@ -38,12 +38,18 @@ void FConsoleManagerModule::StartupModule()
 
 			FConsoleManagerStyle::SetMatchingValuesColor(MatchingValuesColor);
 			FConsoleManagerStyle::SetNotMachingValuesColor(NotMatchingValuesColor);
-
-			TSharedPtr<SDockTab> Tab = FGlobalTabmanager::Get()->FindExistingLiveTab(ConsoleManagerTabName);
-
-			if (Tab.IsValid())
+			
+			if (ActiveTab.IsValid())
 			{
-				Tab->SetContent(BuildUI());
+				ActiveTab.Pin()->SetContent(BuildUI());
+			}
+			else
+			{
+				TSharedPtr<SDockTab> Tab = FGlobalTabmanager::Get()->FindExistingLiveTab(ConsoleManagerTabName);
+				if (Tab.IsValid())
+				{
+					Tab->SetContent(BuildUI());
+				}
 			}
 
 			return true;
@@ -108,7 +114,7 @@ void FConsoleManagerModule::ShutdownModule()
 
 void FConsoleManagerModule::OpenTab()
 {
-	FGlobalTabmanager::Get()->InvokeTab(ConsoleManagerTabName);
+	ActiveTab = FGlobalTabmanager::Get()->InvokeTab(ConsoleManagerTabName);
 }
 
 void FConsoleManagerModule::RegisterMenus()

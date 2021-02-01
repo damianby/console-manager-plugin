@@ -36,6 +36,8 @@ private:
 
 	TSharedRef<class SConsoleManagerSlateWidget> BuildUI();
 
+	TWeakPtr<SDockTab> ActiveTab;
+
 	//This handle allows to catch any changes to cvars
 	FConsoleVariableSinkHandle Handle;
 
