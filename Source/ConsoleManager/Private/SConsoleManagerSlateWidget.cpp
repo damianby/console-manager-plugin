@@ -722,7 +722,7 @@ void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
 void SConsoleManagerSlateWidget::GenerateCommandsScrollBox()
 {
 	CommandsListView->ClearSelection();
-	if (bIsAllCommands)
+	if (CommandsManager.Pin()->GetCurrentCommandGroup().Type == EGroupType::AllCommands)
 	{
 		CommandsListView->GetHeaderRow()->RemoveColumn("Value");
 		CommandsListView->GetHeaderRow()->RemoveColumn("Execute");
@@ -965,7 +965,8 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 			{
 
 				const FText ExecuteName = SelectedCommands.Num() > 1 ? FText::FromString("Execute All") : FText::FromString("Execute");
-
+				
+				EGroupType GroupType = Group.Type;
 				MenuBuilder.AddMenuEntry
 				(
 					ExecuteName,
@@ -977,7 +978,7 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 
 							bool ShouldExecute = true;
 
-							if (bIsAllCommands)
+							if (GroupType == EGroupType::AllCommands)
 							{
 								ShouldExecute = OpenExecMultipleDialog(SelectedCommands);
 							}

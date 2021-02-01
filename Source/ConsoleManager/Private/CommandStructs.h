@@ -2,13 +2,14 @@
 
 #include "CoreMinimal.h"
 
-enum class EConsoleCommandInputType : uint8
-{
-	None,
-	Value,
-	Slider
-};
 
+
+enum class EGroupType : uint8
+{
+	Default,
+	AllCommands,
+	History
+};
 
 enum class EConsoleCommandType : uint8
 {
@@ -82,6 +83,7 @@ struct FCommandGroup
 {
 	FString Name;
 	FString Id;
+	EGroupType Type;
 	TArray<FConsoleCommand> Commands;
 	bool bInitiallySet = false;
 	bool bIsEditable = true;

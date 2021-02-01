@@ -148,12 +148,18 @@ void FCommandsManager::SetActiveAllCommands()
 	SetCurrentCommands(AllCommands);
 }
 
-FCommandGroup* FCommandsManager::AddNewGroup(const FString& Name)
+FCommandGroup* FCommandsManager::AddNewGroup(const FString& Name, EGroupType Type)
 {
 	FCommandGroup& NewGroup = CommandGroups.AddDefaulted_GetRef();
+	NewGroup.Type = Type;
 	NewGroup.Name = Name;
 
 	return &NewGroup;
+}
+
+FCommandGroup* FCommandsManager::AddNewGroup(const FString& Name)
+{
+	return AddNewGroup(Name, EGroupType::Default);
 }
 
 void FCommandsManager::AddCommandsToCurrentGroup(TArray<TSharedPtr<FConsoleCommand>> Commands)
@@ -489,6 +495,7 @@ void FCommandsManager::DumpAllCommands()
 
 	AllCommands.Commands.Empty();
 	AllCommands.bIsEditable = false;
+	AllCommands.Type = EGroupType::AllCommands;
 
 	for (auto& Command : LocalCommands)
 	{

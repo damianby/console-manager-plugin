@@ -18,6 +18,7 @@ void FileHelper::LoadConsoleHistory(FCommandGroup& OutGroup)
 
 	OutGroup.Name = SectionName;
 	OutGroup.Commands.Empty();
+	OutGroup.Type = EGroupType::History;
 	OutGroup.bIsEditable = false;
 
 	for (const auto& ConfigPair : Ini)
@@ -87,6 +88,7 @@ void FileHelper::ProcessCommandsFile(const FString& Contents, TArray<FCommandGro
 
 			CurrentSection = &OutGroups.AddDefaulted_GetRef();
 			CurrentSection->Name = Start;
+			CurrentSection->Type = EGroupType::Default;
 
 			FString NewGroupId = FString(Start) + "_";
 
