@@ -12,6 +12,9 @@
 #include "FileHelper.h"
 #include "ConsoleManagerSettings.h"
 
+#include "Dialogs/Dialogs.h"
+#include "Dialogs/CustomDialog.h"
+
 static const FName ConsoleManagerTabName("ConsoleManager");
 
 #define LOCTEXT_NAMESPACE "FConsoleManagerModule"
