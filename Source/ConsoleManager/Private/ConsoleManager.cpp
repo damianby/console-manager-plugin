@@ -1,4 +1,5 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright 2021 Funky Fox Studio. All Rights Reserved.
+// Author: Damian Baldyga
 
 #include "ConsoleManager.h"
 #include "ConsoleManagerStyle.h"

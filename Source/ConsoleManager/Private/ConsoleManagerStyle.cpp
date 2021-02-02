@@ -1,4 +1,5 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2021 Funky Fox Studio. All Rights Reserved.
+// Author: Damian Baldyga
 
 #include "ConsoleManagerStyle.h"
 #include "Framework/Application/SlateApplication.h"

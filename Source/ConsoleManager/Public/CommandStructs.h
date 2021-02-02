@@ -1,3 +1,6 @@
+// Copyright 2021 Funky Fox Studio. All Rights Reserved.
+// Author: Damian Baldyga
+
 #pragma once
 
 #include "CoreMinimal.h"
