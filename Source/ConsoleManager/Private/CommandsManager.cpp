@@ -86,11 +86,11 @@ bool FCommandsManager::SetActiveGroup(int NewId)
 {
 	check(CommandGroups.IsValidIndex(NewId));
 	
-	if (!CurrentGroup->Id.Equals(CommandGroups[NewId].Id))
-	{
-		SetCurrentCommands(CommandGroups[NewId]);
-		return true;
-	}
+	//if (!CurrentGroup->Id.Equals(CommandGroups[NewId].Id))
+	//{
+	SetCurrentCommands(CommandGroups[NewId]);
+	return true;
+	//}
 
 	return false;
 }
