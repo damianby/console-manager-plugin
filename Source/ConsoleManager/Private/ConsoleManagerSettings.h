@@ -28,6 +28,10 @@ public:
 	UPROPERTY(EditAnywhere, config, Category = UI, meta = (DisplayName = "Show command type"))
 		bool DisplayCommandType = false;
 
+	/** How commands can history keep */
+	UPROPERTY(EditAnywhere, config, Category = UI, meta = (DisplayName = "History buffer size"))
+		int32 HistoryBufferSize = 64;
+
 	/** The color used to visualize matching values */
 	UPROPERTY(EditAnywhere, config, Category = Colors, meta = (DisplayName = "Matching values color"))
 		FLinearColor MatchingValuesColor;

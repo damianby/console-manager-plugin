@@ -201,6 +201,8 @@ TSharedRef<class SDockTab> FConsoleManagerModule::OnSpawnPluginTab(const FSpawnT
 		AskForDefaultGroup();
 	}
 
+	CommandsManager->SetHistoryBufferSize(GetMutableDefault<UConsoleManagerSettings>()->HistoryBufferSize);
+
 	TSharedRef<SConsoleManagerSlateWidget> UI = BuildUI();
 
 	FConsoleCommandDelegate Delegate;

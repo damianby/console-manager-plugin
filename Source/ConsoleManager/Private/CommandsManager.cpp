@@ -31,7 +31,10 @@ void FCommandsManager::Refresh()
 	const FString CommandsPath = IPluginManager::Get().FindPlugin("ConsoleManager")->GetBaseDir() / TEXT("Resources") / TEXT("Commands.txt");
 
 	FileHelper::ReadCommandFile(CommandsPath, CommandGroups);
-	FileHelper::LoadConsoleHistory(ConsoleHistory);
+
+
+	LoadConsoleHistory();
+
 	
 	ValidateCommands(ConsoleHistory.Commands);
 	for (auto& Group : CommandGroups)
@@ -376,7 +379,17 @@ void FCommandsManager::UpdateHistory()
 	TArray<FString> Out;
 	IConsoleManager::Get().GetConsoleHistory(*FString(), Out);
 	
-	ConsoleHistory.Commands.Add(FConsoleCommand(Out.Last()));
+	// limit size to avoid a ever growing file
+	while (ConsoleHistory.Commands.Num() > HistoryBufferSize)
+	{
+		ConsoleHistory.Commands.RemoveAt(0);
+	}
+	FString ExecCommand = Out.Last();
+
+	ConsoleHistory.Commands.RemoveAll([&ExecCommand](FConsoleCommand& Command) { return Command.GetExec().Equals(ExecCommand, ESearchCase::IgnoreCase); });
+	ConsoleHistory.Commands.Add(FConsoleCommand(ExecCommand));
+
+
 }
 
 bool FCommandsManager::IsHistorySelected()
@@ -384,6 +397,21 @@ bool FCommandsManager::IsHistorySelected()
 	return CurrentGroup == &ConsoleHistory ? true : false;
 }
 
+void FCommandsManager::LoadConsoleHistory()
+{
+	ConsoleHistory.Name = "History";
+	ConsoleHistory.Id = FGuid::NewGuid().ToString();
+	ConsoleHistory.Type = EGroupType::History;
+	ConsoleHistory.bIsEditable = false;
+
+	FileHelper::LoadConsoleHistory(ConsoleHistory.Commands);
+
+	// limit size to avoid a ever growing file
+	while (ConsoleHistory.Commands.Num() > HistoryBufferSize)
+	{
+		ConsoleHistory.Commands.RemoveAt(0);
+	}
+}
 //It will not add wrong command to history
 bool FCommandsManager::Execute(const FConsoleCommand& Command)
 {
@@ -403,7 +431,6 @@ bool FCommandsManager::Execute(const FConsoleCommand& Command)
 	if (SuccessExecuting)
 	{
 		IConsoleManager::Get().AddConsoleHistoryEntry(TEXT(""), *ExecCommand);
-		ConsoleHistory.Commands.Add(FConsoleCommand(ExecCommand));
 	}
 	else
 	{
@@ -522,6 +549,8 @@ void FCommandsManager::DumpAllCommands()
 	//LocalCommands.Sort(TLess<FString>());
 
 	AllCommands.Commands.Empty();
+	AllCommands.Name = "All Commands";
+	AllCommands.Id = FGuid::NewGuid().ToString();
 	AllCommands.bIsEditable = false;
 	AllCommands.Type = EGroupType::AllCommands;
 

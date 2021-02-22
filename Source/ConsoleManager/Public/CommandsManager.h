@@ -82,7 +82,10 @@ public:
 
 	bool IsHistorySelected();
 
+	void SetHistoryBufferSize(int32 NewSize) { HistoryBufferSize = NewSize; }
 private:
+
+	void LoadConsoleHistory();
 
 	// We should generate new array every time this array might be resized! (When adding, removing elements)
 	TArray<TSharedPtr<FConsoleCommand>> CurrentCommandsShared;
@@ -105,5 +108,7 @@ private:
 
 	FCommandGroup AllCommands;
 	FString CurrentGroupId;
+
+	int32 HistoryBufferSize = 64;
 
 };

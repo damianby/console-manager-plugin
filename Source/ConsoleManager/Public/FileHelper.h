@@ -16,7 +16,7 @@ public:
 	 * @brief	Loads console history from default project path Saved\Config\ConsoleHistory.ini
 	 * @param OutGroup	CommandGroup containing console history
 	*/
-	static void LoadConsoleHistory(FCommandGroup& OutGroup);
+	static void LoadConsoleHistory(TArray<FConsoleCommand>& OutCommands);
 
 	/**
 	 * @brief	Command file is almost the same as config file expect it uses lines as values instead of key=value

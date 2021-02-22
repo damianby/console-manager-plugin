@@ -7,7 +7,7 @@
 #include "Misc/FileHelper.h"
 
 
-void FileHelper::LoadConsoleHistory(FCommandGroup& OutGroup)
+void FileHelper::LoadConsoleHistory(TArray<FConsoleCommand>& OutCommands)
 {
 	FConfigFile Ini;
 
@@ -17,10 +17,7 @@ void FileHelper::LoadConsoleHistory(FCommandGroup& OutGroup)
 	const FString SectionName = TEXT("ConsoleHistory");
 	const FName KeyName = TEXT("History");
 
-	OutGroup.Name = SectionName;
-	OutGroup.Commands.Empty();
-	OutGroup.Type = EGroupType::History;
-	OutGroup.bIsEditable = false;
+	OutCommands.Reset();
 
 	for (const auto& ConfigPair : Ini)
 	{
@@ -42,7 +39,7 @@ void FileHelper::LoadConsoleHistory(FCommandGroup& OutGroup)
 		{
 			if (ConfigSectionPair.Key == KeyName)
 			{
-				OutGroup.Commands.Add(ConfigSectionPair.Value.GetValue());
+				OutCommands.Add(ConfigSectionPair.Value.GetValue());
 			}
 		}
 	}
