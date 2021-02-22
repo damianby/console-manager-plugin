@@ -228,6 +228,11 @@ const FConsoleCommand& FCommandsManager::GetConsoleCommand(int Id)
 	return CurrentGroup->Commands[Id];
 }
 
+bool FCommandsManager::ExecuteCommand(const FConsoleCommand& Command)
+{
+	return Execute(Command);
+}
+
 bool FCommandsManager::ExecuteCommand(FConsoleCommand& Command)
 {
 	bool SuccessExecuting = Execute(Command);

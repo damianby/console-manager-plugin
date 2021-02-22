@@ -68,6 +68,7 @@ public:
 
 	const FConsoleCommand& GetConsoleCommand(int Id);
 
+	bool ExecuteCommand(const FConsoleCommand& Command);
 	bool ExecuteCommand(FConsoleCommand& Command);
 	void ExecuteMultipleCommands(TArray<TSharedPtr<FConsoleCommand>> Commands);
 
