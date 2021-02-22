@@ -598,7 +598,17 @@ void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
 				.WrappingPolicy(ETextWrappingPolicy::AllowPerCharacterWrapping)
 			];
 
-			
+		Button->ShiftRightClickDelegate.BindLambda(
+			[=]()
+			{
+				const FCommandGroup& SelectedGroup = Group;
+				for (const auto& SelectedCommand : SelectedGroup.Commands)
+				{
+					CommandsManager.Pin()->ExecuteCommand(SelectedCommand);
+				}
+				
+			}
+		);
 
 		Button->RightClickDelegate.BindLambda(
 			[=](const FGeometry& Geometry, const FPointerEvent& MouseEvent) 

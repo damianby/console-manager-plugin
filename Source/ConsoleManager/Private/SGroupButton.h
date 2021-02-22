@@ -20,6 +20,7 @@ public:
 	void Construct(const FArguments& InArgs);
 
 	FPointerEventHandler RightClickDelegate;
+	FSimpleDelegate ShiftRightClickDelegate;
 	
 protected:
 	virtual FReply OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;

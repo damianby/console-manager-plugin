@@ -28,6 +28,11 @@ FReply SGroupButton::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointer
 		Reply = RightClickDelegate.Execute(MyGeometry, MouseEvent);
 	}
 
+	if (MouseEvent.GetModifierKeys().IsLeftShiftDown() && ShiftRightClickDelegate.IsBound())
+	{
+		ShiftRightClickDelegate.Execute();
+	}
+
 	FReply SuperReply = FReply::Unhandled();
 	SuperReply = SButton::OnMouseButtonUp(MyGeometry, MouseEvent);
 
