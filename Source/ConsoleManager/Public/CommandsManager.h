@@ -36,8 +36,7 @@ public:
 
 	void Refresh();
 
-	const TArray<TSharedPtr<FConsoleCommand>>& GetCurrentCommandsSharedPtr();
-	FORCEINLINE const TArray<TSharedPtr<FConsoleCommand>>& GetCurrentCommandsSharedPtr_Cache() { return CurrentCommandsShared; }
+	const TArray<TSharedPtr<FConsoleCommand>>& GetCurrentSharedCommands();
 	FORCEINLINE const FCommandGroup& GetCurrentCommandGroup() const { return *CurrentGroup; };
 	const TArray<FConsoleCommand>& GetCurrentCommands();
 	const TArray<FString> GetGroupList();
@@ -86,6 +85,8 @@ public:
 private:
 
 	void LoadConsoleHistory();
+
+	void RebuildSharedArray();
 
 	// We should generate new array every time this array might be resized! (When adding, removing elements)
 	TArray<TSharedPtr<FConsoleCommand>> CurrentCommandsShared;

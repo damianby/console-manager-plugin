@@ -111,13 +111,14 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 
 
 	CommandsListView = SNew(SListView< TSharedPtr<FConsoleCommand> >)
-		.ListItemsSource(&CommandsManager.Pin()->GetCurrentCommandsSharedPtr())
+		.ListItemsSource(&CommandsManager.Pin()->GetCurrentSharedCommands())
 		.ItemHeight(25.0f)
 		.OnGenerateRow(this, &SConsoleManagerSlateWidget::OnCommandsRowGenerate)
 		.SelectionMode(ESelectionMode::Multi)
 		.HeaderRow(HeaderRow)
 		.OnContextMenuOpening_Raw(this, &SConsoleManagerSlateWidget::GetListViewContextMenu);
 		
+	
 
 	//CommandsListView->SetOnEntryInitialized(SListView<TSharedPtr<FConsoleCommand>>::FOnEntryInitialized::CreateLambda(
 	//	[=](TSharedPtr<FConsoleCommand> Item, const TSharedRef<ITableRow> Row) {
@@ -408,45 +409,46 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 
 void SConsoleManagerSlateWidget::FilterList()
 {
-	const TArray<TSharedPtr<FConsoleCommand>>& Commands = CommandsManager.Pin()->GetCurrentCommandsSharedPtr();
+	const TArray<TSharedPtr<FConsoleCommand>>& Commands = CommandsManager.Pin()->GetCurrentSharedCommands();
+
 
 	bool bShowAll = bShowCCmd && bShowCVar && bShowExec;
 	if (FilterString.IsEmpty() && bShowAll)
 	{
 		CommandsListView->SetListItemsSource(Commands);
 		CommandsListView->RebuildList();
-		return;
 	}
-
-	FilteredListView.Empty();
-	for (const auto& Command : Commands)
+	else
 	{
-		bool bShouldBeDisplayed = true;
-		if (Command->GetObjType() == EConsoleCommandType::CVar)
+		FilteredListView.Empty();
+		for (const auto& Command : Commands)
 		{
-			bShouldBeDisplayed = bShowCVar;
-		}
-		else if(Command->GetObjType() == EConsoleCommandType::CCmd)
-		{
-			bShouldBeDisplayed = bShowCCmd;
-		}
-		else if(Command->GetObjType() == EConsoleCommandType::Exec)
-		{
-			bShouldBeDisplayed = bShowExec;
+			bool bShouldBeDisplayed = true;
+			if (Command->GetObjType() == EConsoleCommandType::CVar)
+			{
+				bShouldBeDisplayed = bShowCVar;
+			}
+			else if (Command->GetObjType() == EConsoleCommandType::CCmd)
+			{
+				bShouldBeDisplayed = bShowCCmd;
+			}
+			else if (Command->GetObjType() == EConsoleCommandType::Exec)
+			{
+				bShouldBeDisplayed = bShowExec;
+			}
+
+			// If its empty no need to check if string contains empty string
+			bool bContainFilterString = FilterString.IsEmpty() || Command->GetName().Contains(FilterString);
+
+			if (bContainFilterString && bShouldBeDisplayed)
+			{
+				FilteredListView.Add(Command);
+			}
 		}
 
-		// If its empty no need to check if string contains empty string
-		bool bContainFilterString = FilterString.IsEmpty() || Command->GetName().Contains(FilterString);
-
-		if (bContainFilterString && bShouldBeDisplayed)
-		{
-			FilteredListView.Add(Command);
-		}
+		CommandsListView->SetListItemsSource(FilteredListView);
+		CommandsListView->RebuildList();
 	}
-	
-	CommandsListView->SetListItemsSource(FilteredListView);
-	CommandsListView->RebuildList();
-
 }
 
 void SConsoleManagerSlateWidget::OnAddGroupButtonClicked()
@@ -522,7 +524,7 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 			CommandsListView->ClearSelection();
 			CommandsListView->SetSelection(Item, ESelectInfo::Direct);
 
-			DragOp->Id = CommandsManager.Pin()->GetCurrentCommandsSharedPtr_Cache().Find(Item);
+			DragOp->Id = CommandsManager.Pin()->GetCurrentSharedCommands().Find(Item);
 
 			//auto t2 = std::chrono::high_resolution_clock::now();
 
@@ -548,7 +550,7 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 			{
 				CommandsManager.Pin()->GetCurrentCommands();
 
-				int32 NewPosition = CommandsManager.Pin()->GetCurrentCommandsSharedPtr_Cache().Find(Item);
+				int32 NewPosition = CommandsManager.Pin()->GetCurrentSharedCommands().Find(Item);
 
 				if (Zone != EItemDropZone::AboveItem)
 				{
@@ -977,7 +979,7 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 							FExecuteAction::CreateLambda(
 								[=]()
 								{
-									CommandsManager.Pin()->DuplicateCommand(CommandsManager.Pin()->GetCurrentCommandsSharedPtr_Cache().Find(SelectedCommands[0]));
+									CommandsManager.Pin()->DuplicateCommand(CommandsManager.Pin()->GetCurrentSharedCommands().Find(SelectedCommands[0]));
 									GenerateCommandsScrollBox();
 
 									CommandsListView->SetSelection(SelectedCommands[0]);
@@ -1003,7 +1005,7 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 							{
 								TArray<int32> Ids;
 
-								const TArray<TSharedPtr<FConsoleCommand>>& Commands = CommandsManager.Pin()->GetCurrentCommandsSharedPtr_Cache();
+								const TArray<TSharedPtr<FConsoleCommand>>& Commands = CommandsManager.Pin()->GetCurrentSharedCommands();
 
 								for (int i = 0; i < SelectedCommands.Num(); i++)
 								{

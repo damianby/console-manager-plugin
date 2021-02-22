@@ -53,15 +53,8 @@ void FCommandsManager::Refresh()
 	}
 }
 
-const TArray<TSharedPtr<FConsoleCommand>>& FCommandsManager::GetCurrentCommandsSharedPtr()
+const TArray<TSharedPtr<FConsoleCommand>>& FCommandsManager::GetCurrentSharedCommands()
 {
-	CurrentCommandsShared.Empty();
-
-	for (int i = 0; i < CurrentGroup->Commands.Num(); i++)
-	{
-		CurrentCommandsShared.Add(MakeShareable(&CurrentGroup->Commands[i], FDeleterNot()));
-	}
-
 	return CurrentCommandsShared;
 }
 
@@ -120,6 +113,8 @@ void FCommandsManager::ReorderCommandInCurrentGroup(int32 CurrentId, int32 NewId
 		Commands.RemoveAt(CurrentId, 1, false);
 		Commands.Insert(Cpy, NewId);
 	}
+
+	RebuildSharedArray();
 }
 
 void FCommandsManager::DuplicateCommand(int32 Id)
@@ -127,6 +122,7 @@ void FCommandsManager::DuplicateCommand(int32 Id)
 	FConsoleCommand Cpy = CurrentGroup->Commands[Id];
 	CurrentGroup->Commands.Insert(Cpy, Id + 1);
 
+	RebuildSharedArray();
 }
 
 void FCommandsManager::RemoveCommands(TArray<int32> Ids)
@@ -140,6 +136,8 @@ void FCommandsManager::RemoveCommands(TArray<int32> Ids)
 	{
 		Commands.RemoveAt(Ids[i], 1, false);
 	}
+
+	RebuildSharedArray();
 }
 
 bool FCommandsManager::SetActiveHistory()
@@ -198,6 +196,8 @@ void FCommandsManager::AddCommandsToGroup(FCommandGroup* Group, TArray<TSharedPt
 			}
 		}
 	}
+
+	RebuildSharedArray();
 }
 
 void FCommandsManager::UpdateCurrentEngineValue(const FConsoleCommand& Command)
@@ -210,6 +210,8 @@ void FCommandsManager::ReplaceCommandInCurrentGroup(int32 Id, FConsoleCommand& N
 	check(CurrentGroup->Commands.IsValidIndex(Id));
 
 	CurrentGroup->Commands[Id] = NewCommand;
+	
+	RebuildSharedArray();
 }
 
 const FCommandGroup* FCommandsManager::GetAllCommands()
@@ -390,6 +392,10 @@ void FCommandsManager::UpdateHistory()
 	ConsoleHistory.Commands.Add(FConsoleCommand(ExecCommand));
 
 
+	if (IsHistorySelected())
+	{
+		RebuildSharedArray();
+	}
 }
 
 bool FCommandsManager::IsHistorySelected()
@@ -412,6 +418,20 @@ void FCommandsManager::LoadConsoleHistory()
 		ConsoleHistory.Commands.RemoveAt(0);
 	}
 }
+
+void FCommandsManager::RebuildSharedArray()
+{
+	int CommandsNum = CurrentGroup->Commands.Num();
+
+	CurrentCommandsShared.Reset(CommandsNum);
+
+	for (int i = 0; i < CommandsNum; i++)
+	{
+		CurrentCommandsShared.Add(MakeShareable(&CurrentGroup->Commands[i], FDeleterNot()));
+	}
+
+}
+
 //It will not add wrong command to history
 bool FCommandsManager::Execute(const FConsoleCommand& Command)
 {
@@ -527,6 +547,8 @@ void FCommandsManager::SetCurrentCommands(FCommandGroup& Group)
 	CurrentGroup = &Group;
 
 	CurrentGroupId = Group.Id;
+
+	RebuildSharedArray();
 }
 
 void FCommandsManager::DumpAllCommands()
