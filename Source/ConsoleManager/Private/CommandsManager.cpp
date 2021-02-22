@@ -366,6 +366,19 @@ bool FCommandsManager::SaveCommands()
 	return FileHelper::SaveCommandFile(CommandsPath, CommandGroups);
 }
 
+void FCommandsManager::UpdateHistory()
+{
+	TArray<FString> Out;
+	IConsoleManager::Get().GetConsoleHistory(*FString(), Out);
+	
+	ConsoleHistory.Commands.Add(FConsoleCommand(Out.Last()));
+}
+
+bool FCommandsManager::IsHistorySelected()
+{
+	return CurrentGroup == &ConsoleHistory ? true : false;
+}
+
 //It will not add wrong command to history
 bool FCommandsManager::Execute(const FConsoleCommand& Command)
 {

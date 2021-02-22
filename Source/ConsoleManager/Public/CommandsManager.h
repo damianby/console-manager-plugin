@@ -76,6 +76,11 @@ public:
 	void DuplicateGroup(int Id);
 
 	bool SaveCommands();
+
+	void UpdateHistory();
+
+	bool IsHistorySelected();
+
 private:
 
 	// We should generate new array every time this array might be resized! (When adding, removing elements)

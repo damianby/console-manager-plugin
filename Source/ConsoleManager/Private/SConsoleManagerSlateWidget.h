@@ -11,7 +11,7 @@
 #include "Widgets/Input/SSearchBox.h"
 #include "Widgets/SCompoundWidget.h"
 #include "Widgets/Views/STableRow.h"
-
+#include "Widgets/Layout/SScrollBox.h"
 /**
  * 
  */
@@ -174,7 +174,16 @@ public:
 		if (bNeedsRefresh)
 		{
 			//CommandsListView->RequestListRefresh();
-			CommandsListView->RebuildList();
+			
+			if (!CommandsManager.Pin()->IsHistorySelected())
+			{
+				CommandsListView->RebuildList();
+			}
+			else
+			{
+				GenerateCommandsScrollBox();
+				CommandsListView->ScrollToBottom();
+			}
 		}
 	};
 
