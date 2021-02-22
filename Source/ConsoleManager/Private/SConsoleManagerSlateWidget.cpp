@@ -6,7 +6,7 @@
 #include "SlateOptMacros.h"
 #include "ConsoleManagerCommands.h"
 
-#include "Widgets/Layout/SScrollBox.h"
+
 
 #include "Widgets/Layout/SGridPanel.h"
 #include "Dialogs/Dialogs.h"
@@ -231,7 +231,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 				.AutoHeight()
 				[
 					SNew(SButton)
-					.Text(LOCTEXT("ShowAllButton", "Show All"))
+					.Text(LOCTEXT("ShowAllButton", "All commands"))
 					.OnClicked(FOnClicked::CreateLambda([=]() {
 						if(CommandsManager.Pin()->SetActiveAllCommands())
 						{
