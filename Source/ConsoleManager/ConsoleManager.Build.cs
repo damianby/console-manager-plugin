@@ -45,6 +45,7 @@ public class ConsoleManager : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+				"AssetTools"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
