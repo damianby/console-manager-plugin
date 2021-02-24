@@ -13,6 +13,7 @@
 #include "Dialogs/CustomDialog.h"
 #include "Widgets/Views/SListView.h"
 #include "Widgets/Input/SMultiLineEditableTextBox.h"
+#include "ConsoleManager.h"
 
 #define LOCTEXT_NAMESPACE "FConsoleManagerModule"
 
@@ -117,19 +118,17 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 		.SelectionMode(ESelectionMode::Multi)
 		.HeaderRow(HeaderRow)
 		.OnContextMenuOpening_Raw(this, &SConsoleManagerSlateWidget::GetListViewContextMenu);
-		
-	
+
 
 	//CommandsListView->SetOnEntryInitialized(SListView<TSharedPtr<FConsoleCommand>>::FOnEntryInitialized::CreateLambda(
 	//	[=](TSharedPtr<FConsoleCommand> Item, const TSharedRef<ITableRow> Row) {
 
 	//		
-	//		
 
-	//		bool IsGen = CommandsListView->GetHeaderRow()->IsColumnGenerated("Command");
-	//		FVector2D MaxSize = Row->GetRowSizeForColumn("Command");
-	//		UE_LOG(LogTemp, Warning, TEXT("%s : %f : %f"), *MaxSize.ToString(), CommandsListView->GetHeaderRow()->GetColumns()[0].GetWidth(), MaxSize.X);
-	//		//CommandsListView->GetHeaderRow()->SetColumnWidth("Command", MaxSize.X);
+	//		//bool IsGen = CommandsListView->GetHeaderRow()->IsColumnGenerated("Command");
+	//		//FVector2D MaxSize = Row->GetRowSizeForColumn("Command");
+	//		//UE_LOG(LogTemp, Warning, TEXT("%s : %f : %f"), *MaxSize.ToString(), CommandsListView->GetHeaderRow()->GetColumns()[0].GetWidth(), MaxSize.X);
+	//		////CommandsListView->GetHeaderRow()->SetColumnWidth("Command", MaxSize.X);
 
 	//	}));
 
@@ -185,6 +184,25 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 
 	//Validate all console commands to check if any existing in AllCommands //git
 	TSharedRef<SWidget> Content = SNew(SVerticalBox)
+		+ SVerticalBox::Slot()
+		.Padding(FMargin(6.0f, 6.0f, 6.0f, 0))
+		.AutoHeight()
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			[
+				SNew(SButton)
+				.Text(FText::FromString("Open Settings"))
+				.OnClicked_Lambda([=]() 
+				{
+					FConsoleManagerModule::GetModule().OpenSettings();
+
+					return FReply::Handled();
+				})
+			]
+		]
+
 		+ SVerticalBox::Slot()
 		.Padding(FMargin(6.0f, 6.0f, 6.0f, 0))
 		.AutoHeight()
@@ -463,6 +481,7 @@ FReply SConsoleManagerSlateWidget::OnSelectGroupClicked(int Id)
 {
 	if (CommandsManager.Pin()->SetActiveGroup(Id))
 	{
+		SearchBox->SetText(FText::GetEmpty());
 		GenerateCommandsScrollBox();
 	}
 
@@ -493,13 +512,45 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 			CommandsManager.Pin()->UpdateCurrentEngineValue(Command);
 			bNeedsRefresh = true;
 
+
 		}
 	));
 
 	Row->SetOnEngineValueEditing(FOnSimpleCommand::CreateLambda(
 		[=](TSharedPtr<FConsoleCommand> Command)
 		{
-			CommandsListView->SetSelection(Command);
+			//int32 IndexInList;
+			//TSharedPtr<ITableRow> Widget = CommandsListView->WidgetFromItem(Command);
+			//if (Widget.IsValid())
+			//{
+			//	TSharedPtr<SConsoleCommandListRow> NewRow = StaticCastSharedPtr<SConsoleCommandListRow>(Widget);
+
+			//	if (NewRow.IsValid())
+			//	{
+			//		IndexInList = NewRow->GetIndexInList();
+			//	}
+			//}
+
+			//FChildren* Children = CommandsListView->GetAllChildren();
+
+			//for (int i = 0; i < Children->Num(); i++)
+			//{
+			//	Children->GetChildAt(i)->
+			//}
+
+			//FChildren* Children = CommandsListView->
+
+			//for (int i = 0; i < Children->Num(); i++)
+			//{
+				//CommandsListView->ItemFromWidget(TSharedPtr<SWidget>(Children->GetChildAt(i)).Get());
+				//UE_LOG(LogTemp, Warning, TEXT("%s"), *Children->GetChildAt(i)->GetType().ToString());
+				
+			//}
+
+			//bNeedsRefresh = false;
+			CommandsManager.Pin()->UpdateCurrentEngineValue(Command.ToSharedRef().Get());
+			//bNeedsRefresh = true;
+
 		}
 	));
 
@@ -538,7 +589,6 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 			return FReply::Handled().BeginDragDrop(DragOp);
 		}
 	));
-
 
 	Row->SetOnAcceptDrop(STableRow<TSharedPtr<FConsoleCommand>>::FOnAcceptDrop::CreateLambda(
 		[=](const FDragDropEvent& DragDropEvent, EItemDropZone Zone, TSharedPtr<FConsoleCommand> Item)
@@ -827,6 +877,7 @@ bool SConsoleManagerSlateWidget::OpenExecMultipleDialog(TArray<TSharedPtr<FConso
 		TSharedRef<SEditableTextBox> EditText =
 			SNew(SEditableTextBox)
 			.Text(FText::FromString(SelectedCommand->GetCurrentValue()))
+			.SelectAllTextWhenFocused(true)
 			.MinDesiredWidth(100);
 
 		TextBoxes.Add(EditText);
@@ -917,7 +968,7 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 			MenuBuilder.BeginSection("Command", LOCTEXT("CommandContextMenu_Header_Command", "Command"));
 			{
 
-				const FText ExecuteName = SelectedCommands.Num() > 1 ? FText::FromString("Execute All") : FText::FromString("Execute");
+				const FText ExecuteName = SelectedCommands.Num() > 1 ? FText::FromString("Execute Selected") : FText::FromString("Execute");
 				
 				EGroupType GroupType = Group.Type;
 				MenuBuilder.AddMenuEntry
@@ -1339,6 +1390,7 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 				return true;
 			}
 		))
+		.IsEnabled(bIsEditable)
 		.Text(FText::FromString(Item->GetValue()))
 		.ClearKeyboardFocusOnCommit(false)
 		.AllowContextMenu(false)
@@ -1429,12 +1481,18 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 
 					TempCommand.SetValue(NewText.ToString());
 
-					if (OnExecuteCommand.IsBound())
+					if (OnEngineValueEditing.IsBound())
+					{
+						OnEngineValueEditing.Execute(TSharedPtr<FConsoleCommand>(new FConsoleCommand(TempCommand)));
+						Item->Refresh();
+					}
+
+					/*if (OnExecuteCommand.IsBound())
 					{
 						OnExecuteCommand.Execute(TempCommand);
 
 						Item->Refresh();
-					}
+					}*/
 				}
 				else if( How == ETextCommit::OnCleared)
 				{
@@ -1444,6 +1502,8 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 
 			}
 		);
+
+		CurrentValueEditText = EditText;
 
 
 		const bool bContainsValueColumn_Copy = bContainsValueColumn;

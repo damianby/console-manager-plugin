@@ -11,7 +11,7 @@
 
 class FToolBarBuilder;
 class FMenuBuilder;
-
+class UCommandsContainer;
 
 
 class FConsoleManagerModule : public IModuleInterface
@@ -24,6 +24,22 @@ public:
 
 
 	void OpenTab();
+
+	void OpenSettings();
+
+	void OpenTab(const TArray<UObject*>& Containers);
+
+	/**
+	 * @brief Provide singleton like access to this module
+	 * @return Module
+	*/
+	static inline FConsoleManagerModule& GetModule()
+	{
+		static const FName ModuleName = "ConsoleManager";
+		return FModuleManager::LoadModuleChecked< FConsoleManagerModule >(ModuleName);
+	}
+
+	
 
 private:
 
@@ -43,4 +59,9 @@ private:
 	FConsoleVariableSinkHandle Handle;
 
 	TSharedPtr<FCommandsManager> CommandsManager;
+
+
+	/** The collection of registered asset type actions. */
+	TArray<TSharedRef<IAssetTypeActions>> RegisteredAssetTypeActions;
+
 };

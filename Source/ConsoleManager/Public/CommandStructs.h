@@ -5,6 +5,7 @@
 
 #include "CoreMinimal.h"
 
+#include "CommandStructs.generated.h"
 
 
 enum class EGroupType : uint8
@@ -21,9 +22,14 @@ enum class EConsoleCommandType : uint8
 	Exec
 };
 
-class FConsoleCommand
+USTRUCT(BlueprintType)
+struct FConsoleCommand
 {
+	GENERATED_BODY()
+
 public:
+	FConsoleCommand() {};
+
 	FConsoleCommand(FString _Command);
 	FConsoleCommand(const FConsoleCommand& Copy);
 
@@ -56,38 +62,61 @@ public:
 	void Refresh();
 	FString GetTooltip();
 	
+	
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
+	FString ExecCommand;
+	//UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
+	FString CurrentValue;
+	//UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
+	FString Value;
+	//UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
+	FString SetBy;
+
+	// These values are initialized on object creation and not changed later 
+	//UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
+	FString Name;
+	
+	EConsoleCommandType ObjType;
+	//UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
+	FString Type;
+	//
+
+
+
 private:
 
 	FORCEINLINE void RefreshExec() { ExecCommand = Name + " " + Value; };
 
 	void InitialParse(IConsoleObject* Obj);
 
-	FString ExecCommand;
-	FString CurrentValue;
-	FString Value;
-
-	// These values are initialized on object creation and not changed later 
-
-	FString Name;
-	EConsoleCommandType ObjType;
-	FString Type;
-	FString SetBy;
-	//
+	
 
 	static FString GetTextSection(const TCHAR * &It);
 
 	bool bIsValid = true;
 	bool bIsInitiallyParsed = false;
-	//FString ExecCommand;
-
 };
 
+USTRUCT(BlueprintType)
 struct FCommandGroup
 {
+	GENERATED_BODY()
+public:
+
+	FCommandGroup() { };
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
 	FString Name;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
 	FString Id;
+
 	EGroupType Type;
+
+	FSoftObjectPtr ContainerSoftPtr;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
 	TArray<FConsoleCommand> Commands;
+
 	bool bInitiallySet = false;
 	bool bIsEditable = true;
 

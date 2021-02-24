@@ -129,6 +129,14 @@ public:
      */
     virtual TSharedRef<SWidget> GenerateWidgetForColumn(const FName& ColumnName) override;
 
+	void SetFocusToCurrentValue() {
+		FSlateApplication& SlateApp = FSlateApplication::Get();
+
+		SlateApp.SetUserFocus(0, CurrentValueEditText, EFocusCause::SetDirectly);
+	};
+
+	int32 GetIndexInList() { return IndexInList; };
+
 protected:
 	FOnExecuteCommand OnExecuteCommand;
 
@@ -141,6 +149,8 @@ protected:
 	int32 Id;
 
 	bool bContainsValueColumn = true;
+
+	TSharedPtr<SEditableText> CurrentValueEditText;
 
 };
 
@@ -178,6 +188,7 @@ public:
 			if (!CommandsManager.Pin()->IsHistorySelected())
 			{
 				CommandsListView->RebuildList();
+				
 			}
 			else
 			{
@@ -237,5 +248,4 @@ private:
 
 	SHeaderRow::FColumn::FArguments HeaderValue = SHeaderRow::FColumn::FArguments();
 	SHeaderRow::FColumn::FArguments HeaderExec = SHeaderRow::FColumn::FArguments();
-
 };

@@ -9,12 +9,31 @@
 /**
  * 
  */
-UCLASS(config = ConsoleManager, defaultconfig)
+
+class UCommandsContainer;
+
+
+UENUM(BlueprintType)
+enum class EConsoleManagerStartupOption : uint8
+{
+	AllCommands UMETA(DisplayName = "All commands"),
+	LastOpened	UMETA(DisplayName = "Last opened"),
+	Specified	UMETA(DisplayName = "Specified")
+};
+
+UCLASS(config = ConsoleManager)
 class CONSOLEMANAGER_API UConsoleManagerSettings : public UObject {
 	GENERATED_BODY()
 
 public:
 	UConsoleManagerSettings(const FObjectInitializer& ObjectInitializer);
+
+	/** Should toolbar button be visible next to settings (when disabled Console Manager will be accessible from Window tab)  */
+	UPROPERTY(EditAnywhere, config, Category = UI, meta = (DisplayName = "Show toolbar button"))
+		bool bShowToolbar = true;
+
+	UPROPERTY(config, meta = (DisplayName = "Last Selected Objects"))
+		TArray< TSoftObjectPtr<UCommandsContainer>> LastSelectedObjs;
 
 	/** Contains information what type of variable to use (only applies to CVar's) */
 	UPROPERTY(EditAnywhere, config, Category = UI, meta = (DisplayName = "Show variable type"))
@@ -28,7 +47,7 @@ public:
 	UPROPERTY(EditAnywhere, config, Category = UI, meta = (DisplayName = "Show command type"))
 		bool DisplayCommandType = false;
 
-	/** How commands can history keep */
+	/** How many commands can history keep */
 	UPROPERTY(EditAnywhere, config, Category = UI, meta = (DisplayName = "History buffer size"))
 		int32 HistoryBufferSize = 64;
 
@@ -39,6 +58,13 @@ public:
 	/** The color used to visualize difference between values */
 	UPROPERTY(EditAnywhere, config, Category = Colors, meta = (DisplayName = "Different values color"))
 		FLinearColor NotMatchingValuesColor;
+
+	/** Which commands to open when clicking on toolbar button or Window menu */
+	UPROPERTY(EditAnywhere, config, Category = Startup, meta = (DisplayName = "Default commands on open"))
+		EConsoleManagerStartupOption StartupOption = EConsoleManagerStartupOption::AllCommands;
+
+	UPROPERTY(EditAnywhere, config, Category = Startup, meta = (DisplayName = "Asset to load", EditCondition = "StartupOption==ConsoleManagerStartupOption::Specified"))
+		TSoftObjectPtr<UCommandsContainer> AssetToLoad;
 
 };
 

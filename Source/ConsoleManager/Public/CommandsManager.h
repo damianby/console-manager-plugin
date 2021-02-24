@@ -10,21 +10,20 @@
 
 #include "CommandStructs.h"
 
+class UCommandsContainer;
+
 /**
  * 
  */
 
+/**
+ * Class made to avoid deletion of ConsoleCommand objects when TSharedPtr goes out of scope
+*/
 class FDeleterNot
 {
 public:
 	void operator() (void*) {};
 };
-
-struct FCommandTransaction
-{
-	
-};
-
 
 class CONSOLEMANAGER_API FCommandsManager
 {
@@ -33,6 +32,8 @@ public:
 	FCommandsManager();
 
 	bool Initialize(const FString& Path);
+
+	bool InitializeFromContainers(TArray<UCommandsContainer*> Containers);
 
 	void Refresh();
 
@@ -52,8 +53,7 @@ public:
 	bool SetActiveHistory();
 	bool SetActiveAllCommands();
 
-	FCommandGroup* AddNewGroup(const FString& Name, EGroupType Type);
-	FCommandGroup* AddNewGroup(const FString& Name);
+
 
 	void AddCommandsToCurrentGroup(TArray<TSharedPtr<FConsoleCommand>> Commands);
 	void AddCommandsToGroup(FCommandGroup* Group, TArray<TSharedPtr<FConsoleCommand>> Commands);
@@ -71,6 +71,9 @@ public:
 	bool ExecuteCommand(FConsoleCommand& Command);
 	void ExecuteMultipleCommands(TArray<TSharedPtr<FConsoleCommand>> Commands);
 
+
+	FCommandGroup* AddNewGroup(const FString& Name, EGroupType Type);
+	FCommandGroup* AddNewGroup(const FString& Name);
 	void RemoveGroup(int Id);
 	bool RenameGroup(int Id, const FString& NewName);
 	void DuplicateGroup(int Id);
@@ -84,8 +87,16 @@ public:
 	void SetHistoryBufferSize(int32 NewSize) { HistoryBufferSize = NewSize; }
 private:
 
+	void LoadAllAssets();
+	void SaveToAssets();
+
+
 	void LoadConsoleHistory();
 
+	/**
+	 * @brief Refresh pointers to current displayed commands.
+	 *		  This should be called whenever anything in current commands change
+	*/
 	void RebuildSharedArray();
 
 	// We should generate new array every time this array might be resized! (When adding, removing elements)
@@ -110,6 +121,9 @@ private:
 	FCommandGroup AllCommands;
 	FString CurrentGroupId;
 
+	/** How many commands to keep in history */
 	int32 HistoryBufferSize = 64;
 
+	/** Assets being watched */
+	TArray<UCommandsContainer*> CommandsContainers;
 };
