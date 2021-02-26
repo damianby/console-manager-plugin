@@ -85,6 +85,9 @@ public:
 	bool IsHistorySelected();
 
 	void SetHistoryBufferSize(int32 NewSize) { HistoryBufferSize = NewSize; }
+
+
+	const TArray<UCommandsContainer*>& GetCommandsContainers() { return CommandsContainers; };
 private:
 
 	void LoadAllAssets();
@@ -126,4 +129,5 @@ private:
 
 	/** Assets being watched */
 	TArray<UCommandsContainer*> CommandsContainers;
+
 };

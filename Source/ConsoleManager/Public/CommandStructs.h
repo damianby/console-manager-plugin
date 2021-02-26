@@ -15,6 +15,7 @@ enum class EGroupType : uint8
 	History
 };
 
+UENUM(BlueprintType)
 enum class EConsoleCommandType : uint8
 {
 	CVar,
@@ -63,21 +64,22 @@ public:
 	FString GetTooltip();
 	
 	
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
+	//UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
 	FString ExecCommand;
 	//UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
 	FString CurrentValue;
-	//UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
 	FString Value;
 	//UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
 	FString SetBy;
 
 	// These values are initialized on object creation and not changed later 
-	//UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
 	FString Name;
 	
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
 	EConsoleCommandType ObjType;
-	//UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
 	FString Type;
 	//
 
@@ -104,13 +106,14 @@ struct FCommandGroup
 public:
 
 	FCommandGroup() { };
+	//FCommandGroup(const FCommandGroup& Copy);
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
 	FString Name;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
 	FString Id;
 
-	EGroupType Type;
+	EGroupType Type = EGroupType::Default;
 
 	FSoftObjectPtr ContainerSoftPtr;
 

@@ -50,18 +50,19 @@ void FCommandsManager::Refresh()
 
 	for (auto& Container : CommandsContainers)
 	{
-		for (auto GroupInContainer : Container->Groups)
+		for (auto& GroupInContainer : Container->Groups)
 		{
 			GroupInContainer.ContainerSoftPtr = FSoftObjectPtr(Container);
+			
 			CommandGroups.Add(GroupInContainer);
+			/*FCommandGroup& AddedGroup = CommandGroups.Add_GetRef(GroupInContainer);
+			AddedGroup.ContainerSoftPtr = FSoftObjectPtr(Container);*/
 		}
 	}
 
 	//FileHelper::ReadCommandFile(CommandsPath, CommandGroups);
 	
-
 	LoadConsoleHistory();
-
 	
 	ValidateCommands(ConsoleHistory.Commands);
 	for (auto& Group : CommandGroups)
@@ -398,6 +399,21 @@ FString FCommandsManager::GetNewIdForGroup(const FCommandGroup& Group)
 
 bool FCommandsManager::SaveCommands()
 {
+	for (auto& Container : CommandsContainers)
+	{
+		if (Container->IsValidLowLevel())
+		{
+			const FString Path = Container->GetPackage()->GetPathName();
+			UE_LOG(LogTemp, Warning, TEXT("Path to obj container %s : %s"), *Container->GetName(), *Path);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Object is not valid!"));
+		}
+		
+	}
+
+
 	//const FString CommandsPath = IPluginManager::Get().FindPlugin("ConsoleManager")->GetBaseDir() / TEXT("Resources") / TEXT("Commands.txt");
 
 	//return FileHelper::SaveCommandFile(CommandsPath, CommandGroups);
@@ -507,6 +523,8 @@ void FCommandsManager::LoadAllAssets()
 {
 	TArray<FAssetData> Assets;
 	UAssetManager::Get().GetAssetRegistry().GetAssetsByClass(UCommandsContainer::StaticClass()->GetFName(), Assets);
+
+	//UAssetManager::Get().GetAssetRegistry().OnAssetAdded()
 
 	UE_LOG(LogTemp, Warning, TEXT("Found %d assets %d"), Assets.Num());
 

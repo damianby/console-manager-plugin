@@ -181,7 +181,7 @@ void FConsoleManagerModule::OpenTab()
 
 			break;
 		}
-	case EConsoleManagerStartupOption::AllCommands:
+	case EConsoleManagerStartupOption::AllContainers:
 	default:
 
 		CommandsManager->InitializeFromContainers(TArray<UCommandsContainer*>());
@@ -414,7 +414,7 @@ TSharedRef<class SDockTab> FConsoleManagerModule::OnSpawnPluginTab(const FSpawnT
 		{
 			IConsoleManager::Get().UnregisterConsoleVariableSink_Handle(Handle);
 			CommandsManager->SaveCommands();
-			DockTab->ClearContent();
+			//DockTab->ClearContent();
 		});
 
 	DockTab->SetOnTabClosed(ClosedTabDelegate);

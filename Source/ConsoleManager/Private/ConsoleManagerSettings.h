@@ -16,7 +16,7 @@ class UCommandsContainer;
 UENUM(BlueprintType)
 enum class EConsoleManagerStartupOption : uint8
 {
-	AllCommands UMETA(DisplayName = "All commands"),
+	AllContainers UMETA(DisplayName = "All containers"),
 	LastOpened	UMETA(DisplayName = "Last opened"),
 	Specified	UMETA(DisplayName = "Specified")
 };
@@ -60,10 +60,10 @@ public:
 		FLinearColor NotMatchingValuesColor;
 
 	/** Which commands to open when clicking on toolbar button or Window menu */
-	UPROPERTY(EditAnywhere, config, Category = Startup, meta = (DisplayName = "Default commands on open"))
-		EConsoleManagerStartupOption StartupOption = EConsoleManagerStartupOption::AllCommands;
+	UPROPERTY(EditAnywhere, config, Category = Startup, meta = (DisplayName = "Default container on open"))
+		EConsoleManagerStartupOption StartupOption = EConsoleManagerStartupOption::AllContainers;
 
-	UPROPERTY(EditAnywhere, config, Category = Startup, meta = (DisplayName = "Asset to load", EditCondition = "StartupOption==ConsoleManagerStartupOption::Specified"))
+	UPROPERTY(EditAnywhere, config, Category = Startup, meta = (DisplayName = "Asset to load", EditCondition = "StartupOption==EConsoleManagerStartupOption::Specified"))
 		TSoftObjectPtr<UCommandsContainer> AssetToLoad;
 
 };

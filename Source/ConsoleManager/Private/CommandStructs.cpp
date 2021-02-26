@@ -65,15 +65,22 @@ FConsoleCommand::FConsoleCommand(FString _Command)
 
 FConsoleCommand::FConsoleCommand(const FConsoleCommand& Copy)
 {
-	Name = Copy.Name;
-	Value = Copy.Value;
-	CurrentValue = Copy.CurrentValue;
-	ObjType = Copy.ObjType;
-	Type = Copy.Type;
-	bIsValid = Copy.bIsValid;
-	bIsInitiallyParsed = Copy.bIsInitiallyParsed;
+	//if (bIsInitiallyParsed)
+	//{
+		Name = Copy.Name;
+		Value = Copy.Value;
+		//CurrentValue = Copy.CurrentValue;
+		ObjType = Copy.ObjType;
+		Type = Copy.Type;
+		bIsValid = Copy.bIsValid;
+		bIsInitiallyParsed = Copy.bIsInitiallyParsed;
 
-	RefreshExec();
+		RefreshExec();
+	//}
+	//else
+	//{
+	//	FConsoleCommand(Copy.ExecCommand);
+	//}
 }
 
 
@@ -195,3 +202,17 @@ FString FConsoleCommand::GetTextSection(const TCHAR*& It)
 
 	return ret;
 }
+//
+//FCommandGroup::FCommandGroup(const FCommandGroup& Copy)
+//{
+//	Name = Copy.Name;
+//	Id = Copy.Id;
+//	Type = Copy.Type;
+//
+//	ContainerSoftPtr = Copy.ContainerSoftPtr;
+//
+//	Commands = Copy.Commands;
+//
+//	bInitiallySet = Copy.bInitiallySet;
+//	bIsEditable = Copy.bIsEditable;
+//}
