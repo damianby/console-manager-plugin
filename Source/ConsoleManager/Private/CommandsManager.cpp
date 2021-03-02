@@ -22,6 +22,19 @@ FCommandsManager::FCommandsManager()
 	FileHelper::PrintGroups_Debug(CommandGroups);
 
 	SetCurrentCommands(ConsoleHistory);
+
+
+	// We should refresh our list when new asset with our factory is created
+	FEditorDelegates::OnNewAssetCreated.AddLambda(
+		[=](UFactory* Factory)
+		{
+			
+			UE_LOG(LogTemp, Warning, TEXT("New Asset created! %s"), *Factory->GetClass()->GetName());
+		});
+
+	// No need to look for deleted as we should check everytime if object is valid
+
+	
 }
 
 bool FCommandsManager::Initialize(const FString& Path)

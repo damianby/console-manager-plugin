@@ -12,6 +12,10 @@
 
 class UCommandsContainer;
 
+
+DECLARE_DELEGATE(FOnDataRefreshed);
+
+
 /**
  * 
  */
@@ -88,6 +92,9 @@ public:
 
 
 	const TArray<UCommandsContainer*>& GetCommandsContainers() { return CommandsContainers; };
+
+
+	FOnDataRefreshed OnDataRefreshed;
 private:
 
 	void LoadAllAssets();
