@@ -16,6 +16,13 @@ class CONSOLEMANAGER_API UCommandsContainer : public UObject
 	GENERATED_BODY()
 
 public:
+
+	UCommandsContainer(const FObjectInitializer& ObjectInitializer);
+
+
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
 	TArray<FCommandGroup> Groups;
+
+
+	void PostEditChangeProperty(FPropertyChangedChainEvent& Event);
 };

@@ -18,7 +18,7 @@
 
 #include <chrono>
 
-
+class UCommandsContainer;
 
 class DragNDrop : public FDragDropOperation
 {
@@ -207,6 +207,11 @@ private:
 	bool bShowExec = true;
 	bool bShowCVar = true;
 	bool bShowCCmd = true;
+	bool bShowOnlyModified = false;
+
+	TSharedPtr<SCheckBox> ShowVarsCb;
+	TSharedPtr<SCheckBox> ShowCmdsCb;
+	TSharedPtr<SCheckBox> ShowExecsCb;
 
 	bool bNeedsRefresh = true;
 
@@ -226,7 +231,7 @@ private:
 
 	void OnAddGroupButtonClicked();
 
-	FReply OnSelectGroupClicked(int Id);
+	FReply OnSelectGroupClicked(FGuid Id);
 
 	TSharedRef< ITableRow > OnCommandsRowGenerate(TSharedPtr<FConsoleCommand> Item, const TSharedRef< STableViewBase >& OwnerTable);
 
@@ -234,18 +239,23 @@ private:
 
 	void GenerateCommandsScrollBox();
 
-	void RemoveGroup(int Id);
-	void DuplicateGroup(int Id);
-	void EditGroup(int Id);
+	void RemoveGroup(FGuid Id);
+	void DuplicateGroup(FGuid Id);
+	void EditGroup(FGuid Id);
 
 	bool OpenExecMultipleDialog(TArray<TSharedPtr<FConsoleCommand>> Commands);
-
+	bool DisplayExecuteWarning(const FText& Text);
 
 	TSharedPtr<SWidget> GetListViewContextMenu();
 
-	FCommandGroup* HandleNewGroup();
+	bool HandleNewGroup(FString& OutName, UCommandsContainer*& OutContainer, UCommandsContainer* InContainer = nullptr);
 	void HandleNewCommands();
 
 	SHeaderRow::FColumn::FArguments HeaderValue = SHeaderRow::FColumn::FArguments();
 	SHeaderRow::FColumn::FArguments HeaderExec = SHeaderRow::FColumn::FArguments();
+
+	TSharedRef<SButton> GetMenuButton(FText Text, const FSlateBrush* ImageBrush, FOnClicked ClickedDelegate);
+
+	ECheckBoxState GetCurrentSelectedGroup(FGuid Id) const;
+
 };

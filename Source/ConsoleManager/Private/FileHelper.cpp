@@ -93,13 +93,13 @@ void FileHelper::ProcessCommandsFile(const FString& Contents, TArray<FCommandGro
 			int NewId = 0;
 
 			FString TempName = NewGroupId + FString::FromInt(NewId);
-			while (OutGroups.FindByKey<FString>(TempName))
+			/*while (OutGroups.FindByKey<FString>(TempName))
 			{
 				++NewId;
 				TempName = NewGroupId + FString::FromInt(NewId);
-			}
+			}*/
 
-			CurrentSection->Id = TempName;
+			//CurrentSection->Id = TempName;
 		}
 
 		// Otherwise, if we're currently inside a section, and we haven't reached the end of the stream

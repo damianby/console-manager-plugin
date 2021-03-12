@@ -53,18 +53,21 @@ FConsoleCommand::FConsoleCommand(FString _Command)
 			}
 		}),
 		*Name);
-		
+	
+	CachedObj = Obj;
+
 	if (!FoundName.IsEmpty())
 	{
 		Name = FoundName;
 	}
 
-	InitialParse(Obj);
+	InitialParse(CachedObj);
 	RefreshExec();
 }
 
 FConsoleCommand::FConsoleCommand(const FConsoleCommand& Copy)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Copy constructor"));
 	//if (bIsInitiallyParsed)
 	//{
 		Name = Copy.Name;
@@ -86,17 +89,26 @@ FConsoleCommand::FConsoleCommand(const FConsoleCommand& Copy)
 
 void FConsoleCommand::Refresh()
 {
-	IConsoleObject* Obj = IConsoleManager::Get().FindConsoleObject(*Name);
-	if (Obj)
+	if (!CachedObj)
 	{
-		SetBy = GetSetByTCHAR(Obj->GetFlags());
+		CachedObj = IConsoleManager::Get().FindConsoleObject(*Name);
+	}
 
-		IConsoleVariable* CVar = Obj->AsVariable();
+	if (CachedObj)
+	{
+		SetBy = GetSetByTCHAR(CachedObj->GetFlags());
+
+		IConsoleVariable* CVar = CachedObj->AsVariable();
 		if (CVar)
 		{
 			CurrentValue = CVar->GetString();
 		}
 	}
+
+}
+void FConsoleCommand::InitializeLoaded()
+{
+	RefreshExec();
 }
 void FConsoleCommand::InitialParse(IConsoleObject* Obj)
 {

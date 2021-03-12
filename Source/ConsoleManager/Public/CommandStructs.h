@@ -58,7 +58,7 @@ public:
 	FORCEINLINE const EConsoleCommandType& GetObjType() const { return ObjType; }
 
 
-	const FString& GetCurrentValue() { return CurrentValue; };
+	const FString& GetCurrentValue() const { return CurrentValue; };
 
 	void Refresh();
 	FString GetTooltip();
@@ -83,7 +83,7 @@ public:
 	FString Type;
 	//
 
-
+	void InitializeLoaded();
 
 private:
 
@@ -97,6 +97,8 @@ private:
 
 	bool bIsValid = true;
 	bool bIsInitiallyParsed = false;
+
+	IConsoleObject* CachedObj = nullptr;
 };
 
 USTRUCT(BlueprintType)
@@ -111,11 +113,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
 	FString Name;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
-	FString Id;
+	FGuid Id;
 
 	EGroupType Type = EGroupType::Default;
-
-	FSoftObjectPtr ContainerSoftPtr;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
 	TArray<FConsoleCommand> Commands;
@@ -123,8 +123,8 @@ public:
 	bool bInitiallySet = false;
 	bool bIsEditable = true;
 
-	FORCEINLINE bool operator == (const FString& Other) const {
-		return Id.Equals(Other);
+	FORCEINLINE bool operator == (const FGuid& Other) const {
+		return Id == Other;
 	};
 };
 

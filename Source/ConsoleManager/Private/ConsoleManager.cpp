@@ -22,6 +22,10 @@
 #include "CommandsContainerActions.h"
 #include "CommandsContainer.h"
 
+
+#include "ISettingsContainer.h"
+#include "ISettingsCategory.h"
+
 static const FName ConsoleManagerTabName("ConsoleManager");
 
 #define LOCTEXT_NAMESPACE "FConsoleManagerModule"
@@ -160,7 +164,7 @@ void FConsoleManagerModule::OpenTab()
 				}
 			}
 
-			CommandsManager->InitializeFromContainers(Objects);
+			CommandsManager->Initialize(Objects);
 
 			break;
 		}
@@ -170,13 +174,13 @@ void FConsoleManagerModule::OpenTab()
 			
 			if (LoadedAsset)
 			{
-				CommandsManager->InitializeFromContainers(TArray<UCommandsContainer*>{LoadedAsset});
+				CommandsManager->Initialize(TArray<UCommandsContainer*>{LoadedAsset});
 
 			}
 			else
 			{
 				// Loads all if specified asset is not found
-				CommandsManager->InitializeFromContainers(TArray<UCommandsContainer*>());
+				CommandsManager->Initialize();
 			}
 
 			break;
@@ -184,7 +188,7 @@ void FConsoleManagerModule::OpenTab()
 	case EConsoleManagerStartupOption::AllContainers:
 	default:
 
-		CommandsManager->InitializeFromContainers(TArray<UCommandsContainer*>());
+		CommandsManager->Initialize();
 
 		break;
 	}
@@ -199,8 +203,6 @@ void FConsoleManagerModule::OpenSettings()
 	SettingsModule->ShowViewer("Editor", "Plugins", "Console Manager");
 }
 
-#include "ISettingsContainer.h"
-#include "ISettingsCategory.h"
 
 void FConsoleManagerModule::OpenTab(const TArray<UObject*>& Containers)
 {
@@ -212,7 +214,7 @@ void FConsoleManagerModule::OpenTab(const TArray<UObject*>& Containers)
 		OutCommandsContainers.Add(OutContainer);
 	}
 
-	CommandsManager->InitializeFromContainers(OutCommandsContainers);
+	CommandsManager->Initialize(OutCommandsContainers);
 
 	if (ActiveTab.IsValid())
 	{
@@ -273,8 +275,24 @@ void FConsoleManagerModule::RegisterMenus()
 		{
 			FToolMenuSection& Section = ToolbarMenu->FindOrAddSection("Settings");
 			{
+			
 				FToolMenuEntry& Entry = Section.AddEntry(FToolMenuEntry::InitToolBarButton(FConsoleManagerCommands::Get().OpenTab));
 				Entry.SetCommandList(PluginCommands);
+
+				//Section.AddEntry(FToolMenuEntry::InitComboButton(
+				//	"ConsoleManagerDropdown",
+				//	FUIAction(
+				//		FExecuteAction(),
+				//		FCanExecuteAction(),
+				//		FIsActionChecked(),
+				//		FIsActionButtonVisible::CreateStatic(FLevelEditorActionCallbacks::CanShowSourceCodeActions)),
+				//	FNewToolMenuChoice(),
+				//	LOCTEXT("CompileCombo_Label", "Compile Options"),
+				//	LOCTEXT("CompileComboToolTip", "Compile options menu"),
+				//	FSlateIcon(FEditorStyle::GetStyleSetName(), "LevelEditor.Recompile"),
+				//	true
+				//));
+
 			}
 		}
 	}
@@ -311,18 +329,20 @@ void FConsoleManagerModule::AskForDefaultGroup()
 	switch (ButtonPressed)
 	{
 	case 0:
-		FCommandGroup* NewGroup = CommandsManager->AddNewGroup("Default");
-		const FCommandGroup* AllCommands = CommandsManager->GetAllCommands();
+		
 
-		for (const FConsoleCommand& Command : AllCommands->Commands)
-		{
-			
-			if (Command.GetObjType() == EConsoleCommandType::CVar)
-			{
-				FConsoleCommand& NewCommand = NewGroup->Commands.Add_GetRef(Command);
-				NewCommand.SetValue(NewCommand.GetCurrentValue());
-			}
-		}
+		//FCommandGroup* NewGroup = CommandsManager->AddNewGroup("Default");
+		//const FCommandGroup* AllCommands = CommandsManager->GetAllCommands();
+
+		//for (const FConsoleCommand& Command : AllCommands->Commands)
+		//{
+		//	
+		//	if (Command.GetObjType() == EConsoleCommandType::CVar)
+		//	{
+		//		FConsoleCommand& NewCommand = NewGroup->Commands.Add_GetRef(Command);
+		//		NewCommand.SetValue(NewCommand.GetCurrentValue());
+		//	}
+		//}
 
 		break;
 	}
@@ -330,57 +350,6 @@ void FConsoleManagerModule::AskForDefaultGroup()
 
 TSharedRef<class SDockTab> FConsoleManagerModule::OnSpawnPluginTab(const FSpawnTabArgs& SpawnTabArgs)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Spawn plugin tab!"));
-	//if (CommandsContainers.Num() > 0)
-	//{
-
-	//}
-
-	//TArray<FAssetData> Assets;
-	//UAssetManager::Get().GetAssetRegistry().GetAssetsByClass(UCommandsContainer::StaticClass()->GetFName(), Assets);
-
-
-	//UE_LOG(LogTemp, Warning, TEXT("Asset count %d || %s"), Assets.Num(), *UCommandsContainer::StaticClass()->GetFName().ToString());
-
-	//for (auto& Asset : Assets)
-	//{
-	//	UPackage* Package = Asset.GetPackage();
-	//	//Package->MarkPackageDirty();
-
-
-	//	UObject* Resolved = Asset.GetAsset();
-
-	//	if (Resolved)
-	//	{
-	//		UCommandsContainer* Container = Cast< UCommandsContainer >(Resolved);
-	//		auto& Groups = CommandsManager.Get()->GetCommandGroups();
-
-	//		for (int i = 0; i < Groups.Num(); i++)
-	//		{
-	//			Container->Groups.Add(Groups[i]);
-	//		}
-	//	}
-	//	else
-	//	{
-	//		UE_LOG(LogTemp, Warning, TEXT("Not resolved!"));
-	//	}
-
-	//	UE_LOG(LogTemp, Warning, TEXT("Package name: %s | %s | %s"), *Package->FileName.ToString(), *Package->GetFullGroupName(false), *Package->GetPathName());
-	//	// Construct a filename from long package name.
-	//	FString PackageFileName = FPackageName::LongPackageNameToFilename(Package->GetPathName(), FPackageName::GetAssetPackageExtension());
-	//	
-	//	//FString Path = FString::Printf(TEXT("%s%s%s"));
-
-	//	FSavePackageResultStruct OutStruct = Package->Save(Package, Asset.GetAsset(), EObjectFlags::RF_Standalone | EObjectFlags::RF_Public, *PackageFileName);
-	//	//UPackage::Save(Package, Resolved, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, Asset.);
-	//	//Resolved->PostEditChange();
-	//	
-	//	UE_LOG(LogTemp, Warning, TEXT("Result of save: %d | %lld"), OutStruct.Result, OutStruct.TotalFileSize);
-	//	
-	//}
-
-
-
 	//If there isnt any group created on window open ask user if he wants to create new with all variables
 	if (CommandsManager->GetCommandGroups().Num() == 0)
 	{
@@ -413,7 +382,7 @@ TSharedRef<class SDockTab> FConsoleManagerModule::OnSpawnPluginTab(const FSpawnT
 	ClosedTabDelegate.BindLambda([=](TSharedRef<SDockTab> DockTab)
 		{
 			IConsoleManager::Get().UnregisterConsoleVariableSink_Handle(Handle);
-			CommandsManager->SaveCommands();
+			CommandsManager->SaveToAssets();
 			//DockTab->ClearContent();
 		});
 
@@ -430,12 +399,14 @@ TSharedRef<class SConsoleManagerSlateWidget> FConsoleManagerModule::BuildUI()
 	bool DisplaySetByValue = GetMutableDefault<UConsoleManagerSettings>()->DisplaySetByValue;
 	bool DisplayCommandType = GetMutableDefault<UConsoleManagerSettings>()->DisplayCommandType;
 
-
-	return SNew(SConsoleManagerSlateWidget)
+	TSharedRef<SConsoleManagerSlateWidget> ConsoleManagerSlate = SNew(SConsoleManagerSlateWidget)
 		.CommandsManager(CommandsManager)
 		.DisplayCommandValueType(DisplayCommandValueType)
 		.DisplaySetByValue(DisplaySetByValue)
 		.DisplayCommandType(DisplayCommandType);
+
+
+	return ConsoleManagerSlate;
 }
 
 #undef LOCTEXT_NAMESPACE

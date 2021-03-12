@@ -9,9 +9,9 @@
 #include "Misc/Parse.h"
 
 #include "CommandStructs.h"
+#include "Widgets/Notifications/SNotificationList.h"
 
 class UCommandsContainer;
-
 
 DECLARE_DELEGATE(FOnDataRefreshed);
 
@@ -32,23 +32,24 @@ public:
 class CONSOLEMANAGER_API FCommandsManager
 {
 public:
-
 	FCommandsManager();
 
-	bool Initialize(const FString& Path);
-
-	bool InitializeFromContainers(TArray<UCommandsContainer*> Containers);
+	void Initialize();
+	void Initialize(TArray<UCommandsContainer*> Containers);
 
 	void Refresh();
 
 	const TArray<TSharedPtr<FConsoleCommand>>& GetCurrentSharedCommands();
 	FORCEINLINE const FCommandGroup& GetCurrentCommandGroup() const { return *CurrentGroup; };
 	const TArray<FConsoleCommand>& GetCurrentCommands();
-	const TArray<FString> GetGroupList();
+	const TArray<TPair<FString, FGuid>> GetGroupList();
+
+
 
 	FORCEINLINE const TArray<FCommandGroup>& GetCommandGroups() { return CommandGroups; };
 
-	bool SetActiveGroup(int NewId);
+	//bool SetActiveGroup(int NewId);
+	bool SetActiveGroup(FGuid Id);
 
 	void ReorderCommandInCurrentGroup(int32 CurrentId, int32 NewId);
 	void DuplicateCommand(int32 Id);
@@ -56,31 +57,41 @@ public:
 
 	bool SetActiveHistory();
 	bool SetActiveAllCommands();
+	bool SetActiveSnapshot();
 
 
 
 	void AddCommandsToCurrentGroup(TArray<TSharedPtr<FConsoleCommand>> Commands);
-	void AddCommandsToGroup(FCommandGroup* Group, TArray<TSharedPtr<FConsoleCommand>> Commands);
+	void AddCommandsToGroup(FGuid Id, TArray<TSharedPtr<FConsoleCommand>> Commands);
 
 	void UpdateCurrentEngineValue(const FConsoleCommand& Command);
 
 	void ReplaceCommandInCurrentGroup(int32 Id, FConsoleCommand& NewCommand);
 
 	const FCommandGroup* GetAllCommands();
-	FCommandGroup* GetGroupById(const FString& Id);
+	const FCommandGroup* GetHistory();
+	const FCommandGroup* GetSnapshot();
+	const FCommandGroup* GetGroupById(const FGuid& Id);
 
 	const FConsoleCommand& GetConsoleCommand(int Id);
 
 	bool ExecuteCommand(const FConsoleCommand& Command);
 	bool ExecuteCommand(FConsoleCommand& Command);
 	void ExecuteMultipleCommands(TArray<TSharedPtr<FConsoleCommand>> Commands);
+	void ExecuteGroup(const FGuid& Id);
+
+	void CreateNewGroup(const FString& Name, UCommandsContainer* Container);
+
+	// Creates new group with given commands in the same container as given group 
+	void CreateNewGroup(const FString& Name, UCommandsContainer* Container, TArray<TSharedPtr<FConsoleCommand>> Commands);
+
+	void CreateSnapshotCVars(const FString& Name, UCommandsContainer* Container);
+
+	void RemoveGroup(FGuid Id);
+	bool RenameGroup(FGuid Id, const FString& NewName);
+	void DuplicateGroup(FGuid Id);
 
 
-	FCommandGroup* AddNewGroup(const FString& Name, EGroupType Type);
-	FCommandGroup* AddNewGroup(const FString& Name);
-	void RemoveGroup(int Id);
-	bool RenameGroup(int Id, const FString& NewName);
-	void DuplicateGroup(int Id);
 
 	bool SaveCommands();
 
@@ -93,13 +104,20 @@ public:
 
 	const TArray<UCommandsContainer*>& GetCommandsContainers() { return CommandsContainers; };
 
-
+	void SaveToAssets();
 	FOnDataRefreshed OnDataRefreshed;
 private:
 
-	void LoadAllAssets();
-	void SaveToAssets();
 
+	void Initialize_Internal(TArray<UCommandsContainer*> Containers);
+
+	FCommandGroup& AddNewGroup_Internal(const FString& Name, UCommandsContainer* Container, EGroupType Type = EGroupType::Default);
+
+	TArray<UCommandsContainer*> LoadAllContainers();
+
+
+
+	void AddCommandsToGroup(FCommandGroup* Group, TArray<TSharedPtr<FConsoleCommand>> Commands);
 
 	void LoadConsoleHistory();
 
@@ -115,6 +133,7 @@ private:
 	void SetCurrentCommands(FCommandGroup& Group);
 
 	FCommandGroup ConsoleHistory;
+	FCommandGroup Snapshot;
 
 	TArray<FCommandGroup> CommandGroups;
 
@@ -124,9 +143,14 @@ private:
 
 	void ValidateCommands(TArray<FConsoleCommand>& Commands);
 
-	FString GetNewIdForGroup(const FCommandGroup& Group);
+	FGuid GetNewIdForGroup(const FCommandGroup& Group);
 
 	void DumpAllCommands();
+
+	void DisplayNotification(FText Text, SNotificationItem::ECompletionState State);
+
+	// Return nullptr if not found
+	FCommandGroup* GetGroup(FGuid Id);
 
 	FCommandGroup AllCommands;
 	FString CurrentGroupId;
@@ -137,4 +161,8 @@ private:
 	/** Assets being watched */
 	TArray<UCommandsContainer*> CommandsContainers;
 
+
+	TMap<FGuid, UCommandsContainer*> GroupToContainerMap;
+
+	TSharedPtr<SNotificationItem> NotificationItem;
 };
