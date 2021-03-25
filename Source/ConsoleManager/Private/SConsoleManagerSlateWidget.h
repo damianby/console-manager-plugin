@@ -51,7 +51,7 @@ public:
 		SLATE_ARGUMENT(TSharedPtr<FConsoleCommand>, Item)
 		SLATE_ARGUMENT(bool, bIsValid)
 		SLATE_ARGUMENT(bool, bIsEditable)
-	//	SLATE_ARGUMENT(int32, Id)
+		SLATE_ARGUMENT(bool, bDisplayIcons)
     SLATE_END_ARGS()
 			 
 
@@ -97,20 +97,36 @@ public:
         Item = InArgs._Item;
 		bIsValid = InArgs._bIsValid;
 		bIsEditable = InArgs._bIsEditable;
-		
+		bDisplayIcons = InArgs._bDisplayIcons;
 		//static FTableRowStyle NewStyle = FCoreStyle::Get().GetWidgetStyle<FTableRowStyle>("TableView.Row");
 		//NewStyle.DropIndicator_Onto = NewStyle.;
+		
+		const FTableRowStyle* StyleRow = &FConsoleManagerStyle::Get().GetWidgetStyle<FTableRowStyle>("TableView.Row");
+
 
 		FTableRowArgs Args;
+
 		Args.Padding(FMargin(0, 2.0f));
-		
+		Args.Style(StyleRow);
+
 		bContainsValueColumn = InOwnerTableView->GetHeaderRow()->IsColumnGenerated("Value");
 		
 		//Args.Style(&NewStyle);
 
 		SMultiColumnTableRow<TSharedPtr<FConsoleCommand> >::Construct(Args, InOwnerTableView);
 
-		//SetBorderBackgroundColor(FLinearColor(255, 0, 0));
+		//if (Id % 2 == 0)
+		//{
+		//	SetColorAndOpacity(FLinearColor(1.f, 0, 0, 1.));
+		//	//SetBorderBackgroundColor(FLinearColor(255, 0, 0));
+		//}
+		//else
+		//{
+		//	SetColorAndOpacity(FLinearColor(0.f, 1.0f, 0, 1.));
+
+		//	//SetBorderBackgroundColor(FLinearColor(0,255, 0));
+		//}
+
 
 		OnCanAcceptDrop = FOnCanAcceptDrop::CreateLambda(
 			[=](const FDragDropEvent& DragDrop, EItemDropZone Zone, TSharedPtr<FConsoleCommand> Item)
@@ -146,7 +162,7 @@ protected:
     TSharedPtr<FConsoleCommand> Item;
 	bool bIsValid;
 	bool bIsEditable;
-	int32 Id;
+	bool bDisplayIcons;
 
 	bool bContainsValueColumn = true;
 
@@ -163,10 +179,14 @@ protected:
 
 class SScrollBox;
 
-class CONSOLEMANAGER_API SConsoleManagerSlateWidget : public SCompoundWidget
+class CONSOLEMANAGER_API SConsoleManagerSlateWidget : public SDockTab
 {
 public:
 	SLATE_BEGIN_ARGS(SConsoleManagerSlateWidget)
+		: _CommandsManager()
+		, _DisplayCommandValueType()
+		, _DisplaySetByValue()
+		, _DisplayCommandType()
 	{}
 
 	SLATE_ARGUMENT(TWeakPtr<FCommandsManager>, CommandsManager);
@@ -182,13 +202,10 @@ public:
 
 	void RefreshListView() { 
 		if (bNeedsRefresh)
-		{
-			//CommandsListView->RequestListRefresh();
-			
-			if (!CommandsManager.Pin()->IsHistorySelected())
+		{		
+			if (CommandsManager.Pin()->GetCurrentCommandGroup().Type != EGroupType::History)
 			{
 				CommandsListView->RebuildList();
-				
 			}
 			else
 			{
@@ -198,11 +215,24 @@ public:
 		}
 	};
 
+	void TabActivated();
+
+	void UpdateHeaderColumnsVisibility(bool bShouldDisplayCommandValueType, bool bShouldDisplaySetByValue, bool bShouldDisplayCommandType);
+
+
+	void RefreshEverything() { GenerateGroupsScrollBox(); GenerateCommandsScrollBox(); UE_LOG(LogTemp, Warning, TEXT("Data refereshed!!!")); }
+
 protected:
 	//virtual FReply OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 
+	//virtual FReply OnFocusReceived(const FGeometry& MyGeometry, const FFocusEvent& InFocusEvent) override;
 
 private:
+
+	// 
+	/** Dirty hack to set focus when everything is constructed. We could do it in tick but its better to do it in timer (fire and forget) */
+	EActiveTimerReturnType SetFocusPostConstruct(double InCurrentTime, float InDeltaTime);
+
 
 	bool bShowExec = true;
 	bool bShowCVar = true;
@@ -231,7 +261,7 @@ private:
 
 	void OnAddGroupButtonClicked();
 
-	FReply OnSelectGroupClicked(FGuid Id);
+	void OnSelectGroupClicked(ECheckBoxState NewRadioState, FGuid Id);
 
 	TSharedRef< ITableRow > OnCommandsRowGenerate(TSharedPtr<FConsoleCommand> Item, const TSharedRef< STableViewBase >& OwnerTable);
 
@@ -246,6 +276,8 @@ private:
 	bool OpenExecMultipleDialog(TArray<TSharedPtr<FConsoleCommand>> Commands);
 	bool DisplayExecuteWarning(const FText& Text);
 
+	bool DisplayTextDialog(const FText& Title, const FText& Desc, FString& InOutContent);
+
 	TSharedPtr<SWidget> GetListViewContextMenu();
 
 	bool HandleNewGroup(FString& OutName, UCommandsContainer*& OutContainer, UCommandsContainer* InContainer = nullptr);
@@ -257,5 +289,11 @@ private:
 	TSharedRef<SButton> GetMenuButton(FText Text, const FSlateBrush* ImageBrush, FOnClicked ClickedDelegate);
 
 	ECheckBoxState GetCurrentSelectedGroup(FGuid Id) const;
+
+	int64 RowId = 0;
+
+	bool bDisplayCommandValueType = false;
+	bool bDisplaySetByValue = false;
+	bool bDisplayCommandType = false;
 
 };

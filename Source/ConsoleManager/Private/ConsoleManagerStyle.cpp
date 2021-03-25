@@ -23,7 +23,7 @@ public:
 		, DefaultButtonHover_Ref(MakeShareable(new FLinearColor(0.728f, 0.364f, 0.003f)))
 		, DefaultButtonPress_Ref(MakeShareable(new FLinearColor(0.701f, 0.225f, 0.003f)))
 	{
-
+		
 	}
 
 
@@ -34,7 +34,6 @@ public:
 		Source->B = Value.B;
 		Source->A = Value.A;
 	}
-
 
 	const TSharedRef<FLinearColor> DefaultMatchingValues_Ref;
 	const TSharedRef<FLinearColor> DefaultNotMatchingValues_Ref;
@@ -83,8 +82,19 @@ void FConsoleManagerStyle::SetMatchingValuesColor(const FLinearColor& NewColor)
 	FSlateConsoleManagerStyle::SetColor(Style->DefaultMatchingValues_Ref, NewColor);
 }
 
+void FConsoleManagerStyle::SetCommandsFontSize(int32 NewSize)
+{
+	check(StyleInstance);
+
+	StyleInstance->Set("Fonts.Commands", FCoreStyle::GetDefaultFontStyle("Regular", NewSize));
+	StyleInstance->Set("Fonts.FontSize", static_cast<float>(NewSize));
+	
+}
+
 #define IMAGE_BRUSH( RelativePath, ... ) FSlateImageBrush( Style->RootToContentDir( RelativePath, TEXT(".png") ), __VA_ARGS__ )
 #define BOX_BRUSH( RelativePath, ... ) FSlateBoxBrush( Style->RootToContentDir( RelativePath, TEXT(".png") ), __VA_ARGS__ )
+
+
 #define BORDER_BRUSH( RelativePath, ... ) FSlateBorderBrush( Style->RootToContentDir( RelativePath, TEXT(".png") ), __VA_ARGS__ )
 #define TTF_FONT( RelativePath, ... ) FSlateFontInfo( Style->RootToContentDir( RelativePath, TEXT(".ttf") ), __VA_ARGS__ )
 #define OTF_FONT( RelativePath, ... ) FSlateFontInfo( Style->RootToContentDir( RelativePath, TEXT(".otf") ), __VA_ARGS__ )
@@ -103,8 +113,6 @@ TSharedRef< FSlateStyleSet > FConsoleManagerStyle::Create()
 	const FSlateColor DefaultMatchingValues(Style->DefaultMatchingValues_Ref);
 	const FSlateColor DefaultNotMatchingValues(Style->DefaultNotMatchingValues_Ref);
 
-	
-
 	const FSlateColor DefaultButtonHover(Style->DefaultButtonHover_Ref);
 	const FSlateColor DefaultButtonPress(Style->DefaultButtonPress_Ref);
 
@@ -115,7 +123,19 @@ TSharedRef< FSlateStyleSet > FConsoleManagerStyle::Create()
 
 	Style->Set("ConsoleManager.OpenTab", new IMAGE_BRUSH(TEXT("ButtonIcon_40x"), Icon40x40));
 	Style->Set("ConsoleManager.OpenTab.Small", new IMAGE_BRUSH(TEXT("ButtonIcon_40x"), Icon20x20));
-	Style->Set("ConsoleManager.ExecAction", new IMAGE_BRUSH(TEXT("go"), Icon16x16));
+
+	FSlateImageBrush* ExecActionBrush = new IMAGE_BRUSH(TEXT("Execute_16"), Icon16x16);
+	ExecActionBrush->DrawAs = ESlateBrushDrawType::Box;
+	ExecActionBrush->Margin = FMargin(0);
+
+	Style->Set("ConsoleManager.ExecAction", ExecActionBrush);
+
+
+	FSlateImageBrush* NoteBrush = new IMAGE_BRUSH(TEXT("Note_16"), Icon16x16);
+	NoteBrush->DrawAs = ESlateBrushDrawType::Box;
+	NoteBrush->Margin = FMargin(0);
+
+	Style->Set("Icons.Note", NoteBrush);
 
 
 	Style->Set("Icons.Settings", new IMAGE_BRUSH(TEXT("Settings_40"), Icon27x27));
@@ -166,8 +186,10 @@ TSharedRef< FSlateStyleSet > FConsoleManagerStyle::Create()
 
 	Style->Set("EmptyButton", NoBorder);
 	
-
 	
+	Style->Set("Fonts.Commands", FCoreStyle::GetDefaultFontStyle("Regular", 9));
+	Style->Set("Fonts.FontSize", 9.0f);
+
 
 	// Normal Text
 	const FTextBlockStyle GlobalPresetButtonFont = FTextBlockStyle()
@@ -191,6 +213,7 @@ TSharedRef< FSlateStyleSet > FConsoleManagerStyle::Create()
 	/* Default Style for a toggleable button */
 	const FCheckBoxStyle GlobalPresetToggleButton = FCheckBoxStyle()
 		.SetCheckBoxType(ESlateCheckBoxType::ToggleButton)
+		//.SetBorderBackgroundColor(FSlateColor(FLinearColor(1.0f,0,0,1.0f)))
 		.SetUncheckedImage(IMAGE_BRUSH(TEXT("ButtonSolo_Idle"), FVector2D(150, 34)))
 		.SetUncheckedHoveredImage(IMAGE_BRUSH(TEXT("ButtonSolo_Idle"), FVector2D(150, 34), FLinearColor(1.f, 1.f, 1.f, 0.7f)))
 		.SetUncheckedPressedImage(IMAGE_BRUSH(TEXT("ButtonSolo_Idle"), FVector2D(150, 34), FLinearColor(1.f, 1.f, 1.f, 0.5f)))
@@ -200,6 +223,23 @@ TSharedRef< FSlateStyleSet > FConsoleManagerStyle::Create()
 
 	Style->Set("GlobalPresetToggleButton", GlobalPresetToggleButton);
 
+
+	const FCheckBoxStyle SinglePresetToggleButton = FCheckBoxStyle()
+		.SetCheckBoxType(ESlateCheckBoxType::ToggleButton)
+		.SetUncheckedImage(FSlateColorBrush(FLinearColor(0.f, 0.f, 0.f, 0.f)))
+		.SetUncheckedHoveredImage(FSlateColorBrush(FLinearColor(0.728f / 4.f, 0.364f / 4.f, 0.003f / 4.f)))
+		.SetUncheckedPressedImage(FSlateColorBrush(FLinearColor(0.728f / 2.f, 0.364f / 2.f, 0.003f / 2.f)))
+		.SetCheckedImage(FSlateColorBrush(FLinearColor(0.728f, 0.364f, 0.003f)))
+		.SetCheckedHoveredImage(FSlateColorBrush(FLinearColor(0.728f, 0.364f, 0.003f)))
+		.SetCheckedPressedImage(FSlateColorBrush(FLinearColor(0.728f, 0.364f, 0.003f)));
+
+	Style->Set("SinglePresetToggleButton", SinglePresetToggleButton);
+
+	const FTableRowStyle DefaultTableRowStyle = FTableRowStyle(FCoreStyle::Get().GetWidgetStyle<FTableRowStyle>("TableView.Row"))
+		.SetEvenRowBackgroundBrush(FSlateColorBrush(FLinearColor(0.f, 0.f, 0.f, 0.1f)))
+		.SetOddRowBackgroundBrush(FSlateColorBrush(FLinearColor(0.f, 0.f, 0.f, 0.2f)));
+
+	Style->Set("TableView.Row", DefaultTableRowStyle);
 
 	return Style;
 }

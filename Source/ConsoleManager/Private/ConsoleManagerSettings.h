@@ -28,6 +28,16 @@ class CONSOLEMANAGER_API UConsoleManagerSettings : public UObject {
 public:
 	UConsoleManagerSettings(const FObjectInitializer& ObjectInitializer);
 
+
+	/** Global shortcut to open manager */
+	UPROPERTY(EditAnywhere, config, Category = Shortcuts, meta = (DisplayName = "Open manager shortcut"))
+		FInputChord OpenShortcut = FInputChord();
+
+
+	/** Commands font size */
+	UPROPERTY(EditAnywhere, config, Category = UI, meta = (DisplayName = "Commands font size"))
+		int32 CommandsFontSize = 9;
+
 	/** Should toolbar button be visible next to settings (when disabled Console Manager will be accessible from Window tab)  */
 	UPROPERTY(EditAnywhere, config, Category = UI, meta = (DisplayName = "Show toolbar button"))
 		bool bShowToolbar = true;

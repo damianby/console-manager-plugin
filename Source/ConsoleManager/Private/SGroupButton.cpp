@@ -8,7 +8,7 @@
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SGroupButton::Construct(const FArguments& InArgs) 
 {
-	SButton::Construct(InArgs);
+	SCheckBox::Construct(InArgs);
 	
 	/*
 	ChildSlot
@@ -34,7 +34,7 @@ FReply SGroupButton::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointer
 	}
 
 	FReply SuperReply = FReply::Unhandled();
-	SuperReply = SButton::OnMouseButtonUp(MyGeometry, MouseEvent);
+	SuperReply = SCheckBox::OnMouseButtonUp(MyGeometry, MouseEvent);
 
 	// if its handled we should return it because it releases mouse capture!
 	if (SuperReply.IsEventHandled())

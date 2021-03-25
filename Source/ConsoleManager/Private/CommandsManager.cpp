@@ -17,6 +17,11 @@
 #include "ISourceControlModule.h"
 #include "Misc/FileHelper.h"
 
+#include "Misc/ConfigCacheIni.h"
+#include "Misc/OutputDeviceFile.h"
+
+#include "DeviceProfiles/DeviceProfileManager.h"
+
 
 #define LOCTEXT_NAMESPACE "FConsoleManagerModule"
 
@@ -28,9 +33,9 @@ FCommandsManager::FCommandsManager()
 
 	ValidateCommands(ConsoleHistory.Commands);
 
-	FileHelper::PrintGroups_Debug(CommandGroups);
+	//FileHelper::PrintGroups_Debug(CommandGroups);
 
-	SetCurrentCommands(ConsoleHistory);
+	SetCurrentCommands(AllCommands);
 
 	// We should refresh our list when new asset with our factory is created
 	FEditorDelegates::OnNewAssetCreated.AddLambda(
@@ -57,7 +62,8 @@ FCommandsManager::FCommandsManager()
 			}
 		});
 	
-	Snapshot.Id = GetNewIdForGroup(Snapshot);
+	Snapshot.Id = GetNewIdForGroup();
+	Snapshot.bIsEditable = false;
 
 	EPluginLoadedFrom LoadedFrom = IPluginManager::Get().FindPlugin("ConsoleManager")->GetLoadedFrom();
 
@@ -74,36 +80,137 @@ FCommandsManager::FCommandsManager()
 
 	// Find or create default local container (outside SCC)
 
-	const FString CommandsPath = IPluginManager::Get().FindPlugin("ConsoleManager")->GetContentDir() / TEXT("");
-	//FString PerforceIgnoreList = TEXT(".p4ignore.txt") LINE_TERMINATOR TEXT("LocalContainer") + FPackageName::GetAssetPackageExtension();
+	//const FString CommandsPath = IPluginManager::Get().FindPlugin("ConsoleManager")->GetContentDir() / TEXT("");
+	////FString PerforceIgnoreList = TEXT(".p4ignore.txt") LINE_TERMINATOR TEXT("LocalContainer") + FPackageName::GetAssetPackageExtension();
 
-	//FString IgnorePath = CommandsPath / TEXT(".p4ignore");
-	//FFileHelper::SaveStringToFile(PerforceIgnoreList, *IgnorePath);
+	////FString IgnorePath = CommandsPath / TEXT(".p4ignore");
+	////FFileHelper::SaveStringToFile(PerforceIgnoreList, *IgnorePath);
 
 
-	const FString MountedPath = IPluginManager::Get().FindPlugin("ConsoleManager")->GetMountedAssetPath();
+	//const FString MountedPath = IPluginManager::Get().FindPlugin("ConsoleManager")->GetMountedAssetPath();
 
-	FString LocalContainerPackageName = MountedPath / TEXT("LocalContainer");
+	//FString LocalContainerPackageName = MountedPath / TEXT("LocalContainer");
 
-	UPackage* Package = CreatePackage(NULL, *LocalContainerPackageName);
-	UCommandsContainer* NewContainer = NewObject<UCommandsContainer>(Package, UCommandsContainer::StaticClass(), *FString("LocalContainer"), 
-		EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+	//UPackage* Package = CreatePackage(NULL, *LocalContainerPackageName);
+	//UCommandsContainer* NewContainer = NewObject<UCommandsContainer>(Package, UCommandsContainer::StaticClass(), *FString("LocalContainer"), 
+	//	EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+	//
+	//FAssetRegistryModule::AssetCreated(NewContainer);
+	//
+	//
+
+	//FString FilePath = FString::Printf(TEXT("%s%s%s"), *CommandsPath, *FString("LocalContainer"), *FPackageName::GetAssetPackageExtension());
+
+	//bool bSuccess = UPackage::SavePackage(Package, NewContainer, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *FilePath);
+
+	//
+	//UE_LOG(LogTemp, Warning, TEXT("%s"), *CommandsPath);
+
+
+	//FConfigCacheIni::G
+
+
+	TArray<UObject*> Profiles = UDeviceProfileManager::Get().Profiles;
+
+	for (auto& Profile : Profiles)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Profile %s"), *Profile->GetName());
+	}
 	
-	FAssetRegistryModule::AssetCreated(NewContainer);
-	
+
+	if (GConfig->IsReadyForUse())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("IS READY TO USE GCONFIG"));
+
+		TArray<FString> Arr;
+
+		GConfig->GenerateKeyArray(Arr);
+
+		
+
+		TArray<FConfigFile> CArr;
+
+		for (auto El : Arr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Config %s"), *El);
+		}
+
+		/*GConfig->GenerateValueArray(CArr);*/
+		//CArr[0].OverrideFileFromCommandline
+		//GConfig->Dump
+		//const FString Path = FPaths::Combine("F:", "Ini.ini");
 	
 
-	FString FilePath = FString::Printf(TEXT("%s%s%s"), *CommandsPath, *FString("LocalContainer"), *FPackageName::GetAssetPackageExtension());
+		TArray<FString> LocalCommands;
 
-	bool bSuccess = UPackage::SavePackage(Package, NewContainer, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *FilePath);
+		FStringOutputDevice StringOutDevice;
+		StringOutDevice.SetAutoEmitLineTerminator(true);
 
-	
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *CommandsPath);
+		GConfig->Dump(StringOutDevice);
+		//ConsoleCommandLibrary_DumpLibrary(GEditor->GetEditorWorldContext().World(), *GEngine, FString(TEXT("")) + TEXT("*"), StringOutDevice);
+
+		StringOutDevice.ParseIntoArrayLines(LocalCommands);
+
+		UE_LOG(LogTemp, Warning, TEXT("Local Commands lines: %d"), LocalCommands.Num());
+
+
+		const FString Path = FPaths::GeneratedConfigDir() + TEXT("Linesall.txt");
+		FileHelper::DumpAllCommands(Path, LocalCommands);
+
+		
+
+		// Create a file writer to dump the info to
+		//FOutputDevice* OutputOverride = nullptr;
+		//FString OutputFilename;
+		//TUniquePtr<FOutputDeviceFile> OutputBuffer;
+		////if (FParse::Value(*Params, TEXT("dumptofile="), OutputFilename))
+		////{
+		//	OutputBuffer = MakeUnique<FOutputDeviceFile>(*Path, true);
+		//	OutputBuffer->SetSuppressEventTag(true);
+		//	OutputOverride = OutputBuffer.Get();
+
+			
+		//}
+
+
+
+		
+
+			//FCommandLine::Get()
+	}
+
+
+
+	FConsoleCommandDelegate Delegate;
+
+	Delegate.BindLambda([this]() {
+		UpdateHistory();
+		
+		OnDataRefreshed.ExecuteIfBound();
+	});
+
+	Handle = IConsoleManager::Get().RegisterConsoleVariableSink_Handle(Delegate);
+
+
 
 }
 
-void FCommandsManager::Initialize_Internal(TArray<UCommandsContainer*> Containers)
+FCommandsManager::~FCommandsManager()
 {
+	IConsoleManager::Get().UnregisterConsoleVariableSink_Handle(Handle);
+}
+
+void FCommandsManager::Initialize_Internal(TArray<UCommandsContainer*>& Containers)
+{
+	for (auto& Container : CommandsContainers)
+	{
+		if (Container->IsRooted())
+		{
+			Container->RemoveFromRoot();
+		}
+	}
+
+
 	CommandsContainers = Containers;
 
 	if (CommandsContainers.Num() == 0)
@@ -113,6 +220,7 @@ void FCommandsManager::Initialize_Internal(TArray<UCommandsContainer*> Container
 
 	for (auto& Container : CommandsContainers)
 	{
+		//Root them while we use to avoid crash when object is removed
 		if (!Container->IsRooted())
 		{
 			Container->AddToRoot();
@@ -123,54 +231,20 @@ void FCommandsManager::Initialize_Internal(TArray<UCommandsContainer*> Container
 			GroupToContainerMap.Add(GroupInContainer.Id, Container);
 		}
 	}
+
+	
+	OnDataRefreshed.ExecuteIfBound();
 }
 
 void FCommandsManager::Initialize()
 {
-	Initialize_Internal(LoadAllContainers());
+	TArray<UCommandsContainer*> Containers;
+	Initialize_Internal(Containers);
 }
 
 void FCommandsManager::Initialize(TArray<UCommandsContainer*> Containers)
 {
 	Initialize_Internal(Containers);
-}
-
-void FCommandsManager::Refresh()
-{
-	//const FString CommandsPath = IPluginManager::Get().FindPlugin("ConsoleManager")->GetBaseDir() / TEXT("Resources") / TEXT("Commands.txt");
-	
-
-	
-	//FPaths::EngineContentDir().PathAppend()
-
-
-	//FileHelper::ReadCommandFile(CommandsPath, CommandGroups);
-	
-
-	//for (auto& Group : CommandGroups)
-	//{
-	//	ValidateCommands(Group.Commands);
-	//}
-
-	//FCommandGroup* CurrentGroupByName = CommandGroups.FindByKey<FString>(CurrentGroupId);
-	//if (CurrentGroupByName)
-	//{
-	//	SetCurrentCommands(*CurrentGroupByName);
-	//}
-	//else
-	//{
-	//	SetCurrentCommands(ConsoleHistory);
-	//}
-}
-
-const TArray<TSharedPtr<FConsoleCommand>>& FCommandsManager::GetCurrentSharedCommands()
-{
-	return CurrentCommandsShared;
-}
-
-const TArray<FConsoleCommand>& FCommandsManager::GetCurrentCommands()
-{
-	return CurrentGroup->Commands;
 }
 
 const TArray<TPair<FString, FGuid>> FCommandsManager::GetGroupList()
@@ -201,6 +275,7 @@ bool FCommandsManager::SetActiveGroup(FGuid Id)
 		if (Container->IsValidLowLevel())
 		{
 			FCommandGroup* FoundGroup = Container->Groups.FindByKey<FGuid>(Id);
+
 			SetCurrentCommands(*FoundGroup);
 			
 			return true;
@@ -257,6 +332,16 @@ void FCommandsManager::RemoveCommands(TArray<int32> Ids)
 	}
 
 	RebuildSharedArray();
+}
+
+void FCommandsManager::SetNoteCommand(int32 Id, const FString& NewNote)
+{
+	TArray<FConsoleCommand>& Commands = CurrentGroup->Commands;
+
+	if (Commands.IsValidIndex(Id))
+	{
+		Commands[Id].SetNote(NewNote);
+	}
 }
 
 bool FCommandsManager::SetActiveHistory()
@@ -323,7 +408,7 @@ void FCommandsManager::AddCommandsToGroup(FGuid Id, TArray<TSharedPtr<FConsoleCo
 
 void FCommandsManager::UpdateCurrentEngineValue(const FConsoleCommand& Command)
 {
-	bool SuccessExecuting = Execute(Command);
+	bool SuccessExecuting = Execute_Internal(Command);
 }
 
 void FCommandsManager::ReplaceCommandInCurrentGroup(int32 Id, FConsoleCommand& NewCommand)
@@ -333,21 +418,6 @@ void FCommandsManager::ReplaceCommandInCurrentGroup(int32 Id, FConsoleCommand& N
 	CurrentGroup->Commands[Id] = NewCommand;
 	
 	RebuildSharedArray();
-}
-
-const FCommandGroup* FCommandsManager::GetAllCommands()
-{
-	return &AllCommands;
-}
-
-const FCommandGroup* FCommandsManager::GetHistory()
-{
-	return &ConsoleHistory;
-}
-
-const FCommandGroup* FCommandsManager::GetSnapshot()
-{
-	return &Snapshot;
 }
 
 const FCommandGroup* FCommandsManager::GetGroupById(const FGuid& Id)
@@ -376,12 +446,12 @@ const FConsoleCommand& FCommandsManager::GetConsoleCommand(int Id)
 
 bool FCommandsManager::ExecuteCommand(const FConsoleCommand& Command)
 {
-	return Execute(Command);
+	return Execute_Internal(Command);
 }
 
 bool FCommandsManager::ExecuteCommand(FConsoleCommand& Command)
 {
-	bool SuccessExecuting = Execute(Command);
+	bool SuccessExecuting = Execute_Internal(Command);
 
 	Command.SetIsValid(SuccessExecuting);
 
@@ -400,7 +470,7 @@ void FCommandsManager::ExecuteMultipleCommands(TArray<TSharedPtr<FConsoleCommand
 	TArray<FString> Errors;
 	for (const auto& Command : Commands)
 	{
-		if (!Execute(Command.ToSharedRef().Get()))
+		if (!Execute_Internal(Command.ToSharedRef().Get()))
 		{
 			Errors.Add(Command->GetExec());
 		}
@@ -453,7 +523,7 @@ void FCommandsManager::ExecuteGroup(const FGuid& Id)
 	TArray<FString> Errors;
 	for (const auto& Command : FoundGroup.Commands)
 	{
-		if (!Execute(Command))
+		if (!Execute_Internal(Command))
 		{
 			Errors.Add(Command.GetExec());
 		}
@@ -499,7 +569,6 @@ void FCommandsManager::ExecuteGroup(const FGuid& Id)
 
 void FCommandsManager::RemoveGroup(FGuid Id)
 {
-
 	UCommandsContainer** FoundContainer = GroupToContainerMap.Find(Id);
 
 	if (FoundContainer)
@@ -520,6 +589,8 @@ void FCommandsManager::RemoveGroup(FGuid Id)
 			Container->Groups.RemoveAt(GroupIndex, 1, false);
 		}
 	}
+
+	GroupToContainerMap.Remove(Id);
 }
 
 
@@ -561,30 +632,16 @@ void FCommandsManager::CreateSnapshotCVars(const FString& Name, UCommandsContain
 
 FCommandGroup& FCommandsManager::AddNewGroup_Internal(const FString& Name, UCommandsContainer* Container, EGroupType Type)
 {
+	
 	FCommandGroup& NewGroup = Container->Groups.AddDefaulted_GetRef();
 	NewGroup.Type = Type;
 	NewGroup.Name = Name;
-	NewGroup.Id = GetNewIdForGroup(NewGroup);
+	NewGroup.Id = GetNewIdForGroup();
+
+	GroupToContainerMap.Add(NewGroup.Id, Container);
 
 	return NewGroup;
 }
-//
-//FCommandGroup* FCommandsManager::AddNewGroup(const FString& Name)
-//{
-//	return AddNewGroup(Name, EGroupType::Default);
-//}
-
-
-//bool FCommandsManager::RenameGroup(int Id, const FString& NewName)
-//{
-//	check(CommandGroups.IsValidIndex(Id));
-//
-//	CommandGroups[Id].Name = NewName;
-//	CommandGroups[Id].Id = GetNewIdForGroup(CommandGroups[Id]);
-//
-//	return true;
-//
-//}
 
 bool FCommandsManager::RenameGroup(FGuid Id, const FString& NewName)
 {
@@ -621,31 +678,21 @@ void FCommandsManager::DuplicateGroup(FGuid Id)
 		{
 			FCommandGroup NewGroup = Container->Groups[GroupIndex];
 			NewGroup.Name = NewGroup.Name + "_Dup";
-			NewGroup.Id = GetNewIdForGroup(NewGroup);
+			NewGroup.Id = GetNewIdForGroup();
 
 
 			Container->Groups.Insert(NewGroup, GroupIndex + 1);
+
+			GroupToContainerMap.Add(NewGroup.Id, Container);
+
+			OnDataRefreshed.ExecuteIfBound();
 		}
 	}
-	OnDataRefreshed.ExecuteIfBound();
+	
 }
 
-FGuid FCommandsManager::GetNewIdForGroup(const FCommandGroup& Group)
+FGuid FCommandsManager::GetNewIdForGroup()
 {
-	//FString NewGroupId = FString(Group.Name) + "_";
-
-	//int NewId = 0;
-
-	//FString TempName = NewGroupId + FString::FromInt(NewId);
-	//while (CommandGroups.FindByKey<FString>(TempName))
-	//{
-	//	++NewId;
-	//	TempName = NewGroupId + FString::FromInt(NewId);
-	//}
-
-
-	//return TempName;
-
 	return FGuid::NewGuid();
 }
 
@@ -749,6 +796,7 @@ void FCommandsManager::UpdateHistory()
 	TArray<FString> Out;
 	IConsoleManager::Get().GetConsoleHistory(*FString(), Out);
 	
+
 	//// limit size to avoid a ever growing file
 	//while (ConsoleHistory.Commands.Num() > HistoryBufferSize)
 	//{
@@ -756,29 +804,27 @@ void FCommandsManager::UpdateHistory()
 	//}
 	FString ExecCommand = Out.Last();
 
-	//ConsoleHistory.Commands.RemoveAll([&ExecCommand](FConsoleCommand& Command) { return Command.GetExec().Equals(ExecCommand, ESearchCase::IgnoreCase); });
-	ConsoleHistory.Commands.Add(FConsoleCommand(ExecCommand));
-
-
-	if (IsHistorySelected())
+	if (ExecCommand.Equals(ConsoleHistory.Commands.Last().ExecCommand, ESearchCase::IgnoreCase))
 	{
-		RebuildSharedArray();
+		//ConsoleHistory.Commands.RemoveAll([&ExecCommand](FConsoleCommand& Command) { return Command.GetExec().Equals(ExecCommand, ESearchCase::IgnoreCase); });
+		ConsoleHistory.Commands.Add(FConsoleCommand(ExecCommand));
+
+
+		if (CurrentGroup->Type == EGroupType::History)
+		{
+			RebuildSharedArray();
+		}
 	}
 }
 
-bool FCommandsManager::IsHistorySelected()
-{
-	return CurrentGroup == &ConsoleHistory ? true : false;
-}
-
-TArray<UCommandsContainer*> FCommandsManager::LoadAllContainers()
+ TArray<UCommandsContainer*> FCommandsManager::LoadAllContainers()
 {
 	TArray<FAssetData> Assets;
 	UAssetManager::Get().GetAssetRegistry().GetAssetsByClass(UCommandsContainer::StaticClass()->GetFName(), Assets);
 
 	TArray<UCommandsContainer*> Containers;
 
-	UE_LOG(LogTemp, Warning, TEXT("Found %d assets %d"), Assets.Num());
+	UE_LOG(LogTemp, Warning, TEXT("Found %d assets"), Assets.Num());
 
 	for (auto& Asset : Assets)
 	{
@@ -786,11 +832,13 @@ TArray<UCommandsContainer*> FCommandsManager::LoadAllContainers()
 
 		if (Resolved)
 		{
-			UCommandsContainer* Container = Cast< UCommandsContainer >(Resolved);
+			UCommandsContainer* Container = StaticCast< UCommandsContainer* >(Resolved);
 
 			Containers.Add(Container);
 		}
 	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Finished loading assets!"));
 
 	return Containers;
 }
@@ -944,14 +992,19 @@ void FCommandsManager::RebuildSharedArray()
 
 	CurrentCommandsShared.Reset(CommandsNum);
 
+	UE_LOG(LogTemp, Warning, TEXT("Rebuild shared array!"));
+
 	for (int i = 0; i < CommandsNum; i++)
 	{
+		//UE_LOG(LogTemp, Warning, TEXT("Shared before : %s : %s : %s : %s"), *CurrentGroup->Commands[i].GetName(), *CurrentGroup->Commands[i].GetValue(), *CurrentGroup->Commands[i].GetExec(), *CurrentGroup->Commands[i].GetSetBy());
+
 		CurrentCommandsShared.Add(MakeShareable(&CurrentGroup->Commands[i], FDeleterNot()));
+		//UE_LOG(LogTemp, Warning, TEXT("Shared element: %s : %s : %s : %s"), *CurrentCommandsShared.Last()->GetName(), *CurrentCommandsShared.Last()->GetValue(), *CurrentCommandsShared.Last()->GetExec(), *CurrentCommandsShared.Last()->GetSetBy());
 	}
 }
 
 //It will not add wrong command to history
-bool FCommandsManager::Execute(const FConsoleCommand& Command)
+bool FCommandsManager::Execute_Internal(const FConsoleCommand& Command)
 {
 
 
@@ -1063,8 +1116,6 @@ void FCommandsManager::ValidateCommands(TArray<FConsoleCommand>& Commands)
 void FCommandsManager::SetCurrentCommands(FCommandGroup& Group)
 {
 	CurrentGroup = &Group;
-
-	//CurrentGroupId = Group.Id;
 
 	RebuildSharedArray();
 }

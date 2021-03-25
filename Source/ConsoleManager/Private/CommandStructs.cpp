@@ -45,7 +45,7 @@ FConsoleCommand::FConsoleCommand(FString _Command)
 	IConsoleObject* Obj = nullptr;
 
 	IConsoleManager::Get().ForEachConsoleObjectThatContains(FConsoleObjectVisitor::CreateLambda(
-		[=, &FoundName, &Obj](const TCHAR* CurrentObjName, IConsoleObject* CurrentObj) {
+		[&Param1, &FoundName, &Obj](const TCHAR* CurrentObjName, IConsoleObject* CurrentObj) {
 			if (Param1.Equals(CurrentObjName, ESearchCase::IgnoreCase))
 			{
 				FoundName = FString(CurrentObjName);	
@@ -67,18 +67,23 @@ FConsoleCommand::FConsoleCommand(FString _Command)
 
 FConsoleCommand::FConsoleCommand(const FConsoleCommand& Copy)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Copy constructor"));
-	//if (bIsInitiallyParsed)
-	//{
-		Name = Copy.Name;
-		Value = Copy.Value;
-		//CurrentValue = Copy.CurrentValue;
-		ObjType = Copy.ObjType;
-		Type = Copy.Type;
-		bIsValid = Copy.bIsValid;
-		bIsInitiallyParsed = Copy.bIsInitiallyParsed;
+	// When we copy we do it only for these values as rest is dynamically loaded
+	Name = Copy.Name;
+	Value = Copy.Value;
+	RefreshExec();
 
-		RefreshExec();
+
+
+	//CurrentValue = Copy.CurrentValue;
+	ObjType = Copy.ObjType;
+	Type = Copy.Type;
+	bIsValid = Copy.bIsValid;
+	bIsInitiallyParsed = Copy.bIsInitiallyParsed;
+	Note = Copy.Note;
+	SetBy = Copy.SetBy;
+
+	
+	UE_LOG(LogTemp, Warning, TEXT("Data is %s : %s : %s"), *Name, *Value, *ExecCommand);
 	//}
 	//else
 	//{
@@ -118,6 +123,7 @@ void FConsoleCommand::InitialParse(IConsoleObject* Obj)
 
 		IConsoleCommand* CCmd = Obj->AsCommand();
 		IConsoleVariable* CVar = Obj->AsVariable();
+		
 		if (CVar)
 		{
 			CurrentValue = CVar->GetString();
@@ -125,19 +131,19 @@ void FConsoleCommand::InitialParse(IConsoleObject* Obj)
 
 			if (CVar->IsVariableBool())
 			{
-				Type = "Bool";
+				Type = EConsoleCommandVarType::Bool;
 			}
 			else if (CVar->IsVariableFloat())
 			{
-				Type = "Float";
+				Type = EConsoleCommandVarType::Float;
 			}
 			else if (CVar->IsVariableInt())
 			{
-				Type = "Int";
+				Type = EConsoleCommandVarType::Int;
 			}
 			else if (CVar->IsVariableString())
 			{
-				Type = "String";
+				Type = EConsoleCommandVarType::String;
 			}
 		}
 		else if (CCmd)
@@ -162,6 +168,8 @@ void FConsoleCommand::InitialParse(IConsoleObject* Obj)
 		//Its engine command?
 		ObjType = EConsoleCommandType::Exec;
 	}
+
+	bIsInitiallyParsed = true;
 }
 
 FString FConsoleCommand::GetTooltip()
@@ -176,11 +184,11 @@ FString FConsoleCommand::GetTooltip()
 
 		if (CCmd)
 		{
-			HelpString = "Console Command:\n" + ExecCommand + "\n\n";
+			HelpString = "Console Command:" LINE_TERMINATOR + ExecCommand + LINE_TERMINATOR LINE_TERMINATOR;
 		}
 		else if (CVar)
 		{
-			HelpString = "Console Variable:\n" + ExecCommand + "\n\n";
+			HelpString = "Console Variable:" LINE_TERMINATOR + ExecCommand + LINE_TERMINATOR LINE_TERMINATOR;
 		}
 
 		HelpString += Obj->GetHelp();
@@ -188,6 +196,11 @@ FString FConsoleCommand::GetTooltip()
 	else
 	{
 		HelpString += "Exec commands have no help";
+	}
+
+	if (!Note.IsEmpty())
+	{
+		HelpString += LINE_TERMINATOR LINE_TERMINATOR "Note:" LINE_TERMINATOR + Note;
 	}
 
 	return HelpString;

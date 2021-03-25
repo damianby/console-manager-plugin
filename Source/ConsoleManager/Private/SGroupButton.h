@@ -9,7 +9,7 @@
 /**
  * 
  */
-class SGroupButton : public SButton
+class SGroupButton : public SCheckBox
 {
 public:
 	/*SLATE_BEGIN_ARGS(SGroupButton)

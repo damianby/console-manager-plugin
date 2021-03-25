@@ -3,12 +3,18 @@
 
 using UnrealBuildTool;
 
+using System.IO;
+
 public class ConsoleManager : ModuleRules
 {
 	public ConsoleManager(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		
+
+		//string EnginePath = Path.GetFullPath(Target.RelativeEnginePath);
+
+		//string srcrt_path = EnginePath + "Source/Editor/";
 		PublicIncludePaths.AddRange(
 			new string[] {
 				// ... add public include paths required here ...
@@ -42,10 +48,13 @@ public class ConsoleManager : ModuleRules
 				"LevelEditor",
 				"Settings",
 				"CoreUObject",
+				"PropertyEditor",
 				"Engine",
 				"Slate",
 				"SlateCore",
-				"AssetTools"
+				"AssetTools",
+				"DeviceProfileEditor",
+				"EditorStyle"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

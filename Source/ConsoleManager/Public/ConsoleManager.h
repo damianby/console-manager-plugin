@@ -43,9 +43,13 @@ public:
 
 private:
 
+	void ApplySettings();
+
 	void RegisterMenus();
 
 	void AskForDefaultGroup();
+
+	
 
 	TSharedRef<class SDockTab> OnSpawnPluginTab(const class FSpawnTabArgs& SpawnTabArgs);
 
@@ -53,10 +57,7 @@ private:
 
 	TSharedRef<class SConsoleManagerSlateWidget> BuildUI();
 
-	TWeakPtr<SDockTab> ActiveTab;
-
-	//This handle allows to catch any changes to cvars
-	FConsoleVariableSinkHandle Handle;
+	TWeakPtr<class SConsoleManagerSlateWidget> ActiveTab;
 
 	TSharedPtr<FCommandsManager> CommandsManager;
 
@@ -64,4 +65,5 @@ private:
 	/** The collection of registered asset type actions. */
 	TArray<TSharedRef<IAssetTypeActions>> RegisteredAssetTypeActions;
 
+	bool bIsTabAutostarted = true;
 };

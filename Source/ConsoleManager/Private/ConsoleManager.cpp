@@ -26,13 +26,24 @@
 #include "ISettingsContainer.h"
 #include "ISettingsCategory.h"
 
+#include "LevelEditor.h"
+#include "SDeviceProfileCreateProfilePanel.h"
+
 static const FName ConsoleManagerTabName("ConsoleManager");
 
 #define LOCTEXT_NAMESPACE "FConsoleManagerModule"
 
+
+
+
 void FConsoleManagerModule::StartupModule()
 {
+	CommandsManager = TSharedPtr<FCommandsManager>(new FCommandsManager());
 	
+	UE_LOG(LogTemp, Warning, TEXT("STARTUP MODULE"));
+
+	//FCoreDelegates::OnPostEngineInit
+	// We load module after engine and editor init so everything should be ready
 	if (ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings")) 
 	{
 		TSharedPtr<ISettingsSection> Section = SettingsModule->RegisterSettings("Editor", "Plugins", "Console Manager",
@@ -44,30 +55,26 @@ void FConsoleManagerModule::StartupModule()
 		
 		Section->OnModified().BindLambda([=]() {
 
-			FLinearColor MatchingValuesColor = GetMutableDefault<UConsoleManagerSettings>()->MatchingValuesColor;
-			FLinearColor NotMatchingValuesColor = GetMutableDefault<UConsoleManagerSettings>()->NotMatchingValuesColor;
-
-			FConsoleManagerStyle::SetMatchingValuesColor(MatchingValuesColor);
-			FConsoleManagerStyle::SetNotMachingValuesColor(NotMatchingValuesColor);
-			
-			if (ActiveTab.IsValid())
+			// Rebuild UI after change to settings
+			if (!ActiveTab.IsValid())
 			{
-				ActiveTab.Pin()->SetContent(BuildUI());
-			}
-			else
-			{
-				TSharedPtr<SDockTab> Tab = FGlobalTabmanager::Get()->FindExistingLiveTab(ConsoleManagerTabName);
-				if (Tab.IsValid())
+				TSharedPtr<SDockTab> FoundDockTab = FGlobalTabmanager::Get()->FindExistingLiveTab(ConsoleManagerTabName);
+				if (FoundDockTab.IsValid())
 				{
-					Tab->SetContent(BuildUI());
+					TSharedPtr<SConsoleManagerSlateWidget> Tab = StaticCastSharedPtr< SConsoleManagerSlateWidget, SDockTab>(FoundDockTab);
+					if (Tab.IsValid())
+					{
+						ActiveTab = Tab;
+					}
 				}
 			}
 
-			return true;
-			});
-	}
+			ApplySettings();
 
-	CommandsManager = TSharedPtr<FCommandsManager>(new FCommandsManager());
+			return true;
+		});
+	}
+	
 
 	FConsoleManagerStyle::Initialize();
 	FConsoleManagerStyle::ReloadTextures();
@@ -81,6 +88,12 @@ void FConsoleManagerModule::StartupModule()
 		FExecuteAction::CreateRaw(this, &FConsoleManagerModule::OpenTab),
 		FCanExecuteAction());
 
+
+	FLevelEditorModule& LevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
+	
+	LevelEditorModule.GetGlobalLevelEditorActions()->Append(PluginCommands.ToSharedRef());
+	
+
 	UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FConsoleManagerModule::RegisterMenus));
 
 
@@ -90,14 +103,6 @@ void FConsoleManagerModule::StartupModule()
 		.SetDisplayName(LOCTEXT("FConsoleManagerTabTitle", "Console Manager"))
 		.SetMenuType(ETabSpawnerMenuType::Hidden);
 
-	
-
-	FLinearColor MatchingValuesColor = GetMutableDefault<UConsoleManagerSettings>()->MatchingValuesColor;
-	FLinearColor NotMatchingValuesColor = GetMutableDefault<UConsoleManagerSettings>()->NotMatchingValuesColor;
-
-	FConsoleManagerStyle::SetMatchingValuesColor(MatchingValuesColor);
-	FConsoleManagerStyle::SetNotMachingValuesColor(NotMatchingValuesColor);
-
 
 	IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
 
@@ -106,6 +111,8 @@ void FConsoleManagerModule::StartupModule()
 	AssetTools.RegisterAssetTypeActions(Actions);
 
 	RegisteredAssetTypeActions.Add(Actions);
+
+	ApplySettings();
 }
 
 void FConsoleManagerModule::ShutdownModule()
@@ -143,13 +150,40 @@ void FConsoleManagerModule::ShutdownModule()
 
 void FConsoleManagerModule::OpenTab()
 {
+	bIsTabAutostarted = false;
 
-	
-	EConsoleManagerStartupOption StartupOption = GetMutableDefault<UConsoleManagerSettings>()->StartupOption;
+	UE_LOG(LogTemp, Warning, TEXT("Open tab called!"));
 
-	switch (StartupOption)
+
+	if (ActiveTab.IsValid())
 	{
-	case EConsoleManagerStartupOption::LastOpened:
+		ActiveTab.Pin()->DrawAttention();
+		ActiveTab.Pin()->TabActivated();
+	}
+	else
+	{
+		/*TSharedPtr<SDockTab> TabAlive = FGlobalTabmanager::Get()->FindExistingLiveTab(ConsoleManagerTabName);
+
+		if (TabAlive.IsValid())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Tab is alive!"));
+
+			TSharedPtr<SConsoleManagerSlateWidget> CMWidget = StaticCastSharedPtr<SConsoleManagerSlateWidget>(TabAlive);
+			if (CMWidget.IsValid())
+			{
+				UE_LOG(LogTemp, Warning, TEXT("CM is valid"));
+				FGlobalTabmanager::Get()->TryInvokeTab(ConsoleManagerTabName);
+				CMWidget->TabActivated();
+			}
+		}*/
+
+		UE_LOG(LogTemp, Warning, TEXT("Tab alive is not found!"));
+
+		EConsoleManagerStartupOption StartupOption = GetMutableDefault<UConsoleManagerSettings>()->StartupOption;
+
+		switch (StartupOption)
+		{
+		case EConsoleManagerStartupOption::LastOpened:
 		{
 			TArray<TSoftObjectPtr<UCommandsContainer>> LastOpenedObjs = GetMutableDefault<UConsoleManagerSettings>()->LastSelectedObjs;
 
@@ -157,10 +191,16 @@ void FConsoleManagerModule::OpenTab()
 
 			for (auto& SoftObjPtr : LastOpenedObjs)
 			{
+				
 				UCommandsContainer* ExistingObj = SoftObjPtr.Get();
 				if (ExistingObj)
 				{
 					Objects.Add(ExistingObj);
+				}
+				else
+				{
+					UCommandsContainer* LoadedObj = SoftObjPtr.LoadSynchronous();
+					Objects.Add(LoadedObj);
 				}
 			}
 
@@ -168,10 +208,10 @@ void FConsoleManagerModule::OpenTab()
 
 			break;
 		}
-	case EConsoleManagerStartupOption::Specified:
+		case EConsoleManagerStartupOption::Specified:
 		{
 			UCommandsContainer* LoadedAsset = GetMutableDefault<UConsoleManagerSettings>()->AssetToLoad.Get();
-			
+
 			if (LoadedAsset)
 			{
 				CommandsManager->Initialize(TArray<UCommandsContainer*>{LoadedAsset});
@@ -185,16 +225,16 @@ void FConsoleManagerModule::OpenTab()
 
 			break;
 		}
-	case EConsoleManagerStartupOption::AllContainers:
-	default:
+		case EConsoleManagerStartupOption::AllContainers:
+		default:
 
-		CommandsManager->Initialize();
+			CommandsManager->Initialize();
 
-		break;
+			break;
+		}
+
+		FGlobalTabmanager::Get()->TryInvokeTab(ConsoleManagerTabName);
 	}
-
-
-	FGlobalTabmanager::Get()->TryInvokeTab(ConsoleManagerTabName);
 }
 
 void FConsoleManagerModule::OpenSettings()
@@ -203,9 +243,10 @@ void FConsoleManagerModule::OpenSettings()
 	SettingsModule->ShowViewer("Editor", "Plugins", "Console Manager");
 }
 
-
 void FConsoleManagerModule::OpenTab(const TArray<UObject*>& Containers)
 {
+	bIsTabAutostarted = false;
+
 	TArray<UCommandsContainer*> OutCommandsContainers;
 
 	for (const auto& Container : Containers)
@@ -216,27 +257,6 @@ void FConsoleManagerModule::OpenTab(const TArray<UObject*>& Containers)
 
 	CommandsManager->Initialize(OutCommandsContainers);
 
-	if (ActiveTab.IsValid())
-	{
-		ActiveTab.Pin()->SetContent(BuildUI());
-		UE_LOG(LogTemp, Warning, TEXT("Active tab is valid!"));
-	}
-	else
-	{
-		TSharedPtr<SDockTab> Tab = FGlobalTabmanager::Get()->FindExistingLiveTab(ConsoleManagerTabName);
-		if (Tab.IsValid())
-		{
-			Tab->SetContent(BuildUI());
-			UE_LOG(LogTemp, Warning, TEXT("Tab is valid!"));
-		}
-		else
-		{
-			FGlobalTabmanager::Get()->TryInvokeTab(ConsoleManagerTabName);
-			UE_LOG(LogTemp, Warning, TEXT("Try invoke"));
-		}
-	}
-
-
 	ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings");
 	
 	TArray< TSoftObjectPtr<UCommandsContainer>> LastSelectedObjs;
@@ -246,15 +266,59 @@ void FConsoleManagerModule::OpenTab(const TArray<UObject*>& Containers)
 		LastSelectedObjs.Add(TSoftObjectPtr<UCommandsContainer>(Container));
 	}
 
-
 	GetMutableDefault<UConsoleManagerSettings>()->LastSelectedObjs = LastSelectedObjs;
-
 
 	auto Section = SettingsModule->GetContainer("Editor")->GetCategory("Plugins")->GetSection("Console Manager");
 	
 	Section->Save();
 
-	
+
+	if (ActiveTab.IsValid())
+	{
+		ActiveTab.Pin()->TabActivated();
+	}
+
+	//TSharedPtr<SDockTab> TabAlive = FGlobalTabmanager::Get()->TryInvokeTab(ConsoleManagerTabName);
+
+	//if (TabAlive.IsValid())
+	//{
+	//	TSharedPtr<SConsoleManagerSlateWidget> CMWidget = StaticCastSharedPtr<SConsoleManagerSlateWidget>(TabAlive);
+	//	if (CMWidget.IsValid())
+	//	{
+	//		CMWidget->TabActivated();
+	//	}
+	//}
+}
+
+void FConsoleManagerModule::ApplySettings()
+{
+	const FLinearColor& MatchingValuesColor = GetMutableDefault<UConsoleManagerSettings>()->MatchingValuesColor;
+	const FLinearColor& NotMatchingValuesColor = GetMutableDefault<UConsoleManagerSettings>()->NotMatchingValuesColor;
+	int32 CommandsFontSize = GetMutableDefault<UConsoleManagerSettings>()->CommandsFontSize;
+
+	FConsoleManagerStyle::SetMatchingValuesColor(MatchingValuesColor);
+	FConsoleManagerStyle::SetNotMachingValuesColor(NotMatchingValuesColor);
+	FConsoleManagerStyle::SetCommandsFontSize(CommandsFontSize);
+
+	FInputChord OpenManagerShortcut = GetMutableDefault<UConsoleManagerSettings>()->OpenShortcut;
+	if (OpenManagerShortcut.IsValidChord())
+	{
+		FConsoleManagerCommands::Get().OpenTab->SetActiveChord(OpenManagerShortcut, EMultipleKeyBindingIndex::Secondary);
+	}
+
+	if (CommandsManager.IsValid())
+	{
+		CommandsManager->SetHistoryBufferSize(GetMutableDefault<UConsoleManagerSettings>()->HistoryBufferSize);
+	}
+
+	if (ActiveTab.IsValid())
+	{
+		const bool DisplayCommandValueType = GetMutableDefault<UConsoleManagerSettings>()->DisplayCommandValueType;
+		const bool DisplaySetByValue = GetMutableDefault<UConsoleManagerSettings>()->DisplaySetByValue;
+		const bool DisplayCommandType = GetMutableDefault<UConsoleManagerSettings>()->DisplayCommandType;
+
+		ActiveTab.Pin()->UpdateHeaderColumnsVisibility(DisplayCommandValueType, DisplaySetByValue, DisplayCommandType);
+	}
 }
 
 void FConsoleManagerModule::RegisterMenus()
@@ -350,54 +414,86 @@ void FConsoleManagerModule::AskForDefaultGroup()
 
 TSharedRef<class SDockTab> FConsoleManagerModule::OnSpawnPluginTab(const FSpawnTabArgs& SpawnTabArgs)
 {
+
+	//TSharedRef<SDockTab> Tab = SNew(SDockTab)
+	//	.TabRole(ETabRole::NomadTab);
+
+
+	//TWeakObjectPtr<UDeviceProfileManager> DevProf = TWeakObjectPtr<UDeviceProfileManager>(&UDeviceProfileManager::Get());
+
+	//TSharedRef<SWidget> ProfCr = SNew(SDeviceProfileCreateProfilePanel, DevProf);
+
+
+
+	//Tab->SetContent(ProfCr);
+
+
+	//return Tab;
+
+
+
+
+
 	//If there isnt any group created on window open ask user if he wants to create new with all variables
-	if (CommandsManager->GetCommandGroups().Num() == 0)
+	//if (CommandsManager->GetCommandGroups().Num() == 0)
+	//{
+	//	AskForDefaultGroup();
+	//}
+
+	// if its autostarted then we load previously opened containers
+	if (bIsTabAutostarted)
 	{
-		AskForDefaultGroup();
+		UE_LOG(LogTemp, Warning, TEXT("IS AUTOSTARTED"));
+
+		TArray<TSoftObjectPtr<UCommandsContainer>> LastOpenedObjs = GetMutableDefault<UConsoleManagerSettings>()->LastSelectedObjs;
+		TArray<UCommandsContainer*> Objects;
+
+		UE_LOG(LogTemp, Warning, TEXT("Last opened objects num: %d"), LastOpenedObjs.Num());
+
+		for (auto& SoftObjPtr : LastOpenedObjs)
+		{
+			
+			UCommandsContainer* ExistingObj = SoftObjPtr.Get();
+			if (ExistingObj)
+			{
+				Objects.Add(ExistingObj);
+				UE_LOG(LogTemp, Warning, TEXT("Last object: %s"), *ExistingObj->GetName());
+			}
+			else
+			{
+				UCommandsContainer* LoadedObj = SoftObjPtr.LoadSynchronous();
+				Objects.Add(LoadedObj);
+				UE_LOG(LogTemp, Warning, TEXT("Loading assets"));
+			}
+		}
+
+		UE_LOG(LogTemp, Warning, TEXT("OBJS NUM after: %d"), Objects.Num());
+		// If there are no previously selected we load all containers
+		if (Objects.Num() > 0)
+		{
+
+			CommandsManager->Initialize(Objects);
+		}
+		else
+		{
+			CommandsManager->Initialize();
+		}
+
 	}
 
-	CommandsManager->SetHistoryBufferSize(GetMutableDefault<UConsoleManagerSettings>()->HistoryBufferSize);
 
 	TSharedRef<SConsoleManagerSlateWidget> UI = BuildUI();
+	
+	ActiveTab = UI;
 
-	FConsoleCommandDelegate Delegate;
-
-	Delegate.BindLambda([=]() {
-		CommandsManager->UpdateHistory();
-		UI->RefreshListView();
-		//CreateCommandList(ButtonList, AbsoluteFilePath);
-		});
-
-	Handle = IConsoleManager::Get().RegisterConsoleVariableSink_Handle(Delegate);
-
-	TSharedRef<SDockTab> DockTab = SNew(SDockTab)
-		.TabRole(ETabRole::NomadTab)
-		[
-			UI
-		];
-
-
-	SDockTab::FOnTabClosedCallback ClosedTabDelegate;
-
-	ClosedTabDelegate.BindLambda([=](TSharedRef<SDockTab> DockTab)
-		{
-			IConsoleManager::Get().UnregisterConsoleVariableSink_Handle(Handle);
-			CommandsManager->SaveToAssets();
-			//DockTab->ClearContent();
-		});
-
-	DockTab->SetOnTabClosed(ClosedTabDelegate);
-
-	ActiveTab = DockTab;
-
-	return DockTab;
+	return UI;
 }
 
 TSharedRef<class SConsoleManagerSlateWidget> FConsoleManagerModule::BuildUI()
 {
-	bool DisplayCommandValueType = GetMutableDefault<UConsoleManagerSettings>()->DisplayCommandValueType;
-	bool DisplaySetByValue = GetMutableDefault<UConsoleManagerSettings>()->DisplaySetByValue;
-	bool DisplayCommandType = GetMutableDefault<UConsoleManagerSettings>()->DisplayCommandType;
+	const bool DisplayCommandValueType = GetMutableDefault<UConsoleManagerSettings>()->DisplayCommandValueType;
+	const bool DisplaySetByValue = GetMutableDefault<UConsoleManagerSettings>()->DisplaySetByValue;
+	const bool DisplayCommandType = GetMutableDefault<UConsoleManagerSettings>()->DisplayCommandType;
 
 	TSharedRef<SConsoleManagerSlateWidget> ConsoleManagerSlate = SNew(SConsoleManagerSlateWidget)
 		.CommandsManager(CommandsManager)
@@ -405,6 +501,16 @@ TSharedRef<class SConsoleManagerSlateWidget> FConsoleManagerModule::BuildUI()
 		.DisplaySetByValue(DisplaySetByValue)
 		.DisplayCommandType(DisplayCommandType);
 
+	SDockTab::FOnTabClosedCallback ClosedTabDelegate;
+
+	ClosedTabDelegate.BindLambda([this](TSharedRef<SDockTab> DockTab)
+		{
+			CommandsManager->SaveToAssets();
+			
+			ActiveTab.Reset();
+		});
+
+	ConsoleManagerSlate->SetOnTabClosed(ClosedTabDelegate);
 
 	return ConsoleManagerSlate;
 }

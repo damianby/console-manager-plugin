@@ -23,7 +23,7 @@ public:
 
 	static void SetNotMachingValuesColor(const FLinearColor& NewColor);
     static void SetMatchingValuesColor(const FLinearColor& NewColor);
-
+	static void SetCommandsFontSize(int32 NewSize);
 
 private:
 

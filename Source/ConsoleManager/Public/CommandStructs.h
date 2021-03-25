@@ -16,6 +16,16 @@ enum class EGroupType : uint8
 };
 
 UENUM(BlueprintType)
+enum class EConsoleCommandVarType : uint8
+{
+	None UMETA(DisplayName = "None"),
+	Int UMETA(DisplayName = "Int"),
+	Float UMETA(DisplayName = "Float"),
+	Bool UMETA(DisplayName = "Bool"),
+	String UMETA(DisplayName = "String")
+};
+
+UENUM(BlueprintType)
 enum class EConsoleCommandType : uint8
 {
 	CVar,
@@ -29,7 +39,9 @@ struct FConsoleCommand
 	GENERATED_BODY()
 
 public:
-	FConsoleCommand() {};
+	FConsoleCommand() {
+		UE_LOG(LogTemp, Warning, TEXT("DEFAULT CONSTRUCTOR is %s : %s : %s"), *Name, *Value, *ExecCommand);
+	};
 
 	FConsoleCommand(FString _Command);
 	FConsoleCommand(const FConsoleCommand& Copy);
@@ -50,38 +62,44 @@ public:
 		Value = NewValue;
 		RefreshExec();
 	};
+
+	FORCEINLINE void SetNote(const FString& NewNote){ Note = NewNote; }
 	const FString& GetValue() const { return Value; };
 
 	FORCEINLINE const FString& GetName() const { return Name; }
 	FORCEINLINE const FString& GetSetBy() const { return SetBy; }
-	FORCEINLINE const FString& GetType() const { return Type; }
+	FORCEINLINE const EConsoleCommandVarType& GetType() const { return Type; }
 	FORCEINLINE const EConsoleCommandType& GetObjType() const { return ObjType; }
-
+	FORCEINLINE const FString& GetNote() const { return Note; }
 
 	const FString& GetCurrentValue() const { return CurrentValue; };
 
 	void Refresh();
 	FString GetTooltip();
 	
-	
+	// We expose only these properties because there is no need to save rest, they are updated when needed
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
+		EConsoleCommandType ObjType;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
+		FString Name;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
+		FString Value;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
+		FString Note;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
+		EConsoleCommandVarType Type = EConsoleCommandVarType::None;
+	//
+
+
 	//UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
 	FString ExecCommand;
 	//UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
 	FString CurrentValue;
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
-	FString Value;
 	//UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
 	FString SetBy;
 
-	// These values are initialized on object creation and not changed later 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
-	FString Name;
 	
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
-	EConsoleCommandType ObjType;
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
-	FString Type;
-	//
+
 
 	void InitializeLoaded();
 
