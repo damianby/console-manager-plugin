@@ -15,11 +15,50 @@ UCommandsContainer::UCommandsContainer(const FObjectInitializer& ObjectInitializ
 	//		Command.InitializeLoaded();
 	//	}
 	//}
+	UE_LOG(LogTemp, Warning, TEXT("Real constructor for object: %s"), *GetName());
 }
 
-void UCommandsContainer::PostEditChangeProperty(FPropertyChangedChainEvent& Event)
+void UCommandsContainer::PostInitProperties()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Property changed!"));
+	Super::PostInitProperties();
 
-	
+	UE_LOG(LogTemp, Warning, TEXT("PostInitProperties | Group count: %d   | Name: %s"), Groups.Num(), *GetName());
 }
+
+void UCommandsContainer::PostLoad()
+{
+	Super::PostLoad();
+	UE_LOG(LogTemp, Warning, TEXT("POSTLOAD! %s"), *GetName());
+
+	UE_LOG(LogTemp, Warning, TEXT("Group count: %d"), Groups.Num());
+
+	for (auto& Group : Groups)
+	{
+		for (auto& Command : Group.Commands)
+		{
+			Command.InitializeLoaded();
+			UE_LOG(LogTemp, Warning, TEXT("DATA POSTLOAD : %s : %s : %s : %s"), *Command.GetName(), *Command.GetValue(), *Command.GetExec(), *Command.GetSetBy());
+		}
+	}
+}
+
+void UCommandsContainer::PostEditChangeProperty(FPropertyChangedEvent& PropertyChanged)
+{
+	Super::PostEditChangeProperty(PropertyChanged);
+	UE_LOG(LogTemp, Warning, TEXT("Post edit: count %d"), Groups.Num());
+
+}
+
+void UCommandsContainer::PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChainChanged)
+{
+	Super::PostEditChangeChainProperty(PropertyChainChanged);
+	UE_LOG(LogTemp, Warning, TEXT("postedit chain: count %d"), Groups.Num());
+
+}
+
+void UCommandsContainer::PostEditImport()
+{
+	Super::PostEditImport();
+	UE_LOG(LogTemp, Warning, TEXT("Post edit import: count %d"), Groups.Num());
+}
+	

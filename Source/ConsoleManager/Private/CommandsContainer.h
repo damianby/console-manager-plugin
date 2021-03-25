@@ -24,5 +24,9 @@ public:
 	TArray<FCommandGroup> Groups;
 
 
-	void PostEditChangeProperty(FPropertyChangedChainEvent& Event);
+	virtual void PostInitProperties() override;
+	virtual void PostLoad() override;
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChanged) override;
+	virtual void PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChainChanged) override;
+	virtual void PostEditImport() override;
 };
