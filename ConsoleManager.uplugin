@@ -20,6 +20,12 @@
 			"Type": "Editor",
 			"LoadingPhase": "PostEngineInit",
 			"WhitelistPlatforms": [ "Win64", "Win32" ]
+		},
+		{
+			"Name": "ConsoleManagerCVarWatcher",
+			"Type": "DeveloperTool",
+			"LoadingPhase": "EarliestPossible",
+			"WhitelistPlatforms": [ "Win64", "Win32" ]
 		}
 	]
 }
