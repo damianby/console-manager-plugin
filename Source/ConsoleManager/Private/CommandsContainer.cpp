@@ -61,4 +61,16 @@ void UCommandsContainer::PostEditImport()
 	Super::PostEditImport();
 	UE_LOG(LogTemp, Warning, TEXT("Post edit import: count %d"), Groups.Num());
 }
+
+FCommandGroup* UCommandsContainer::GetGroupByName(const FString& Name)
+{
+	for (FCommandGroup& Group : Groups)
+	{
+		if (Group.Name.Equals(Name))
+		{
+			return &Group;
+		}
+	}
+	return nullptr;
+}
 	

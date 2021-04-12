@@ -1844,11 +1844,30 @@ bool SConsoleManagerSlateWidget::HandleNewGroup(FString& OutName, UCommandsConta
 			]
 		];
 
+	FSimpleDelegate OkClickedDelegate;
+	OkClickedDelegate.BindLambda(
+		[&Containers, &Widget]() {
+			for (auto Container : Containers)
+			{
+				FCommandGroup* FoundGroup = Container->GetGroupByName(Widget->GetText().ToString());
+
+				if (FoundGroup != nullptr)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Group found!"));
+				}
+			}
+		}
+	);
+	
+
+
+	
+
 	TSharedRef<SCustomDialog> NewGroupDialog = SNew(SCustomDialog)
 		.Title(FText(LOCTEXT("NewGroupDialog_Title", "New Group")))
 		.DialogContent(ContentWidget)
 		.Buttons({
-			SCustomDialog::FButton(LOCTEXT("OK", "OK"), FSimpleDelegate()),
+			SCustomDialog::FButton(LOCTEXT("OK", "OK"), OkClickedDelegate),
 			SCustomDialog::FButton(LOCTEXT("Cancel", "Cancel"), FSimpleDelegate())
 			});
 

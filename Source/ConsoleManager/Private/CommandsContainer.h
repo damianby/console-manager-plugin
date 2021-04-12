@@ -29,4 +29,6 @@ public:
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChanged) override;
 	virtual void PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChainChanged) override;
 	virtual void PostEditImport() override;
+
+	FCommandGroup* GetGroupByName(const FString& Name);
 };

@@ -596,7 +596,7 @@ void FCommandsManager::RemoveGroup(FGuid Id)
 
 void FCommandsManager::CreateNewGroup(const FString& Name, UCommandsContainer* Container)
 {
-	if (Container->IsValidLowLevel())
+	if (Container->IsValidLowLevel() && Container->GetGroupByName(Name) == nullptr)
 	{
 		FCommandGroup& NewGroup = AddNewGroup_Internal(Name, Container);
 		OnDataRefreshed.ExecuteIfBound();
@@ -605,7 +605,7 @@ void FCommandsManager::CreateNewGroup(const FString& Name, UCommandsContainer* C
 
 void FCommandsManager::CreateNewGroup(const FString& Name, UCommandsContainer* Container, TArray<TSharedPtr<FConsoleCommand>> Commands)
 {
-	if (Container->IsValidLowLevel())
+	if (Container->IsValidLowLevel() && Container->GetGroupByName(Name) == nullptr)
 	{
 		FCommandGroup& NewGroup = AddNewGroup_Internal(Name, Container);
 		AddCommandsToGroup(&NewGroup, Commands);
