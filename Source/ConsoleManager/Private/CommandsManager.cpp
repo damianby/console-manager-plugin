@@ -802,17 +802,20 @@ void FCommandsManager::UpdateHistory()
 	//{
 	//	ConsoleHistory.Commands.RemoveAt(0);
 	//}
-	FString ExecCommand = Out.Last();
-
-	if (ExecCommand.Equals(ConsoleHistory.Commands.Last().ExecCommand, ESearchCase::IgnoreCase))
+	if (Out.Num() > 0) 
 	{
-		//ConsoleHistory.Commands.RemoveAll([&ExecCommand](FConsoleCommand& Command) { return Command.GetExec().Equals(ExecCommand, ESearchCase::IgnoreCase); });
-		ConsoleHistory.Commands.Add(FConsoleCommand(ExecCommand));
+		FString ExecCommand = Out.Last();
 
-
-		if (CurrentGroup->Type == EGroupType::History)
+		if (ExecCommand.Equals(ConsoleHistory.Commands.Last().ExecCommand, ESearchCase::IgnoreCase))
 		{
-			RebuildSharedArray();
+			//ConsoleHistory.Commands.RemoveAll([&ExecCommand](FConsoleCommand& Command) { return Command.GetExec().Equals(ExecCommand, ESearchCase::IgnoreCase); });
+			ConsoleHistory.Commands.Add(FConsoleCommand(ExecCommand));
+
+
+			if (CurrentGroup->Type == EGroupType::History)
+			{
+				RebuildSharedArray();
+			}
 		}
 	}
 }
