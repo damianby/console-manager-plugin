@@ -505,7 +505,7 @@ TSharedRef<class SConsoleManagerSlateWidget> FConsoleManagerModule::BuildUI()
 
 	ClosedTabDelegate.BindLambda([this](TSharedRef<SDockTab> DockTab)
 		{
-			CommandsManager->SaveToAssets();
+			//CommandsManager->SaveToAssets();
 			
 			ActiveTab.Reset();
 		});
