@@ -258,12 +258,8 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 
 					GetMenuButton(LOCTEXT("SaveButton", "Save"), FConsoleManagerStyle::Get().GetBrush("Icons.Save"),
 					FOnClicked::CreateLambda([=]() {
-							/*FString NewGroupName;
-							UCommandsContainer* SelectedContainer;
-							if (HandleNewGroup(NewGroupName, SelectedContainer))
-							{
-								CommandsManager.Pin()->CreateSnapshotCVars(NewGroupName, SelectedContainer);
-							}*/
+
+							CommandsManager.Pin()->SaveToAssets();
 
 							return FReply::Handled();
 						}))
