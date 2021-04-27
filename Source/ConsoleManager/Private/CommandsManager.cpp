@@ -308,7 +308,7 @@ void FCommandsManager::ReorderCommandInCurrentGroup(int32 CurrentId, int32 NewId
 		Commands.Insert(Cpy, NewId);
 	}
 
-	RebuildSharedArray();
+	ContainerChanged();
 }
 
 void FCommandsManager::DuplicateCommand(int32 Id)
@@ -316,7 +316,7 @@ void FCommandsManager::DuplicateCommand(int32 Id)
 	FConsoleCommand Cpy = CurrentGroup->Commands[Id];
 	CurrentGroup->Commands.Insert(Cpy, Id + 1);
 
-	RebuildSharedArray();
+	ContainerChanged();
 }
 
 void FCommandsManager::RemoveCommands(TArray<int32> Ids)
@@ -331,7 +331,7 @@ void FCommandsManager::RemoveCommands(TArray<int32> Ids)
 		Commands.RemoveAt(Ids[i], 1, false);
 	}
 
-	RebuildSharedArray();
+	ContainerChanged();
 }
 
 void FCommandsManager::SetNoteCommand(int32 Id, const FString& NewNote)
@@ -389,7 +389,7 @@ void FCommandsManager::AddCommandsToGroup(FCommandGroup* Group, TArray<TSharedPt
 					NewCommand.SetValue(Command->GetCurrentValue());
 				}
 			}
-			RebuildSharedArray();
+			ContainerChanged();
 		}
 	}
 }
@@ -417,7 +417,7 @@ void FCommandsManager::ReplaceCommandInCurrentGroup(int32 Id, FConsoleCommand& N
 
 	CurrentGroup->Commands[Id] = NewCommand;
 	
-	RebuildSharedArray();
+	ContainerChanged();
 }
 
 const FCommandGroup* FCommandsManager::GetGroupById(const FGuid& Id)
@@ -1006,6 +1006,20 @@ void FCommandsManager::RebuildSharedArray()
 	}
 }
 
+void FCommandsManager::ContainerChanged()
+{
+	RebuildSharedArray();
+
+
+	UCommandsContainer** ContainerFound_Ptr = GroupToContainerMap.Find(CurrentGroup->Id);
+	if (ContainerFound_Ptr != nullptr)
+	{
+		UCommandsContainer* ContainerFound = *ContainerFound_Ptr;
+
+		ContainerFound->GetPackage()->MarkPackageDirty();
+	}
+}
+
 //It will not add wrong command to history
 bool FCommandsManager::Execute_Internal(const FConsoleCommand& Command)
 {
@@ -1120,7 +1134,7 @@ void FCommandsManager::SetCurrentCommands(FCommandGroup& Group)
 {
 	CurrentGroup = &Group;
 
-	RebuildSharedArray();
+	ContainerChanged();
 }
 
 void FCommandsManager::DumpAllCommands()

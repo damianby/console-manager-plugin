@@ -131,7 +131,7 @@ private:
 	*/
 	void RebuildSharedArray();
 
-
+	void ContainerChanged();
 
 	void SetCurrentCommands(FCommandGroup& Group);
 
