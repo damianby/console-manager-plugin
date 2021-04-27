@@ -62,7 +62,7 @@ public:
 	// Creates new group with given commands in the same container as given group 
 	void CreateNewGroup(const FString& Name, UCommandsContainer* Container, TArray<TSharedPtr<FConsoleCommand>> Commands);
 
-	void CreateSnapshotCVars(const FString& Name, UCommandsContainer* Container);
+	void CreateSnapshotCVars();
 
 	void RemoveGroup(FGuid Id);
 	bool RenameGroup(FGuid Id, const FString& NewName);

@@ -613,26 +613,24 @@ void FCommandsManager::CreateNewGroup(const FString& Name, UCommandsContainer* C
 	}
 }
 
-void FCommandsManager::CreateSnapshotCVars(const FString& Name, UCommandsContainer* Container)
+void FCommandsManager::CreateSnapshotCVars()
 {
-	if (Container->IsValidLowLevel())
+	Snapshot.Commands.Empty();
+	for (auto& Command : AllCommands.Commands)
 	{
-		FCommandGroup& NewGroup = AddNewGroup_Internal(Name, Container);
-
-		for (const auto& Command : AllCommands.Commands)
+		if (Command.GetObjType() == EConsoleCommandType::CVar)
 		{
-			if (Command.GetObjType() == EConsoleCommandType::CVar)
-			{
-				FConsoleCommand& CopiedCommand = NewGroup.Commands.Add_GetRef(Command);
-				CopiedCommand.SetValue(Command.GetCurrentValue());
-			}
+			//Update current value
+			Command.Refresh();
+			FConsoleCommand& CopiedCommand = Snapshot.Commands.Add_GetRef(Command);
+			CopiedCommand.SetValue(Command.GetCurrentValue());
 		}
 	}
+
 }
 
 FCommandGroup& FCommandsManager::AddNewGroup_Internal(const FString& Name, UCommandsContainer* Container, EGroupType Type)
 {
-	
 	FCommandGroup& NewGroup = Container->Groups.AddDefaulted_GetRef();
 	NewGroup.Type = Type;
 	NewGroup.Name = Name;

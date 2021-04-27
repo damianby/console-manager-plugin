@@ -74,7 +74,7 @@ FConsoleCommand::FConsoleCommand(const FConsoleCommand& Copy)
 
 
 
-	//CurrentValue = Copy.CurrentValue;
+	CurrentValue = Copy.CurrentValue;
 	ObjType = Copy.ObjType;
 	Type = Copy.Type;
 	bIsValid = Copy.bIsValid;

@@ -222,12 +222,8 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 				[
 					GetMenuButton(LOCTEXT("SnapshotButton", "Snapshot"), FConsoleManagerStyle::Get().GetBrush("Icons.Snapshot"), 
 					FOnClicked::CreateLambda([=]() {
-							FString NewGroupName;
-							UCommandsContainer* SelectedContainer;
-							if (HandleNewGroup(NewGroupName, SelectedContainer))
-							{
-								CommandsManager.Pin()->CreateSnapshotCVars(NewGroupName, SelectedContainer);
-							}
+
+							CommandsManager.Pin()->CreateSnapshotCVars();
 
 							return FReply::Handled();
 						}))
