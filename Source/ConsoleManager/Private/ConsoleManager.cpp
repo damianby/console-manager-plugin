@@ -34,8 +34,6 @@ static const FName ConsoleManagerTabName("ConsoleManager");
 #define LOCTEXT_NAMESPACE "FConsoleManagerModule"
 
 
-
-
 void FConsoleManagerModule::StartupModule()
 {
 	CommandsManager = TSharedPtr<FCommandsManager>(new FCommandsManager());
@@ -53,9 +51,9 @@ void FConsoleManagerModule::StartupModule()
 			GetMutableDefault<UConsoleManagerSettings>()
 		);
 		
+		// Rebuild UI if active after change to settings
 		Section->OnModified().BindLambda([=]() {
 
-			// Rebuild UI after change to settings
 			if (!ActiveTab.IsValid())
 			{
 				TSharedPtr<SDockTab> FoundDockTab = FGlobalTabmanager::Get()->FindExistingLiveTab(ConsoleManagerTabName);
@@ -89,10 +87,9 @@ void FConsoleManagerModule::StartupModule()
 		FCanExecuteAction());
 
 
+	// Register in level editor module for global shortcut
 	FLevelEditorModule& LevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
-	
 	LevelEditorModule.GetGlobalLevelEditorActions()->Append(PluginCommands.ToSharedRef());
-	
 
 	UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FConsoleManagerModule::RegisterMenus));
 
@@ -104,13 +101,12 @@ void FConsoleManagerModule::StartupModule()
 		.SetMenuType(ETabSpawnerMenuType::Hidden);
 
 
+	// Register actions Commands Container asset
 	IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
-
 	TSharedRef<FCommandsContainerActions> Actions = MakeShared<FCommandsContainerActions>();
-	
 	AssetTools.RegisterAssetTypeActions(Actions);
-
 	RegisteredAssetTypeActions.Add(Actions);
+
 
 	ApplySettings();
 }

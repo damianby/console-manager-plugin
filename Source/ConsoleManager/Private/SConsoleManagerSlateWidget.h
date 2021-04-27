@@ -215,6 +215,9 @@ public:
 		}
 	};
 
+	/**
+	 * @brief Hack to set focus on next frame after construction
+	*/
 	void TabActivated();
 
 	void UpdateHeaderColumnsVisibility(bool bShouldDisplayCommandValueType, bool bShouldDisplaySetByValue, bool bShouldDisplayCommandType);

@@ -21,7 +21,7 @@ DECLARE_DELEGATE(FOnDataRefreshed);
  */
 
 /**
- * Class made to avoid deletion of ConsoleCommand objects when TSharedPtr goes out of scope
+ * Class made to avoid deletion of ConsoleCommand objects when TSharedPtr goes out of scope as we are using very unsafe method
 */
 class FDeleterNot
 {
