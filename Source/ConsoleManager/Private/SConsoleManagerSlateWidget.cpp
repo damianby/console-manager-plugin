@@ -195,7 +195,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 
 	//Validate all console commands to check if any existing in AllCommands //git
 	
-
+	
 
 	//TabWellContentBackground = SNew(SBorder)
 	//	.BorderBackgroundColor(FSlateColor(FLinearColor(1.0f, 0., 0., 1.0f)));
@@ -236,6 +236,8 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 
 					GetMenuButton(LOCTEXT("RevertButton", "Revert"), FConsoleManagerStyle::Get().GetBrush("Icons.Revert"),
 					FOnClicked::CreateLambda([=]() {
+
+							CommandsManager.Pin()->RevertSnapshotCVars();
 							/*FString NewGroupName;
 							UCommandsContainer* SelectedContainer;
 							if (HandleNewGroup(NewGroupName, SelectedContainer))
@@ -244,7 +246,10 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 							}*/
 
 							return FReply::Handled();
-						}))
+						}),
+						TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]() {
+							return CommandsManager.Pin()->GetSnapshot().Commands.Num() > 0 ? true : false;
+							})))
 				]
 
 				+ SHorizontalBox::Slot()
@@ -403,7 +408,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 							]
 
 							]
-							.IsChecked(this, &SConsoleManagerSlateWidget::GetCurrentSelectedGroup, CommandsManager.Pin()->GetSnapshot()->Id)
+							.IsChecked(this, &SConsoleManagerSlateWidget::GetCurrentSelectedGroup, CommandsManager.Pin()->GetSnapshot().Id)
 							.OnCheckStateChanged_Lambda([=](ECheckBoxState NewRadioState) {
 								if (CommandsManager.Pin()->SetActiveSnapshot())
 								{
@@ -599,8 +604,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 							
 
 							return FReply::Handled();
-						})
-					)
+						}))
 				]
 					
 				+ SHorizontalBox::Slot()
@@ -612,8 +616,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 							FConsoleManagerModule::GetModule().OpenSettings();
 
 							return FReply::Handled();
-						})
-					)
+						}))
 				]
 			]
 
@@ -1952,13 +1955,14 @@ void SConsoleManagerSlateWidget::HandleNewCommands()
 	}
 }
 
-TSharedRef<SButton> SConsoleManagerSlateWidget::GetMenuButton(FText Text, const FSlateBrush* ImageBrush, FOnClicked ClickedDelegate)
+TSharedRef<SButton> SConsoleManagerSlateWidget::GetMenuButton(FText Text, const FSlateBrush* ImageBrush, FOnClicked ClickedDelegate, TAttribute<bool> IsEnabledAttribute)
 {
 	return SNew(SButton)
 		.ButtonStyle(&FConsoleManagerStyle::Get().GetWidgetStyle<FButtonStyle>("MenuButton"))
 		.ForegroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f))
 		.ContentPadding(2.0f)
 		.OnClicked(ClickedDelegate)
+		.IsEnabled(IsEnabledAttribute)
 		.Content()
 		[
 			SNew(SVerticalBox)

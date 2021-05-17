@@ -45,7 +45,7 @@ public:
 	FORCEINLINE const TArray<FConsoleCommand>& GetCurrentCommands() const { return CurrentGroup->Commands; }
 	FORCEINLINE const FCommandGroup* GetAllCommands() const { return &AllCommands; }
 	FORCEINLINE const FCommandGroup* GetHistory() const { return &ConsoleHistory; }
-	FORCEINLINE const FCommandGroup* GetSnapshot() const { return &Snapshot; }
+	FORCEINLINE const FCommandGroup& GetSnapshot() const { return Snapshot; }
 
 
 	const TArray<TPair<FString, FGuid>> GetGroupList();
@@ -63,6 +63,7 @@ public:
 	void CreateNewGroup(const FString& Name, UCommandsContainer* Container, TArray<TSharedPtr<FConsoleCommand>> Commands);
 
 	void CreateSnapshotCVars();
+	void RevertSnapshotCVars();
 
 	void RemoveGroup(FGuid Id);
 	bool RenameGroup(FGuid Id, const FString& NewName);
@@ -113,6 +114,8 @@ public:
 private:
 
 
+	void VariableChanged();
+
 	void Initialize_Internal(TArray<UCommandsContainer*>& Containers);
 
 	FCommandGroup& AddNewGroup_Internal(const FString& Name, UCommandsContainer* Container, EGroupType Type = EGroupType::Default);
@@ -139,7 +142,7 @@ private:
 
 
 
-	bool Execute_Internal(const FConsoleCommand& Command);
+	bool Execute_Internal(const FConsoleCommand& Command, bool UpdateHistory = true);
 
 	void ValidateCommands(TArray<FConsoleCommand>& Commands);
 
@@ -180,5 +183,7 @@ private:
 
 	//This handle allows to catch any changes to cvars
 	FConsoleVariableSinkHandle Handle;
+
+	bool bSinkBlocked = false;
 
 };

@@ -183,21 +183,25 @@ FCommandsManager::FCommandsManager()
 
 	FConsoleCommandDelegate Delegate;
 
-	Delegate.BindLambda([this]() {
-		UpdateHistory();
-		
-		OnDataRefreshed.ExecuteIfBound();
-	});
+	Delegate.BindRaw(this, &FCommandsManager::VariableChanged);
 
 	Handle = IConsoleManager::Get().RegisterConsoleVariableSink_Handle(Delegate);
-
-
-
 }
 
 FCommandsManager::~FCommandsManager()
 {
 	IConsoleManager::Get().UnregisterConsoleVariableSink_Handle(Handle);
+}
+
+void FCommandsManager::VariableChanged()
+{
+	if (!bSinkBlocked)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Sink called!"));
+		UpdateHistory();
+
+		OnDataRefreshed.ExecuteIfBound();
+	}
 }
 
 void FCommandsManager::Initialize_Internal(TArray<UCommandsContainer*>& Containers)
@@ -626,7 +630,25 @@ void FCommandsManager::CreateSnapshotCVars()
 			CopiedCommand.SetValue(Command.GetCurrentValue());
 		}
 	}
+	RebuildSharedArray();
+	OnDataRefreshed.ExecuteIfBound();
+}
 
+void FCommandsManager::RevertSnapshotCVars()
+{
+	//Block sink to avoid calling after every variable change
+	bSinkBlocked = true;
+
+	for(auto& Command : Snapshot.Commands)
+	{
+		if (Command.GetObjType() == EConsoleCommandType::CVar)
+		{
+			Execute_Internal(Command, false);
+		}
+	}
+	bSinkBlocked = false;
+
+	OnDataRefreshed.ExecuteIfBound();
 }
 
 FCommandGroup& FCommandsManager::AddNewGroup_Internal(const FString& Name, UCommandsContainer* Container, EGroupType Type)
@@ -1021,7 +1043,7 @@ void FCommandsManager::ContainerChanged()
 }
 
 //It will not add wrong command to history
-bool FCommandsManager::Execute_Internal(const FConsoleCommand& Command)
+bool FCommandsManager::Execute_Internal(const FConsoleCommand& Command, bool UpdateHistory)
 {
 
 
@@ -1036,13 +1058,9 @@ bool FCommandsManager::Execute_Internal(const FConsoleCommand& Command)
 
 	
 
-	if (SuccessExecuting)
+	if (SuccessExecuting && UpdateHistory)
 	{
 		IConsoleManager::Get().AddConsoleHistoryEntry(TEXT(""), *ExecCommand);
-	}
-	else
-	{
-
 	}
 
 	return SuccessExecuting;
