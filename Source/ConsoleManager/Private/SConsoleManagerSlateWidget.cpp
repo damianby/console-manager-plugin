@@ -1882,7 +1882,7 @@ bool SConsoleManagerSlateWidget::HandleNewGroup(FString& OutName, UCommandsConta
 	{
 	case 0:
 		OutName = Widget->GetText().ToString();
-		OutContainer = ContainerComboBox->GetSelectedItem();
+		OutContainer = SelectedContainer;
 		return true;
 		break;
 	}
