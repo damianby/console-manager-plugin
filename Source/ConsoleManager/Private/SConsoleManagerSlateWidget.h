@@ -299,4 +299,7 @@ private:
 	bool bDisplaySetByValue = false;
 	bool bDisplayCommandType = false;
 
+
+	TMap<FString, bool> ContainersExpanded;
+
 };

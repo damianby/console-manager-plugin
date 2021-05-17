@@ -1011,6 +1011,10 @@ void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
 				
 		});
 
+		FString ContainerName = Container->GetName();
+		bool* FoundExpanded = ContainersExpanded.Find(ContainerName);
+		bool InitiallyCollapsed = FoundExpanded != nullptr ? !(*FoundExpanded) : true;
+
 		GroupsScrollBox->AddSlot()
 		[
 			SNew(SBorder)
@@ -1020,7 +1024,7 @@ void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
 			[
 
 				SNew(SExpandableArea)
-				.InitiallyCollapsed(true)
+				.InitiallyCollapsed(InitiallyCollapsed)
 				.HeaderContent()
 				[
 					SNew(STextBlock)
@@ -1030,6 +1034,9 @@ void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
 				[
 					ContainerVBox
 				]
+				.OnAreaExpansionChanged_Lambda([this, ContainerName](bool Expanded) {
+					ContainersExpanded.FindOrAdd(ContainerName, Expanded);
+				})
 				
 			]
 
