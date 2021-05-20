@@ -241,6 +241,9 @@ TSharedRef< FSlateStyleSet > FConsoleManagerStyle::Create()
 
 	Style->Set("TableView.Row", DefaultTableRowStyle);
 
+	//In order to bind the thumbnail to our class we need to type ClassThumbnail.X where X is the name of the C++ class of the asset
+	Style->Set("ClassThumbnail.CommandsContainer", new IMAGE_BRUSH(TEXT("AssetIcon_128"), FVector2D(128.f, 128.f)));
+
 	return Style;
 }
 
