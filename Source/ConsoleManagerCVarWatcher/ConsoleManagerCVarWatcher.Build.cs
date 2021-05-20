@@ -35,17 +35,6 @@ public class ConsoleManagerCVarWatcher : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Projects",
-				"InputCore",
-				"UnrealEd",
-				"ToolMenus",
-				"LevelEditor",
-				"Settings",
-				"CoreUObject",
-				"Engine",
-				"Slate",
-				"SlateCore",
-				"AssetTools"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
