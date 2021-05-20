@@ -23,7 +23,7 @@
 		},
 		{
 			"Name": "ConsoleManagerCVarWatcher",
-			"Type": "DeveloperTool",
+			"Type": "Runtime",
 			"LoadingPhase": "EarliestPossible",
 			"WhitelistPlatforms": [ "Win64", "Win32" ]
 		}
