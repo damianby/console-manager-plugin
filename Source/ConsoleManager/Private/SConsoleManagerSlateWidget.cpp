@@ -218,7 +218,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 
 				+ SHorizontalBox::Slot()
 				.Padding(FMargin(2.0f, 0.f))
-				.AutoWidth()
+				.FillWidth(1.5f)
 				[
 					GetMenuButton(LOCTEXT("SnapshotButton", "Snapshot"), FConsoleManagerStyle::Get().GetBrush("Icons.Snapshot"), 
 					FOnClicked::CreateLambda([=]() {
@@ -231,7 +231,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 
 				+ SHorizontalBox::Slot()
 				.Padding(FMargin(2.0f, 0.f))
-				.AutoWidth()
+				.FillWidth(1.0f)
 				[
 
 					GetMenuButton(LOCTEXT("RevertButton", "Revert"), FConsoleManagerStyle::Get().GetBrush("Icons.Revert"),
@@ -254,7 +254,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 
 				+ SHorizontalBox::Slot()
 				.Padding(FMargin(2.0f, 0.f))
-				.AutoWidth()
+				.FillWidth(1.0f)
 				[
 
 					GetMenuButton(LOCTEXT("SaveButton", "Save"), FConsoleManagerStyle::Get().GetBrush("Icons.Save"),
@@ -598,7 +598,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 				.Padding(5.0f, 0.f, 0.f, 0.f)
 				.AutoWidth()
 				[
-					GetMenuButton(LOCTEXT("ProfilesButton", "Profiles"), FConsoleManagerStyle::Get().GetBrush("Icons.Settings"),
+					GetMenuButton(LOCTEXT("RefreshButton", "Refresh"), FConsoleManagerStyle::Get().GetBrush("Icons.Settings"),
 					FOnClicked::CreateLambda([]() {
 							
 							
@@ -1032,6 +1032,9 @@ void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
 				[
 					SNew(STextBlock)
 					.Text(FText::FromString(Container->GetName()))
+					.WrappingPolicy(ETextWrappingPolicy::AllowPerCharacterWrapping)
+					.AutoWrapText(true)
+					.WrapTextAt(150.f)
 				]
 				.BodyContent()
 				[
