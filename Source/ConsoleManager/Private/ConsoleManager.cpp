@@ -66,6 +66,10 @@ void FConsoleManagerModule::StartupModule()
 					}
 				}
 			}
+			
+			CommandsManager->ShouldLoadAllContainers(GetMutableDefault<UConsoleManagerSettings>()->StartupOption == EConsoleManagerStartupOption::AllContainers);
+			
+
 
 			ApplySettings();
 
@@ -311,6 +315,8 @@ void FConsoleManagerModule::ApplySettings()
 
 		ActiveTab.Pin()->UpdateHeaderColumnsVisibility(DisplayCommandValueType, DisplaySetByValue, DisplayCommandType);
 	}
+
+	CommandsManager->ShouldLoadAllContainers(GetMutableDefault<UConsoleManagerSettings>()->StartupOption == EConsoleManagerStartupOption::AllContainers);
 }
 
 void FConsoleManagerModule::RegisterMenus()

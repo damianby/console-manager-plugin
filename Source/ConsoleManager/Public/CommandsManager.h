@@ -111,7 +111,9 @@ public:
 	FOnGroupsRefresh OnGroupsRefresh;
 	FOnCommandsRefresh OnCommandsRefresh;
 
+	void Refresh();
 
+	void ShouldLoadAllContainers(bool Val);
 private:
 
 	// Function called when console sink is called (on variable change), can be blocked by bSinkBlocked
@@ -190,4 +192,5 @@ private:
 
 	bool bSinkBlocked = false;
 
+	bool bLoadAllContainers = false;
 };

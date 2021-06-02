@@ -988,6 +988,24 @@ void FCommandsManager::SaveToAssets()
 //}
 }
 
+void FCommandsManager::Refresh()
+{
+	if (bLoadAllContainers) 
+	{
+		TArray<UCommandsContainer*> NewContainers = LoadAllContainers();
+		Initialize_Internal(NewContainers);
+	}
+	else
+	{
+		OnDataRefreshed.ExecuteIfBound();
+	}
+}
+
+void FCommandsManager::ShouldLoadAllContainers(bool Val)
+{
+	bLoadAllContainers = Val;
+}
+
 
 
 void FCommandsManager::LoadConsoleHistory()
