@@ -291,7 +291,7 @@ private:
 	SHeaderRow::FColumn::FArguments HeaderValue = SHeaderRow::FColumn::FArguments();
 	SHeaderRow::FColumn::FArguments HeaderExec = SHeaderRow::FColumn::FArguments();
 
-	TSharedRef<SButton> GetMenuButton(FText Text, const FSlateBrush* ImageBrush, FOnClicked ClickedDelegate, TAttribute<bool> IsEnabledAttribute = true);
+	TSharedRef<SButton> GetMenuButton(FText Text, const FSlateBrush* ImageBrush, FOnClicked ClickedDelegate, TAttribute<bool> IsEnabledAttribute = true, FText TooltipText = FText());
 
 	ECheckBoxState GetCurrentSelectedGroup(FGuid Id) const;
 

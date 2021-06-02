@@ -229,7 +229,9 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 								CommandsManager->CreateSnapshotCVars();
 
 								return FReply::Handled();
-							}))
+							}),
+						true,
+						LOCTEXT("SnapshotButtonTooltip", "Creates new snapshot of all command variables"))
 					]
 
 					+ SHorizontalBox::Slot()
@@ -252,7 +254,8 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 							}),
 							TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]() {
 								return CommandsManager->GetSnapshot().Commands.Num() > 0 ? true : false;
-								})))
+								})),
+							LOCTEXT("RevertButtonTooltip", "Reverts all changes to last snapshot"))
 					]
 
 					+ SHorizontalBox::Slot()
@@ -266,7 +269,9 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 								CommandsManager->SaveToAssets();
 
 								return FReply::Handled();
-							}))
+							}),
+						true,
+						LOCTEXT("SaveButtonTooltip", "Saves all changed containers"))
 
 					]
 				]
@@ -603,12 +608,14 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 					.AutoWidth()
 					[
 						GetMenuButton(LOCTEXT("RefreshButton", "Refresh"), FConsoleManagerStyle::Get().GetBrush("Icons.Settings"),
-						FOnClicked::CreateLambda([]() {
+						FOnClicked::CreateLambda([this]() {
 							
-							
+								CommandsManager->Refresh();
 
 								return FReply::Handled();
-							}))
+							}),
+						true,
+						LOCTEXT("RefreshButton", "Reloads all opened containers and looks for new ones if set to \"All Containers\""))
 					]
 					
 					+ SHorizontalBox::Slot()
@@ -620,7 +627,9 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 								FConsoleManagerModule::GetModule().OpenSettings();
 
 								return FReply::Handled();
-							}))
+							}),
+						true,
+						LOCTEXT("SettingsButtonTooltip", "Opens plugin settings"))
 					]
 				]
 
@@ -629,7 +638,6 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 				.Padding(0,0,0, 0.0f)
 				[
 					CommandsListView.ToSharedRef()
-					//CommandsScrollBox.ToSharedRef()
 				]
 			]
 		]
@@ -1048,7 +1056,7 @@ void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
 					ContainerVBox
 				]
 				.OnAreaExpansionChanged_Lambda([this, ContainerName](bool Expanded) {
-					ContainersExpanded.FindOrAdd(ContainerName, Expanded);
+					ContainersExpanded.Add(ContainerName, Expanded);
 				})
 				
 			]
@@ -1965,12 +1973,13 @@ void SConsoleManagerSlateWidget::HandleNewCommands()
 	}
 }
 
-TSharedRef<SButton> SConsoleManagerSlateWidget::GetMenuButton(FText Text, const FSlateBrush* ImageBrush, FOnClicked ClickedDelegate, TAttribute<bool> IsEnabledAttribute)
+TSharedRef<SButton> SConsoleManagerSlateWidget::GetMenuButton(FText Text, const FSlateBrush* ImageBrush, FOnClicked ClickedDelegate, TAttribute<bool> IsEnabledAttribute, FText TooltipText)
 {
 	return SNew(SButton)
 		.ButtonStyle(&FConsoleManagerStyle::Get().GetWidgetStyle<FButtonStyle>("MenuButton"))
 		.ForegroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f))
 		.ContentPadding(2.0f)
+		.ToolTipText(TooltipText)
 		.OnClicked(ClickedDelegate)
 		.IsEnabled(IsEnabledAttribute)
 		.Content()
