@@ -203,129 +203,166 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 	SDockTab::Construct(SDockTab::FArguments()
 	.TabRole(ETabRole::NomadTab)
 	[
+		SNew(SBorder)
+		.BorderImage(FConsoleManagerStyle::Get().GetBrush("DockTab.Background"))
+		[
 
-		SNew(SHorizontalBox)
-		+ SHorizontalBox::Slot()
-		.AutoWidth()
-		.Padding(5.0f)
-		[// Left Panel
-			SNew(SVerticalBox)
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.Padding(5.0f)
+			[// Left Panel
+				SNew(SVerticalBox)
 
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SNew(SHorizontalBox)
-
-				+ SHorizontalBox::Slot()
-				.Padding(FMargin(2.0f, 0.f))
-				.FillWidth(1.5f)
+				+ SVerticalBox::Slot()
+				.AutoHeight()
 				[
-					GetMenuButton(LOCTEXT("SnapshotButton", "Snapshot"), FConsoleManagerStyle::Get().GetBrush("Icons.Snapshot"), 
-					FOnClicked::CreateLambda([=]() {
+					SNew(SHorizontalBox)
 
-							CommandsManager.Pin()->CreateSnapshotCVars();
-
-							return FReply::Handled();
-						}))
-				]
-
-				+ SHorizontalBox::Slot()
-				.Padding(FMargin(2.0f, 0.f))
-				.FillWidth(1.0f)
-				[
-
-					GetMenuButton(LOCTEXT("RevertButton", "Revert"), FConsoleManagerStyle::Get().GetBrush("Icons.Revert"),
-					FOnClicked::CreateLambda([=]() {
-
-							CommandsManager.Pin()->RevertSnapshotCVars();
-							/*FString NewGroupName;
-							UCommandsContainer* SelectedContainer;
-							if (HandleNewGroup(NewGroupName, SelectedContainer))
-							{
-								CommandsManager.Pin()->CreateSnapshotCVars(NewGroupName, SelectedContainer);
-							}*/
-
-							return FReply::Handled();
-						}),
-						TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]() {
-							return CommandsManager.Pin()->GetSnapshot().Commands.Num() > 0 ? true : false;
-							})))
-				]
-
-				+ SHorizontalBox::Slot()
-				.Padding(FMargin(2.0f, 0.f))
-				.FillWidth(1.0f)
-				[
-
-					GetMenuButton(LOCTEXT("SaveButton", "Save"), FConsoleManagerStyle::Get().GetBrush("Icons.Save"),
-					FOnClicked::CreateLambda([=]() {
-
-							CommandsManager.Pin()->SaveToAssets();
-
-							return FReply::Handled();
-						}))
-
-				]
-			]
-
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SNew(SBox)
-				.HeightOverride(34.0f)
-				[
-					SNew(SCheckBox)
-					.Type(ESlateCheckBoxType::ToggleButton)
-					.ForegroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f))
-					.Style(&FConsoleManagerStyle::Get().GetWidgetStyle<FCheckBoxStyle>("GlobalPresetToggleButton"))
-					.Content()
+					+ SHorizontalBox::Slot()
+					.Padding(FMargin(2.0f, 0.f))
+					.FillWidth(1.5f)
 					[
-						SNew(SOverlay)
-						+SOverlay::Slot()
-						.HAlign(EHorizontalAlignment::HAlign_Center)
-						.VAlign(EVerticalAlignment::VAlign_Top)
-						.Padding(0.f, 7.f, 0.f, 0.f)
-						[
-							SNew(STextBlock)
-							.Text(LOCTEXT("AllCommandsButton", "All Commands"))
-							.TransformPolicy(ETextTransformPolicy::ToUpper)
-							.Font(FConsoleManagerStyle::Get().GetFontStyle("GlobalPresetButtonFont"))
-						]
+						GetMenuButton(LOCTEXT("SnapshotButton", "Snapshot"), FConsoleManagerStyle::Get().GetBrush("Icons.Snapshot"), 
+						FOnClicked::CreateLambda([=]() {
+
+								CommandsManager.Pin()->CreateSnapshotCVars();
+
+								return FReply::Handled();
+							}))
+					]
+
+					+ SHorizontalBox::Slot()
+					.Padding(FMargin(2.0f, 0.f))
+					.FillWidth(1.0f)
+					[
+
+						GetMenuButton(LOCTEXT("RevertButton", "Revert"), FConsoleManagerStyle::Get().GetBrush("Icons.Revert"),
+						FOnClicked::CreateLambda([=]() {
+
+								CommandsManager.Pin()->RevertSnapshotCVars();
+								/*FString NewGroupName;
+								UCommandsContainer* SelectedContainer;
+								if (HandleNewGroup(NewGroupName, SelectedContainer))
+								{
+									CommandsManager.Pin()->CreateSnapshotCVars(NewGroupName, SelectedContainer);
+								}*/
+
+								return FReply::Handled();
+							}),
+							TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]() {
+								return CommandsManager.Pin()->GetSnapshot().Commands.Num() > 0 ? true : false;
+								})))
+					]
+
+					+ SHorizontalBox::Slot()
+					.Padding(FMargin(2.0f, 0.f))
+					.FillWidth(1.0f)
+					[
+
+						GetMenuButton(LOCTEXT("SaveButton", "Save"), FConsoleManagerStyle::Get().GetBrush("Icons.Save"),
+						FOnClicked::CreateLambda([=]() {
+
+								CommandsManager.Pin()->SaveToAssets();
+
+								return FReply::Handled();
+							}))
 
 					]
-					.IsChecked(this, &SConsoleManagerSlateWidget::GetCurrentSelectedGroup, CommandsManager.Pin()->GetAllCommands()->Id)
-					.OnCheckStateChanged_Lambda([=](ECheckBoxState NewRadioState) {
-						if (CommandsManager.Pin()->SetActiveAllCommands())
-						{
-							GenerateCommandsScrollBox();
-
-							CommandsListView->ScrollToTop();
-						}
-					})
 				]
-			]
 
-
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SNew(SBox)
-				.HeightOverride(34.0f)
+				+ SVerticalBox::Slot()
+				.AutoHeight()
 				[
-					SNew(SCheckBox)
-					.Type(ESlateCheckBoxType::ToggleButton)
+					SNew(SBox)
+					.HeightOverride(34.0f)
+					[
+						SNew(SCheckBox)
+						.Type(ESlateCheckBoxType::ToggleButton)
+						.ForegroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f))
+						.Style(&FConsoleManagerStyle::Get().GetWidgetStyle<FCheckBoxStyle>("GlobalPresetToggleButton"))
+						.Content()
+						[
+							SNew(SOverlay)
+							+SOverlay::Slot()
+							.HAlign(EHorizontalAlignment::HAlign_Center)
+							.VAlign(EVerticalAlignment::VAlign_Top)
+							.Padding(0.f, 7.f, 0.f, 0.f)
+							[
+								SNew(STextBlock)
+								.Text(LOCTEXT("AllCommandsButton", "All Commands"))
+								.TransformPolicy(ETextTransformPolicy::ToUpper)
+								.Font(FConsoleManagerStyle::Get().GetFontStyle("GlobalPresetButtonFont"))
+							]
+
+						]
+						.IsChecked(this, &SConsoleManagerSlateWidget::GetCurrentSelectedGroup, CommandsManager.Pin()->GetAllCommands()->Id)
+						.OnCheckStateChanged_Lambda([=](ECheckBoxState NewRadioState) {
+							if (CommandsManager.Pin()->SetActiveAllCommands())
+							{
+								GenerateCommandsScrollBox();
+
+								CommandsListView->ScrollToTop();
+							}
+						})
+					]
+				]
+
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(SBox)
+					.HeightOverride(34.0f)
+					[
+						SNew(SCheckBox)
+						.Type(ESlateCheckBoxType::ToggleButton)
+						.ForegroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f))
+						.Style(&FConsoleManagerStyle::Get().GetWidgetStyle<FCheckBoxStyle>("GlobalPresetToggleButton"))
+						.Content()
+						[
+							SNew(SOverlay)
+							//+ SOverlay::Slot()
+							//.HAlign(EHorizontalAlignment::HAlign_Center)
+							//.VAlign(EVerticalAlignment::VAlign_Center)
+							//[
+							//	SNew(SImage)
+							//	.Image(FConsoleManagerStyle::Get().GetBrush("Image.GlobalPresetButton"))
+							//]
+							+ SOverlay::Slot()
+							.HAlign(EHorizontalAlignment::HAlign_Center)
+							.VAlign(EVerticalAlignment::VAlign_Top)
+							.Padding(0.f, 7.f, 0.f, 0.f)
+							[
+								SNew(STextBlock)
+								.Text(LOCTEXT("HistoryButton", "History"))
+								.TransformPolicy(ETextTransformPolicy::ToUpper)
+								.Font(FConsoleManagerStyle::Get().GetFontStyle("GlobalPresetButtonFont"))
+							]
+
+						]
+						.IsChecked(this, &SConsoleManagerSlateWidget::GetCurrentSelectedGroup, CommandsManager.Pin()->GetHistory()->Id)
+						.OnCheckStateChanged_Lambda([=](ECheckBoxState NewRadioState) {
+							if (CommandsManager.Pin()->SetActiveHistory())
+							{
+								GenerateCommandsScrollBox();
+								CommandsListView->ScrollToBottom();
+							}
+						})
+					]
+					/*SNew(SButton)
+					.ButtonStyle(&FConsoleManagerStyle::Get().GetWidgetStyle<FButtonStyle>("EmptyButton"))
 					.ForegroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f))
-					.Style(&FConsoleManagerStyle::Get().GetWidgetStyle<FCheckBoxStyle>("GlobalPresetToggleButton"))
 					.Content()
 					[
 						SNew(SOverlay)
-						//+ SOverlay::Slot()
-						//.HAlign(EHorizontalAlignment::HAlign_Center)
-						//.VAlign(EVerticalAlignment::VAlign_Center)
-						//[
-						//	SNew(SImage)
-						//	.Image(FConsoleManagerStyle::Get().GetBrush("Image.GlobalPresetButton"))
-						//]
+						+ SOverlay::Slot()
+						.HAlign(EHorizontalAlignment::HAlign_Center)
+						.VAlign(EVerticalAlignment::VAlign_Center)
+						[
+							SNew(SImage)
+							.Image(FConsoleManagerStyle::Get().GetBrush("Image.GlobalPresetButton"))
+						]
 						+ SOverlay::Slot()
 						.HAlign(EHorizontalAlignment::HAlign_Center)
 						.VAlign(EVerticalAlignment::VAlign_Top)
@@ -336,296 +373,264 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 							.TransformPolicy(ETextTransformPolicy::ToUpper)
 							.Font(FConsoleManagerStyle::Get().GetFontStyle("GlobalPresetButtonFont"))
 						]
-
+					
 					]
-					.IsChecked(this, &SConsoleManagerSlateWidget::GetCurrentSelectedGroup, CommandsManager.Pin()->GetHistory()->Id)
-					.OnCheckStateChanged_Lambda([=](ECheckBoxState NewRadioState) {
-						if (CommandsManager.Pin()->SetActiveHistory())
+					.OnClicked(FOnClicked::CreateLambda([=]() {
+						if(CommandsManager.Pin()->SetActiveHistory())
 						{
 							GenerateCommandsScrollBox();
 							CommandsListView->ScrollToBottom();
 						}
-					})
-				]
-				/*SNew(SButton)
-				.ButtonStyle(&FConsoleManagerStyle::Get().GetWidgetStyle<FButtonStyle>("EmptyButton"))
-				.ForegroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f))
-				.Content()
-				[
-					SNew(SOverlay)
-					+ SOverlay::Slot()
-					.HAlign(EHorizontalAlignment::HAlign_Center)
-					.VAlign(EVerticalAlignment::VAlign_Center)
-					[
-						SNew(SImage)
-						.Image(FConsoleManagerStyle::Get().GetBrush("Image.GlobalPresetButton"))
-					]
-					+ SOverlay::Slot()
-					.HAlign(EHorizontalAlignment::HAlign_Center)
-					.VAlign(EVerticalAlignment::VAlign_Top)
-					.Padding(0.f, 7.f, 0.f, 0.f)
-					[
-						SNew(STextBlock)
-						.Text(LOCTEXT("HistoryButton", "History"))
-						.TransformPolicy(ETextTransformPolicy::ToUpper)
-						.Font(FConsoleManagerStyle::Get().GetFontStyle("GlobalPresetButtonFont"))
-					]
-					
-				]
-				.OnClicked(FOnClicked::CreateLambda([=]() {
-					if(CommandsManager.Pin()->SetActiveHistory())
-					{
-						GenerateCommandsScrollBox();
-						CommandsListView->ScrollToBottom();
-					}
 						
-					return FReply::Handled();
-				}))*/
-			]
-
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SNew(SBox)
-				.HeightOverride(34.0f)
-				[
-					SNew(SCheckBox)
-					.Type(ESlateCheckBoxType::ToggleButton)
-					.ForegroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f))
-					.Style(&FConsoleManagerStyle::Get().GetWidgetStyle<FCheckBoxStyle>("GlobalPresetToggleButton"))
-					.Content()
-					[
-						SNew(SOverlay)
-						+ SOverlay::Slot()
-						.HAlign(EHorizontalAlignment::HAlign_Center)
-						.VAlign(EVerticalAlignment::VAlign_Top)
-						.Padding(0.f, 7.f, 0.f, 0.f)
-						[
-							SNew(STextBlock)
-							.Text(LOCTEXT("SnapshotButton", "Snapshot"))
-							.TransformPolicy(ETextTransformPolicy::ToUpper)
-							.Font(FConsoleManagerStyle::Get().GetFontStyle("GlobalPresetButtonFont"))
-							]
-
-							]
-							.IsChecked(this, &SConsoleManagerSlateWidget::GetCurrentSelectedGroup, CommandsManager.Pin()->GetSnapshot().Id)
-							.OnCheckStateChanged_Lambda([=](ECheckBoxState NewRadioState) {
-								if (CommandsManager.Pin()->SetActiveSnapshot())
-								{
-									GenerateCommandsScrollBox();
-
-									CommandsListView->ScrollToTop();
-								}
-						})
+						return FReply::Handled();
+					}))*/
 				]
-			]
 
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SNew(SSpacer)
-				.Size(FVector2D(0.0f, 10.0f))
-			]
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SNew(STextBlock)
-				.Text(LOCTEXT("PresetsHeader", "Presets"))
-				.TransformPolicy(ETextTransformPolicy::ToUpper)
-				.Justification(ETextJustify::Center)
-				.Font(FConsoleManagerStyle::Get().GetFontStyle("GlobalPresetButtonFont"))
-			]
-
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SNew(SSeparator)
-				.Thickness(5.0f)
-			]
-
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				//SNew(SBorder)
-				//.Visibility(EVisibility::SelfHitTestInvisible)
-
-				////.OnMouseButtonUp(GroupsScrollBoxRightClick)
-				//[
-					GroupsScrollBox.ToSharedRef()
-				//]
-					
-			]
-		]// Left Panel
-		+ SHorizontalBox::Slot()
-		.FillWidth(1)
-		.Padding(5.0f, 5.0f, 5.0f, 0)
-		[// Right Panel
-			SNew(SVerticalBox)
-
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SNew(SHorizontalBox)
-				+ SHorizontalBox::Slot()
-				.FillWidth(1.0f)
+				+ SVerticalBox::Slot()
+				.AutoHeight()
 				[
-					SNew(SVerticalBox)
-					+ SVerticalBox::Slot()
-					.VAlign(VAlign_Center)
-					.AutoHeight()
+					SNew(SBox)
+					.HeightOverride(34.0f)
 					[
-						SAssignNew(SearchBox, SSearchBox)
-						.HintText(FText::FromString("Search/Filter"))
-						.SelectAllTextWhenFocused(true)
-						.OnTextChanged_Lambda(
-							[=](const FText& NewText) {
-								FilterString = NewText.ToString();
-								FilterList();
-							}
-						)
-					]
-					
-					+ SVerticalBox::Slot()
-					.FillHeight(1.0f)
-					.VAlign(VAlign_Center)
-					[
-
-						SNew(SWrapBox)
-						.Orientation(EOrientation::Orient_Horizontal)
-						.UseAllottedWidth(true)
-						+ SWrapBox::Slot()
-						.Padding(0.f, 0.f, 10.0f, 0.f)
-						.FillLineWhenSizeLessThan(513.0f)
+						SNew(SCheckBox)
+						.Type(ESlateCheckBoxType::ToggleButton)
+						.ForegroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f))
+						.Style(&FConsoleManagerStyle::Get().GetWidgetStyle<FCheckBoxStyle>("GlobalPresetToggleButton"))
+						.Content()
 						[
-							SNew(SHorizontalBox)
-							+ SHorizontalBox::Slot()
-							.FillWidth(1.0f)
+							SNew(SOverlay)
+							+ SOverlay::Slot()
+							.HAlign(EHorizontalAlignment::HAlign_Center)
+							.VAlign(EVerticalAlignment::VAlign_Top)
+							.Padding(0.f, 7.f, 0.f, 0.f)
 							[
-								SAssignNew(ShowVarsCb, SCheckBox)
-								.IsChecked(ECheckBoxState::Checked)
-								.OnCheckStateChanged_Lambda([=](ECheckBoxState State) {
+								SNew(STextBlock)
+								.Text(LOCTEXT("SnapshotButton", "Snapshot"))
+								.TransformPolicy(ETextTransformPolicy::ToUpper)
+								.Font(FConsoleManagerStyle::Get().GetFontStyle("GlobalPresetButtonFont"))
+								]
 
-										bShowCVar = (bool)State;
+								]
+								.IsChecked(this, &SConsoleManagerSlateWidget::GetCurrentSelectedGroup, CommandsManager.Pin()->GetSnapshot().Id)
+								.OnCheckStateChanged_Lambda([=](ECheckBoxState NewRadioState) {
+									if (CommandsManager.Pin()->SetActiveSnapshot())
+									{
+										GenerateCommandsScrollBox();
+
+										CommandsListView->ScrollToTop();
+									}
+							})
+					]
+				]
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(SSpacer)
+					.Size(FVector2D(0.0f, 10.0f))
+				]
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(STextBlock)
+					.Text(LOCTEXT("PresetsHeader", "Presets"))
+					.TransformPolicy(ETextTransformPolicy::ToUpper)
+					.Justification(ETextJustify::Center)
+					.Font(FConsoleManagerStyle::Get().GetFontStyle("GlobalPresetButtonFont"))
+				]
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(SSeparator)
+					.Thickness(5.0f)
+				]
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					//SNew(SBorder)
+					//.Visibility(EVisibility::SelfHitTestInvisible)
+
+					////.OnMouseButtonUp(GroupsScrollBoxRightClick)
+					//[
+						GroupsScrollBox.ToSharedRef()
+					//]
+					
+				]
+			]// Left Panel
+		
+			+ SHorizontalBox::Slot()
+			.FillWidth(1)
+			.Padding(5.0f, 5.0f, 5.0f, 0)
+			[// Right Panel
+				SNew(SVerticalBox)
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+					.FillWidth(1.0f)
+					[
+						SNew(SVerticalBox)
+						+ SVerticalBox::Slot()
+						.VAlign(VAlign_Center)
+						.AutoHeight()
+						[
+							SAssignNew(SearchBox, SSearchBox)
+							.HintText(FText::FromString("Search/Filter"))
+							.SelectAllTextWhenFocused(true)
+							.OnTextChanged_Lambda(
+								[=](const FText& NewText) {
+									FilterString = NewText.ToString();
+									FilterList();
+								}
+							)
+						]
+					
+						+ SVerticalBox::Slot()
+						.FillHeight(1.0f)
+						.VAlign(VAlign_Center)
+						[
+
+							SNew(SWrapBox)
+							.Orientation(EOrientation::Orient_Horizontal)
+							.UseAllottedWidth(true)
+							+ SWrapBox::Slot()
+							.Padding(0.f, 0.f, 10.0f, 0.f)
+							.FillLineWhenSizeLessThan(513.0f)
+							[
+								SNew(SHorizontalBox)
+								+ SHorizontalBox::Slot()
+								.FillWidth(1.0f)
+								[
+									SAssignNew(ShowVarsCb, SCheckBox)
+									.IsChecked(ECheckBoxState::Checked)
+									.OnCheckStateChanged_Lambda([=](ECheckBoxState State) {
+
+											bShowCVar = (bool)State;
+
+											FilterList();
+										})
+									.Content()
+									[
+										SNew(STextBlock)
+										.Text(FText::FromString("Show variables"))
+									]
+								]
+
+								+ SHorizontalBox::Slot()
+								.FillWidth(1.0f)
+								[
+									SAssignNew(ShowCmdsCb, SCheckBox)
+									.IsChecked(ECheckBoxState::Checked)
+									.OnCheckStateChanged_Lambda([=](ECheckBoxState State) {
+										bShowCCmd = (bool)State;
+										FilterList();
+									})
+									.Content()
+									[
+										SNew(STextBlock)
+										.Text(FText::FromString("Show commands"))
+									]
+								]
+
+							
+							]
+							+ SWrapBox::Slot()
+							.FillLineWhenSizeLessThan(513.0f)
+							.Padding(0.f, 0.f, 20.0f, 0.f)
+							[
+								SNew(SHorizontalBox)
+								+ SHorizontalBox::Slot()
+								.FillWidth(1.0f)
+								.Padding(0.f, 0.f, 10.0f, 0.f)
+								[
+
+									SAssignNew(ShowExecsCb, SCheckBox)
+									.IsChecked(ECheckBoxState::Checked)
+									.OnCheckStateChanged_Lambda([=](ECheckBoxState State) {
+
+										bShowExec = (bool)State;
+
+										FilterList();
+
+									})
+									.Content()
+									[
+										SNew(STextBlock)
+										.Text(FText::FromString("Show exec commands"))
+									]
+								]
+								+ SHorizontalBox::Slot()
+								.FillWidth(1.0f)
+								[
+									SNew(SCheckBox)
+									.IsChecked(ECheckBoxState::Unchecked)
+									.OnCheckStateChanged_Lambda([=](ECheckBoxState State) {
+
+										bShowOnlyModified = (bool)State;
+
+										if (bShowOnlyModified)
+										{
+											ShowVarsCb->SetEnabled(false);
+											ShowCmdsCb->SetEnabled(false);
+											ShowExecsCb->SetEnabled(false);
+										}
+										else
+										{
+											ShowVarsCb->SetEnabled(true);
+											ShowCmdsCb->SetEnabled(true);
+											ShowExecsCb->SetEnabled(true);
+										}
 
 										FilterList();
 									})
-								.Content()
-								[
-									SNew(STextBlock)
-									.Text(FText::FromString("Show variables"))
-								]
-							]
-
-							+ SHorizontalBox::Slot()
-							.FillWidth(1.0f)
-							[
-								SAssignNew(ShowCmdsCb, SCheckBox)
-								.IsChecked(ECheckBoxState::Checked)
-								.OnCheckStateChanged_Lambda([=](ECheckBoxState State) {
-									bShowCCmd = (bool)State;
-									FilterList();
-								})
-								.Content()
-								[
-									SNew(STextBlock)
-									.Text(FText::FromString("Show commands"))
-								]
-							]
-
-							
-						]
-						+ SWrapBox::Slot()
-						.FillLineWhenSizeLessThan(513.0f)
-						.Padding(0.f, 0.f, 20.0f, 0.f)
-						[
-							SNew(SHorizontalBox)
-							+ SHorizontalBox::Slot()
-							.FillWidth(1.0f)
-							.Padding(0.f, 0.f, 10.0f, 0.f)
-							[
-
-								SAssignNew(ShowExecsCb, SCheckBox)
-								.IsChecked(ECheckBoxState::Checked)
-								.OnCheckStateChanged_Lambda([=](ECheckBoxState State) {
-
-									bShowExec = (bool)State;
-
-									FilterList();
-
-								})
-								.Content()
-								[
-									SNew(STextBlock)
-									.Text(FText::FromString("Show exec commands"))
-								]
-							]
-							+ SHorizontalBox::Slot()
-							.FillWidth(1.0f)
-							[
-								SNew(SCheckBox)
-								.IsChecked(ECheckBoxState::Unchecked)
-								.OnCheckStateChanged_Lambda([=](ECheckBoxState State) {
-
-									bShowOnlyModified = (bool)State;
-
-									if (bShowOnlyModified)
-									{
-										ShowVarsCb->SetEnabled(false);
-										ShowCmdsCb->SetEnabled(false);
-										ShowExecsCb->SetEnabled(false);
-									}
-									else
-									{
-										ShowVarsCb->SetEnabled(true);
-										ShowCmdsCb->SetEnabled(true);
-										ShowExecsCb->SetEnabled(true);
-									}
-
-									FilterList();
-								})
-								.Content()
-								[
-									SNew(STextBlock)
-									.Text(FText::FromString("Show only modified"))
-									.ToolTipText(FText::FromString("When checked shows only modified variables (commands and exec's dont have state)"))
+									.Content()
+									[
+										SNew(STextBlock)
+										.Text(FText::FromString("Show only modified"))
+										.ToolTipText(FText::FromString("When checked shows only modified variables (commands and exec's dont have state)"))
+									]
 								]
 							]
 						]
 					]
-				]
 
-				+ SHorizontalBox::Slot()
-				.Padding(5.0f, 0.f, 0.f, 0.f)
-				.AutoWidth()
-				[
-					GetMenuButton(LOCTEXT("RefreshButton", "Refresh"), FConsoleManagerStyle::Get().GetBrush("Icons.Settings"),
-					FOnClicked::CreateLambda([]() {
+					+ SHorizontalBox::Slot()
+					.Padding(5.0f, 0.f, 0.f, 0.f)
+					.AutoWidth()
+					[
+						GetMenuButton(LOCTEXT("RefreshButton", "Refresh"), FConsoleManagerStyle::Get().GetBrush("Icons.Settings"),
+						FOnClicked::CreateLambda([]() {
 							
 							
 
-							return FReply::Handled();
-						}))
-				]
+								return FReply::Handled();
+							}))
+					]
 					
-				+ SHorizontalBox::Slot()
-				.Padding(5.0f, 0.f, 0.f, 0.f)
-				.AutoWidth()
-				[
-					GetMenuButton(LOCTEXT("SettingsButton", "Settings"), FConsoleManagerStyle::Get().GetBrush("Icons.Settings"), 
-					FOnClicked::CreateLambda([]() {
-							FConsoleManagerModule::GetModule().OpenSettings();
+					+ SHorizontalBox::Slot()
+					.Padding(5.0f, 0.f, 0.f, 0.f)
+					.AutoWidth()
+					[
+						GetMenuButton(LOCTEXT("SettingsButton", "Settings"), FConsoleManagerStyle::Get().GetBrush("Icons.Settings"), 
+						FOnClicked::CreateLambda([]() {
+								FConsoleManagerModule::GetModule().OpenSettings();
 
-							return FReply::Handled();
-						}))
+								return FReply::Handled();
+							}))
+					]
 				]
-			]
 
-			+ SVerticalBox::Slot()
-			.FillHeight(1)
-			.Padding(0,0,0, 0.0f)
-			[
-				CommandsListView.ToSharedRef()
-				//CommandsScrollBox.ToSharedRef()
+				+ SVerticalBox::Slot()
+				.FillHeight(1)
+				.Padding(0,0,0, 0.0f)
+				[
+					CommandsListView.ToSharedRef()
+					//CommandsScrollBox.ToSharedRef()
+				]
 			]
 		]
 	]);
@@ -639,6 +644,8 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 	//];
 
 	CommandsManager.Pin()->OnDataRefreshed.BindSP(this, &SConsoleManagerSlateWidget::RefreshEverything);
+	CommandsManager.Pin()->OnGroupsRefresh.BindSP(this, &SConsoleManagerSlateWidget::GroupsRefresh);
+	CommandsManager.Pin()->OnCommandsRefresh.BindSP(this, &SConsoleManagerSlateWidget::CommandsRefresh);
 
 	//CommandsManager.Pin()->OnDataRefreshed.BindLambda(
 	//	[this]() {
@@ -960,8 +967,8 @@ void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
 	for (int i = 0; i < Containers.Num(); i++)
 	{
 		UCommandsContainer* Container = Containers[i];
-		// In case object was destroyed skip it
-		if (!Container->IsValidLowLevel())
+		// In case object was or is going to be destroyed skip it
+		if (!Container->IsValidLowLevel() || Container->IsPendingKill())
 		{
 			continue;
 		}
@@ -2164,16 +2171,22 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 			}
 		);
 
-
-		TSharedRef<SBorder> ValueBorder = SNew(SBorder)
+		TSharedRef<SWidget> ParentWidget = SNew(SBox)
 			.VAlign(EVerticalAlignment::VAlign_Fill)
 			.HAlign(EHorizontalAlignment::HAlign_Fill)
-			.BorderBackgroundColor(Item->GetObjType() == EConsoleCommandType::CVar ? BorderColor : FLinearColor(0,0,0,0))
+			.Padding(FMargin(2.0f, 0.f, 2.0f, 0.f))
 			[
-				EditText
+				SNew(SBorder)
+				.VAlign(EVerticalAlignment::VAlign_Fill)
+				.HAlign(EHorizontalAlignment::HAlign_Fill)
+				.BorderBackgroundColor(Item->GetObjType() == EConsoleCommandType::CVar ? BorderColor : FLinearColor(0, 0, 0, 0))
+				[
+					EditText
+				]
 			];
+
 		
-		return ValueBorder;
+		return ParentWidget;
 	}
 	else if (ColumnName.IsEqual(FName(TEXT("Type"))))
 	{
@@ -2193,8 +2206,6 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 	else if (ColumnName.IsEqual(FName(TEXT("Current Value"))))
 	{
 
-		TSharedPtr<SWidget> CurrentValueCell;
-		
 		TSharedPtr<FConsoleCommand> LocalCmd = Item;
 
 		TAttribute<FText> CurrentValueText = TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateLambda([LocalCmd]() {
@@ -2272,22 +2283,24 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 			return RetColor;
 		}));
 
-		CurrentValueCell = SNew(SBorder)
-			.HAlign(EHorizontalAlignment::HAlign_Fill)
+
+
+		TSharedRef<SWidget> ParentWidget = SNew(SBox)
 			.VAlign(EVerticalAlignment::VAlign_Fill)
-			.BorderBackgroundColor(Item->GetObjType() == EConsoleCommandType::CVar ? BorderColor : FLinearColor(0, 0, 0, 0))
+			.HAlign(EHorizontalAlignment::HAlign_Fill)
+			.Padding(FMargin(2.0f, 0.f, 2.0f, 0.f))
 			[
-				EditText	
+				SNew(SBorder)
+				.VAlign(EVerticalAlignment::VAlign_Fill)
+				.HAlign(EHorizontalAlignment::HAlign_Fill)
+				.BorderBackgroundColor(Item->GetObjType() == EConsoleCommandType::CVar ? BorderColor : FLinearColor(0, 0, 0, 0))
+				[
+					EditText
+				]
 			];
 
 
-		if (Item->GetObjType() != EConsoleCommandType::CVar)
-		{
-			CurrentValueCell->SetVisibility(EVisibility::Hidden);
-		}
-		
-
-		return CurrentValueCell.ToSharedRef();
+		return ParentWidget;
 	}
 	else if (ColumnName.IsEqual(FName(TEXT("CommandType"))))
 	{

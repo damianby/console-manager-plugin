@@ -119,11 +119,11 @@ TSharedRef< FSlateStyleSet > FConsoleManagerStyle::Create()
 	Style->Set("MatchingValues", DefaultMatchingValues);
 	Style->Set("NotMatchingValues", DefaultNotMatchingValues);
 
-	//Style->Set("ConsoleManager.EmptyButton", new FButtonStyle());
+	Style->Set("DockTab.Background", new IMAGE_BRUSH(TEXT("AppTabContentArea"), Icon16x16, FLinearColor(1, 1, 1, 1), ESlateBrushTileType::Both));
 
 	Style->Set("ConsoleManager.OpenTab", new IMAGE_BRUSH(TEXT("ButtonIcon_40x"), Icon40x40));
 	Style->Set("ConsoleManager.OpenTab.Small", new IMAGE_BRUSH(TEXT("ButtonIcon_40x"), Icon20x20));
-
+	
 	FSlateImageBrush* ExecActionBrush = new IMAGE_BRUSH(TEXT("Execute_16"), Icon16x16);
 	ExecActionBrush->DrawAs = ESlateBrushDrawType::Box;
 	ExecActionBrush->Margin = FMargin(0);

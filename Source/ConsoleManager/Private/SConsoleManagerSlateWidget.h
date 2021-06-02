@@ -224,6 +224,8 @@ public:
 
 
 	void RefreshEverything() { GenerateGroupsScrollBox(); GenerateCommandsScrollBox(); UE_LOG(LogTemp, Warning, TEXT("Data refereshed!!!")); }
+	void GroupsRefresh() { GenerateGroupsScrollBox(); };
+	void CommandsRefresh() { GenerateCommandsScrollBox(); };
 
 protected:
 	//virtual FReply OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
