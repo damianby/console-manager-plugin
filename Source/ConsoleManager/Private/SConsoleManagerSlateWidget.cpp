@@ -671,6 +671,13 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 	TabActivated();
 }
 
+SConsoleManagerSlateWidget::~SConsoleManagerSlateWidget()
+{
+	CommandsManager->OnDataRefreshed.Unbind();
+	CommandsManager->OnGroupsRefresh.Unbind();
+	CommandsManager->OnCommandsRefresh.Unbind();
+}
+
 
 void SConsoleManagerSlateWidget::TabActivated()
 {
