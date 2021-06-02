@@ -200,21 +200,12 @@ void FCommandsManager::VariableChanged()
 		UE_LOG(LogTemp, Warning, TEXT("Sink called!"));
 		UpdateHistory();
 
-		OnDataRefreshed.ExecuteIfBound();
+		OnCommandsRefresh.ExecuteIfBound();
 	}
 }
 
 void FCommandsManager::Initialize_Internal(TArray<UCommandsContainer*>& Containers)
 {
-	for (auto& Container : CommandsContainers)
-	{
-		if (Container->IsRooted())
-		{
-			Container->RemoveFromRoot();
-		}
-	}
-
-
 	CommandsContainers = Containers;
 
 	if (CommandsContainers.Num() == 0)
@@ -222,13 +213,10 @@ void FCommandsManager::Initialize_Internal(TArray<UCommandsContainer*>& Containe
 		CommandsContainers = LoadAllContainers();
 	}
 
-	for (auto& Container : CommandsContainers)
+	for (auto Container : CommandsContainers)
 	{
-		//Root them while we use to avoid crash when object is removed
-		if (!Container->IsRooted())
-		{
-			Container->AddToRoot();
-		}
+		Container->OnDestroyCalled.BindRaw(this, &FCommandsManager::ContainerBeingDestroyed);
+		Container->OnRenamed.BindRaw(this, &FCommandsManager::ContainerRenamed);
 
 		for (auto& GroupInContainer : Container->Groups)
 		{
@@ -236,7 +224,6 @@ void FCommandsManager::Initialize_Internal(TArray<UCommandsContainer*>& Containe
 		}
 	}
 
-	
 	OnDataRefreshed.ExecuteIfBound();
 }
 
@@ -282,6 +269,7 @@ bool FCommandsManager::SetActiveGroup(FGuid Id)
 
 			SetCurrentCommands(*FoundGroup);
 			
+			CurrentContainer = Container;
 			return true;
 		}
 	}
@@ -393,7 +381,6 @@ void FCommandsManager::AddCommandsToGroup(FCommandGroup* Group, TArray<TSharedPt
 					NewCommand.SetValue(Command->GetCurrentValue());
 				}
 			}
-			ContainerChanged();
 		}
 	}
 }
@@ -401,6 +388,7 @@ void FCommandsManager::AddCommandsToGroup(FCommandGroup* Group, TArray<TSharedPt
 void FCommandsManager::AddCommandsToCurrentGroup(TArray<TSharedPtr<FConsoleCommand>> Commands)
 {
 	AddCommandsToGroup(CurrentGroup, Commands);
+	ContainerChanged();
 }
 
 void FCommandsManager::AddCommandsToGroup(FGuid Id, TArray<TSharedPtr<FConsoleCommand>> Commands)
@@ -408,6 +396,7 @@ void FCommandsManager::AddCommandsToGroup(FGuid Id, TArray<TSharedPtr<FConsoleCo
 	FCommandGroup* Group = GetGroup(Id);
 
 	AddCommandsToGroup(Group, Commands);
+	ContainerChanged();
 }
 
 void FCommandsManager::UpdateCurrentEngineValue(const FConsoleCommand& Command)
@@ -603,7 +592,8 @@ void FCommandsManager::CreateNewGroup(const FString& Name, UCommandsContainer* C
 	if (Container->IsValidLowLevel() && Container->GetGroupByName(Name) == nullptr)
 	{
 		FCommandGroup& NewGroup = AddNewGroup_Internal(Name, Container);
-		OnDataRefreshed.ExecuteIfBound();
+		ContainerChanged(Container);
+		OnGroupsRefresh.ExecuteIfBound();
 	}
 }
 
@@ -613,7 +603,8 @@ void FCommandsManager::CreateNewGroup(const FString& Name, UCommandsContainer* C
 	{
 		FCommandGroup& NewGroup = AddNewGroup_Internal(Name, Container);
 		AddCommandsToGroup(&NewGroup, Commands);
-		OnDataRefreshed.ExecuteIfBound();
+		ContainerChanged(Container);
+		OnGroupsRefresh.ExecuteIfBound();
 	}
 }
 
@@ -630,8 +621,12 @@ void FCommandsManager::CreateSnapshotCVars()
 			CopiedCommand.SetValue(Command.GetCurrentValue());
 		}
 	}
-	RebuildSharedArray();
-	OnDataRefreshed.ExecuteIfBound();
+	if (CurrentGroup->Id == Snapshot.Id)
+	{
+		RebuildSharedArray();
+		OnCommandsRefresh.ExecuteIfBound();
+	}
+
 }
 
 void FCommandsManager::RevertSnapshotCVars()
@@ -648,7 +643,7 @@ void FCommandsManager::RevertSnapshotCVars()
 	}
 	bSinkBlocked = false;
 
-	OnDataRefreshed.ExecuteIfBound();
+	OnCommandsRefresh.ExecuteIfBound();
 }
 
 FCommandGroup& FCommandsManager::AddNewGroup_Internal(const FString& Name, UCommandsContainer* Container, EGroupType Type)
@@ -674,8 +669,9 @@ bool FCommandsManager::RenameGroup(FGuid Id, const FString& NewName)
 		FCommandGroup* FoundGroup = Container->Groups.FindByKey<FGuid>(Id);
 
 		FoundGroup->Name = NewName;
+		ContainerChanged(Container);
 
-		OnDataRefreshed.ExecuteIfBound();
+		OnGroupsRefresh.ExecuteIfBound();
 
 		return true;
 	}
@@ -704,8 +700,8 @@ void FCommandsManager::DuplicateGroup(FGuid Id)
 			Container->Groups.Insert(NewGroup, GroupIndex + 1);
 
 			GroupToContainerMap.Add(NewGroup.Id, Container);
-
-			OnDataRefreshed.ExecuteIfBound();
+			ContainerChanged(Container);
+			OnGroupsRefresh.ExecuteIfBound();
 		}
 	}
 	
@@ -870,7 +866,6 @@ void FCommandsManager::UpdateHistory()
 
 void FCommandsManager::SaveToAssets()
 {
-
 	if (ISourceControlModule::Get().IsEnabled())
 	{
 		TArray<UPackage*> PackageList;
@@ -1028,17 +1023,31 @@ void FCommandsManager::RebuildSharedArray()
 	}
 }
 
-void FCommandsManager::ContainerChanged()
+void FCommandsManager::ContainerChanged(UCommandsContainer* Container)
 {
-	RebuildSharedArray();
-
-
-	UCommandsContainer** ContainerFound_Ptr = GroupToContainerMap.Find(CurrentGroup->Id);
-	if (ContainerFound_Ptr != nullptr)
+	if (!Container)
 	{
-		UCommandsContainer* ContainerFound = *ContainerFound_Ptr;
+		Container = CurrentContainer;
+		RebuildSharedArray();
+		Container->GetPackage()->MarkPackageDirty();
+	}
+	else
+	{
+		UCommandsContainer** ContainerFound_Ptr = GroupToContainerMap.Find(CurrentGroup->Id);
+		if (ContainerFound_Ptr)
+		{
+			UCommandsContainer* ContainerFound = *ContainerFound_Ptr;
 
-		ContainerFound->GetPackage()->MarkPackageDirty();
+			if (ContainerFound == Container)
+			{
+				RebuildSharedArray();
+			}
+		}
+
+		if (Container->IsValidLowLevel())
+		{
+			Container->GetPackage()->MarkPackageDirty();
+		}
 	}
 }
 
@@ -1146,13 +1155,35 @@ void FCommandsManager::ValidateCommands(TArray<FConsoleCommand>& Commands)
 	}
 }
 
-
-// no need to reparse every time, keep objects IConsoleObjects in memory 
 void FCommandsManager::SetCurrentCommands(FCommandGroup& Group)
 {
 	CurrentGroup = &Group;
 
-	ContainerChanged();
+	RebuildSharedArray();
+}
+
+void FCommandsManager::ContainerBeingDestroyed(UCommandsContainer* Container)
+{
+	if (Container == CurrentContainer)
+	{
+		SetActiveAllCommands();
+	}
+
+	if (Container)
+	{
+		bool bContainerRemoved = static_cast<bool>(CommandsContainers.RemoveSingle(Container));
+
+		if (bContainerRemoved)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Container %s is dying! Removed: %d"), *Container->GetName(), bContainerRemoved);
+			Initialize_Internal(CommandsContainers);
+		}
+	}	
+}
+
+void FCommandsManager::ContainerRenamed(UCommandsContainer* Container)
+{
+	OnGroupsRefresh.ExecuteIfBound();
 }
 
 void FCommandsManager::DumpAllCommands()

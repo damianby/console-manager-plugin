@@ -62,6 +62,20 @@ void UCommandsContainer::PostEditImport()
 	UE_LOG(LogTemp, Warning, TEXT("Post edit import: count %d"), Groups.Num());
 }
 
+void UCommandsContainer::PostRename(UObject* OldOuter, const FName OldName)
+{
+	Super::PostRename(OldOuter, OldName);
+	OnRenamed.ExecuteIfBound(this);
+	UE_LOG(LogTemp, Warning, TEXT("Container renamed"));
+}
+
+void UCommandsContainer::BeginDestroy()
+{
+	OnDestroyCalled.ExecuteIfBound(this);
+	UE_LOG(LogTemp, Warning, TEXT("Container being destroyed!"));
+	Super::BeginDestroy();
+}
+
 FCommandGroup* UCommandsContainer::GetGroupByName(const FString& Name)
 {
 	for (FCommandGroup& Group : Groups)

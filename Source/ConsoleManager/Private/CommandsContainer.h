@@ -7,6 +7,9 @@
 #include "CommandStructs.h"
 #include "CommandsContainer.generated.h"
 
+
+DECLARE_DELEGATE_OneParam(FDestroyCalled, UCommandsContainer*);
+DECLARE_DELEGATE_OneParam(FRenamed, UCommandsContainer*);
 /**
  * 
  */
@@ -24,11 +27,18 @@ public:
 	TArray<FCommandGroup> Groups;
 
 
+	FDestroyCalled OnDestroyCalled;
+	FRenamed OnRenamed;
+
 	virtual void PostInitProperties() override;
 	virtual void PostLoad() override;
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChanged) override;
 	virtual void PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChainChanged) override;
 	virtual void PostEditImport() override;
+
+	virtual void PostRename(UObject* OldOuter, const FName OldName) override;
+
+	virtual void BeginDestroy() override;
 
 	FCommandGroup* GetGroupByName(const FString& Name);
 };

@@ -14,11 +14,8 @@
 class UCommandsContainer;
 
 DECLARE_DELEGATE(FOnDataRefreshed);
-
-
-/**
- * 
- */
+DECLARE_DELEGATE(FOnGroupsRefresh);
+DECLARE_DELEGATE(FOnCommandsRefresh);
 
 /**
  * Class made to avoid deletion of ConsoleCommand objects when TSharedPtr goes out of scope as we are using very unsafe method
@@ -111,9 +108,13 @@ public:
 
 	void SaveToAssets();
 	FOnDataRefreshed OnDataRefreshed;
+	FOnGroupsRefresh OnGroupsRefresh;
+	FOnCommandsRefresh OnCommandsRefresh;
+
+
 private:
 
-
+	// Function called when console sink is called (on variable change), can be blocked by bSinkBlocked
 	void VariableChanged();
 
 	void Initialize_Internal(TArray<UCommandsContainer*>& Containers);
@@ -134,12 +135,14 @@ private:
 	*/
 	void RebuildSharedArray();
 
-	void ContainerChanged();
+	//void ContainerChanged();
+	void ContainerChanged(UCommandsContainer* Container = nullptr);
 
 	void SetCurrentCommands(FCommandGroup& Group);
 
 
-
+	void ContainerBeingDestroyed(UCommandsContainer* Container);
+	void ContainerRenamed(UCommandsContainer* Container);
 
 
 	bool Execute_Internal(const FConsoleCommand& Command, bool UpdateHistory = true);
@@ -155,8 +158,6 @@ private:
 	// Return nullptr if not found
 	FCommandGroup* GetGroup(FGuid Id);
 
-	
-
 	/** How many commands to keep in history */
 	int32 HistoryBufferSize = 64;
 
@@ -166,8 +167,11 @@ private:
 	TArray<TSharedPtr<FConsoleCommand>> CurrentCommandsShared;
 
 
-	// Current active group to be displayed
+	// Current active group to be displayed (this always needs to be set)
 	FCommandGroup* CurrentGroup;
+
+	// Current container from which group is selected (this always needs to be set)
+	UCommandsContainer* CurrentContainer;
 
 	// Groups for always existing commands
 	FCommandGroup AllCommands;
