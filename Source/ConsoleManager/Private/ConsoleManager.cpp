@@ -258,22 +258,6 @@ void FConsoleManagerModule::OpenTab(const TArray<UObject*>& Containers)
 
 	CommandsManager->Initialize(OutCommandsContainers);
 
-	ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings");
-	
-	TArray< TSoftObjectPtr<UCommandsContainer>> LastSelectedObjs;
-
-	for (auto& Container : OutCommandsContainers)
-	{
-		LastSelectedObjs.Add(TSoftObjectPtr<UCommandsContainer>(Container));
-	}
-
-	GetMutableDefault<UConsoleManagerSettings>()->LastSelectedObjs = LastSelectedObjs;
-
-	auto Section = SettingsModule->GetContainer("Editor")->GetCategory("Plugins")->GetSection("Console Manager");
-	
-	Section->Save();
-
-
 	if (ActiveTab.IsValid())
 	{
 		ActiveTab.Pin()->TabActivated();
@@ -509,10 +493,28 @@ TSharedRef<class SConsoleManagerSlateWidget> FConsoleManagerModule::BuildUI()
 		.DisplaySetByValue(DisplaySetByValue)
 		.DisplayCommandType(DisplayCommandType);
 
+
 	SDockTab::FOnTabClosedCallback ClosedTabDelegate;
 
 	ClosedTabDelegate.BindLambda([this](TSharedRef<SDockTab> DockTab)
 		{
+
+			const TArray<UCommandsContainer*>& Containers = CommandsManager->GetCommandsContainers();
+
+			ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings");
+			TArray< TSoftObjectPtr<UCommandsContainer>> LastSelectedObjs;
+
+			for (auto& Container : Containers)
+			{
+				LastSelectedObjs.Add(TSoftObjectPtr<UCommandsContainer>(Container));
+			}
+
+			GetMutableDefault<UConsoleManagerSettings>()->LastSelectedObjs = LastSelectedObjs;
+			auto Section = SettingsModule->GetContainer("Editor")->GetCategory("Plugins")->GetSection("Console Manager");
+			Section->Save();
+
+			UE_LOG(LogTemp, Warning, TEXT("Closed window test"));
+
 			//CommandsManager->SaveToAssets();
 
 			LastTabManager = ActiveTab.Pin()->GetTabManager();
