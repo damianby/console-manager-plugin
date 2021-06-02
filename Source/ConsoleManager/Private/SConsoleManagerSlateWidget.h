@@ -266,8 +266,6 @@ private:
 
 	TSharedPtr<SSearchBox> SearchBox;
 
-	void OnAddGroupButtonClicked();
-
 	void OnSelectGroupClicked(ECheckBoxState NewRadioState, FGuid Id);
 
 	TSharedRef< ITableRow > OnCommandsRowGenerate(TSharedPtr<FConsoleCommand> Item, const TSharedRef< STableViewBase >& OwnerTable);

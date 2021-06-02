@@ -88,9 +88,7 @@ public:
 		FString Note;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
 		EConsoleCommandVarType Type = EConsoleCommandVarType::None;
-	//
-
-
+	
 	//UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
 	FString ExecCommand;
 	//UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
@@ -98,18 +96,12 @@ public:
 	//UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Groups")
 	FString SetBy;
 
-	
-
-
 	void InitializeLoaded();
 
 private:
-
 	FORCEINLINE void RefreshExec() { ExecCommand = Name + " " + Value; };
 
 	void InitialParse(IConsoleObject* Obj);
-
-	
 
 	static FString GetTextSection(const TCHAR * &It);
 

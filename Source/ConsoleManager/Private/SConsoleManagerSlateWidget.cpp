@@ -32,9 +32,6 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
 void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 {
-	
-
-
 	CommandsManager = InArgs._CommandsManager;
 
 	bDisplayCommandValueType = InArgs._DisplayCommandValueType;
@@ -57,10 +54,6 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 	HeaderValue.HAlignHeader(EHorizontalAlignment::HAlign_Center);
 	HeaderValue.VAlignCell(EVerticalAlignment::VAlign_Center);
 	
-
-
-
-	
 	HeaderRow->AddColumn(SHeaderRow::Column("CommandType")
 		.DefaultLabel(FText::FromString("Type"))
 		.ManualWidth(60.0f)
@@ -70,8 +63,6 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 		.ShouldGenerateWidget_Lambda([this]() { return bDisplayCommandType; })
 	);
 	
-
-
 	HeaderRow->AddColumn(SHeaderRow::Column("Type")
 		.DefaultLabel(FText::FromString("Param Type"))
 		.DefaultTooltip(FText::FromString("Variable Type"))
@@ -81,7 +72,6 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 		.ManualWidth(80)
 		.ShouldGenerateWidget_Lambda([this]() { return bDisplayCommandValueType; })
 	);
-	
 	
 	FString SetByDescription = TEXT( 
 		"Represents where variable was set, description below in order from lowest priority to highest:" LINE_TERMINATOR LINE_TERMINATOR
@@ -97,8 +87,6 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 		"Console:				Editor UI or console in game or editor" 
 	);
 
-
-
 	HeaderRow->AddColumn(SHeaderRow::Column("SetBy")
 		.DefaultLabel(FText::FromString("Set By"))
 		.DefaultTooltip(FText::FromString(SetByDescription))
@@ -110,7 +98,6 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 
 	);
 
-	
 	HeaderRow->AddColumn(SHeaderRow::Column("Current Value")
 		.DefaultLabel(FText::FromString("Current Engine Value"))
 		.DefaultTooltip(FText::FromString("Value that is currently set in Engine" LINE_TERMINATOR "Modifying it instantly executes command with that value!"))
@@ -119,8 +106,6 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 		.VAlignCell(EVerticalAlignment::VAlign_Center)
 	);
 		
-
-
 	CommandsListView = SNew(SListView< TSharedPtr<FConsoleCommand> >)
 		.ListItemsSource(&CommandsManager->GetCurrentSharedCommands())
 		.ItemHeight(25.0f)
@@ -129,7 +114,6 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 		.HeaderRow(HeaderRow)
 		.OnContextMenuOpening_Raw(this, &SConsoleManagerSlateWidget::GetListViewContextMenu);
 
-	//CommandsListView->header
 
 	//CommandsListView->SetOnEntryInitialized(SListView<TSharedPtr<FConsoleCommand>>::FOnEntryInitialized::CreateLambda(
 	//	[=](TSharedPtr<FConsoleCommand> Item, const TSharedRef<ITableRow> Row) {
@@ -147,58 +131,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 
 	CommandsScrollBox = SNew(SScrollBox);
 
-	//FConsoleManagerCommands::Get().GroupContextMenu = MakeShareable(new FUICommandList);
-
-
-	//FPointerEventHandler GroupsScrollBoxRightClick;
-
-	//GroupsScrollBoxRightClick.BindLambda(
-	//	[=](const FGeometry& Geometry, const FPointerEvent& MouseEvent)
-	//	{
-	//		FMenuBuilder MenuBuilder(true, NULL, TSharedPtr<FExtender>());
-
-	//		{
-	//			MenuBuilder.BeginSection("Group", LOCTEXT("GroupContextMenu_Header_Group", "Group"));
-	//			{
-
-	//				MenuBuilder.AddMenuEntry
-	//				(
-	//					LOCTEXT("GroupContextMenu_NewGroup", "Add New"),
-	//					LOCTEXT("GroupContextMenu_NewGroup_Desc", "Add new group"),
-	//					FSlateIcon(),
-	//					FUIAction(FExecuteAction::CreateLambda(
-	//						[=]() {
-	//							HandleNewGroup();
-	//							
-
-	//						}),
-	//						FCanExecuteAction()),
-	//					NAME_None,
-	//					EUserInterfaceActionType::Button
-	//				);
-	//			}
-	//			MenuBuilder.EndSection();
-	//		}
-
-	//		if (MouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
-	//		{
-	//			TSharedRef<SWidget> MenuContents = MenuBuilder.MakeWidget();
-	//			FWidgetPath WidgetPath = MouseEvent.GetEventPath() != nullptr ? *MouseEvent.GetEventPath() : FWidgetPath();
-	//			FSlateApplication::Get().PushMenu(AsShared(), WidgetPath, MenuContents, MouseEvent.GetScreenSpacePosition(), FPopupTransitionEffect(FPopupTransitionEffect::ContextMenu));
-
-	//			return FReply::Handled();
-	//		}
-	//	
-	//		return FReply::Unhandled();
-	//		
-	//	});
-
 	//Validate all console commands to check if any existing in AllCommands //git
-	
-	
-
-	//TabWellContentBackground = SNew(SBorder)
-	//	.BorderBackgroundColor(FSlateColor(FLinearColor(1.0f, 0., 0., 1.0f)));
 
 	SDockTab::Construct(SDockTab::FArguments()
 	.TabRole(ETabRole::NomadTab)
@@ -327,13 +260,6 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 						.Content()
 						[
 							SNew(SOverlay)
-							//+ SOverlay::Slot()
-							//.HAlign(EHorizontalAlignment::HAlign_Center)
-							//.VAlign(EVerticalAlignment::VAlign_Center)
-							//[
-							//	SNew(SImage)
-							//	.Image(FConsoleManagerStyle::Get().GetBrush("Image.GlobalPresetButton"))
-							//]
 							+ SOverlay::Slot()
 							.HAlign(EHorizontalAlignment::HAlign_Center)
 							.VAlign(EVerticalAlignment::VAlign_Top)
@@ -355,42 +281,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 							}
 						})
 					]
-					/*SNew(SButton)
-					.ButtonStyle(&FConsoleManagerStyle::Get().GetWidgetStyle<FButtonStyle>("EmptyButton"))
-					.ForegroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f))
-					.Content()
-					[
-						SNew(SOverlay)
-						+ SOverlay::Slot()
-						.HAlign(EHorizontalAlignment::HAlign_Center)
-						.VAlign(EVerticalAlignment::VAlign_Center)
-						[
-							SNew(SImage)
-							.Image(FConsoleManagerStyle::Get().GetBrush("Image.GlobalPresetButton"))
-						]
-						+ SOverlay::Slot()
-						.HAlign(EHorizontalAlignment::HAlign_Center)
-						.VAlign(EVerticalAlignment::VAlign_Top)
-						.Padding(0.f, 7.f, 0.f, 0.f)
-						[
-							SNew(STextBlock)
-							.Text(LOCTEXT("HistoryButton", "History"))
-							.TransformPolicy(ETextTransformPolicy::ToUpper)
-							.Font(FConsoleManagerStyle::Get().GetFontStyle("GlobalPresetButtonFont"))
-						]
-					
-					]
-					.OnClicked(FOnClicked::CreateLambda([=]() {
-						if(CommandsManager->SetActiveHistory())
-						{
-							GenerateCommandsScrollBox();
-							CommandsListView->ScrollToBottom();
-						}
-						
-						return FReply::Handled();
-					}))*/
 				]
-
 				+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
@@ -413,21 +304,20 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 								.Text(LOCTEXT("SnapshotButton", "Snapshot"))
 								.TransformPolicy(ETextTransformPolicy::ToUpper)
 								.Font(FConsoleManagerStyle::Get().GetFontStyle("GlobalPresetButtonFont"))
-								]
+							]
 
-								]
-								.IsChecked(this, &SConsoleManagerSlateWidget::GetCurrentSelectedGroup, CommandsManager->GetSnapshot().Id)
-								.OnCheckStateChanged_Lambda([=](ECheckBoxState NewRadioState) {
-									if (CommandsManager->SetActiveSnapshot())
-									{
-										GenerateCommandsScrollBox();
+						]
+						.IsChecked(this, &SConsoleManagerSlateWidget::GetCurrentSelectedGroup, CommandsManager->GetSnapshot().Id)
+						.OnCheckStateChanged_Lambda([=](ECheckBoxState NewRadioState) {
+							if (CommandsManager->SetActiveSnapshot())
+							{
+								GenerateCommandsScrollBox();
 
-										CommandsListView->ScrollToTop();
-									}
-							})
+								CommandsListView->ScrollToTop();
+							}
+						})
 					]
 				]
-
 				+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
@@ -454,23 +344,14 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 				+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
-					//SNew(SBorder)
-					//.Visibility(EVisibility::SelfHitTestInvisible)
-
-					////.OnMouseButtonUp(GroupsScrollBoxRightClick)
-					//[
-						GroupsScrollBox.ToSharedRef()
-					//]
-					
+					GroupsScrollBox.ToSharedRef()
 				]
 			]// Left Panel
-		
 			+ SHorizontalBox::Slot()
 			.FillWidth(1)
 			.Padding(5.0f, 5.0f, 5.0f, 0)
 			[// Right Panel
 				SNew(SVerticalBox)
-
 				+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
@@ -540,8 +421,6 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 										.Text(FText::FromString("Show commands"))
 									]
 								]
-
-							
 							]
 							+ SWrapBox::Slot()
 							.FillLineWhenSizeLessThan(513.0f)
@@ -558,9 +437,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 									.OnCheckStateChanged_Lambda([=](ECheckBoxState State) {
 
 										bShowExec = (bool)State;
-
 										FilterList();
-
 									})
 									.Content()
 									[
@@ -642,28 +519,10 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 			]
 		]
 	]);
-		
-
-	//ChildSlot
-	//.VAlign(VAlign_Fill)
-	//.HAlign(HAlign_Fill)
-	//[
-	//	Content
-	//];
 
 	CommandsManager->OnDataRefreshed.BindSP(this, &SConsoleManagerSlateWidget::RefreshEverything);
 	CommandsManager->OnGroupsRefresh.BindSP(this, &SConsoleManagerSlateWidget::GroupsRefresh);
 	CommandsManager->OnCommandsRefresh.BindSP(this, &SConsoleManagerSlateWidget::CommandsRefresh);
-
-	//CommandsManager->OnDataRefreshed.BindLambda(
-	//	[this]() {
-
-	//		GenerateGroupsScrollBox();
-	//		GenerateCommandsScrollBox();
-	//		UE_LOG(LogTemp, Warning, TEXT("DATA NEEDS REFRESH!"));
-	//	}
-	//);
-
 
 	GenerateGroupsScrollBox();
 	GenerateCommandsScrollBox();
@@ -694,7 +553,7 @@ EActiveTimerReturnType SConsoleManagerSlateWidget::SetFocusPostConstruct(double 
 			{
 				bSucceeded = true;
 			}
-			});
+		});
 
 		if (bSucceeded)
 		{
@@ -816,14 +675,6 @@ void SConsoleManagerSlateWidget::FilterList()
 	}
 }
 
-void SConsoleManagerSlateWidget::OnAddGroupButtonClicked()
-{
-	//CommandsManager->AddNewGroup("NewGroup");
-
-	//GenerateGroupsScrollBox();
-
-}
-
 void SConsoleManagerSlateWidget::OnSelectGroupClicked(ECheckBoxState NewRadioState, FGuid Id)
 {
 	if (CommandsManager->SetActiveGroup(Id))
@@ -831,10 +682,7 @@ void SConsoleManagerSlateWidget::OnSelectGroupClicked(ECheckBoxState NewRadioSta
 		SearchBox->SetText(FText::GetEmpty());
 		GenerateCommandsScrollBox();
 	}
-
-	//return FReply::Handled();
 }
-
 
 TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedPtr<FConsoleCommand> Item, const TSharedRef<STableViewBase>& OwnerTable)
 {
@@ -845,8 +693,6 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 	const bool bDisplayIcons = CurrentGroup.Type != EGroupType::AllCommands;
 
 	TSharedRef<SConsoleCommandListRow> Row = SNew(SConsoleCommandListRow, OwnerTable).Item(Item).bIsValid(Item->IsValid()).bDisplayIcons(bDisplayIcons).bIsEditable(CurrentGroup.bIsEditable);
-
-	//OwnerTable->
 
 	Row->SetOnCommandValueEdit(FOnCommandValueEdit::CreateLambda(
 		[=](TSharedPtr<FConsoleCommand> Command, int32 Index)
@@ -869,42 +715,10 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 	Row->SetOnEngineValueEditing(FOnSimpleCommand::CreateLambda(
 		[=](TSharedPtr<FConsoleCommand> Command)
 		{
-			//int32 IndexInList;
-			//TSharedPtr<ITableRow> Widget = CommandsListView->WidgetFromItem(Command);
-			//if (Widget.IsValid())
-			//{
-			//	TSharedPtr<SConsoleCommandListRow> NewRow = StaticCastSharedPtr<SConsoleCommandListRow>(Widget);
-
-			//	if (NewRow.IsValid())
-			//	{
-			//		IndexInList = NewRow->GetIndexInList();
-			//	}
-			//}
-
-			//FChildren* Children = CommandsListView->GetAllChildren();
-
-			//for (int i = 0; i < Children->Num(); i++)
-			//{
-			//	Children->GetChildAt(i)->
-			//}
-
-			//FChildren* Children = CommandsListView->
-
-			//for (int i = 0; i < Children->Num(); i++)
-			//{
-				//CommandsListView->ItemFromWidget(TSharedPtr<SWidget>(Children->GetChildAt(i)).Get());
-				//UE_LOG(LogTemp, Warning, TEXT("%s"), *Children->GetChildAt(i)->GetType().ToString());
-				
-			//}
-
-			//bNeedsRefresh = false;
+			//Should we refresh after we change this?
 			CommandsManager->UpdateCurrentEngineValue(Command.ToSharedRef().Get());
-			//bNeedsRefresh = true;
-
 		}
 	));
-
-	
 
 	//Do not allow to reorder elements in all commands nor history
 	if (!CurrentGroup.bIsEditable)
@@ -965,8 +779,6 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 			return FReply::Handled();
 		}
 	));
-
-	
 
 	return Row;
 }
@@ -1074,45 +886,7 @@ void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
 
 		for (int j = 0; j < Groups.Num(); j++)
 		{
-			
 			const FCommandGroup& Group = Groups[j];
-
-			//Unnecessary copy was made when capturing not by reference   --- add & to group or remove completely
-			//TAttribute<FText> GroupName = TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateLambda([Group]() {
-			//	return FText::FromString(Group.Name);
-			//	}));
-
-
-
-			//SNew(SCheckBox)
-			//	.Type(ESlateCheckBoxType::ToggleButton)
-			//	.ForegroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f))
-			//	.Style(&FConsoleManagerStyle::Get().GetWidgetStyle<FCheckBoxStyle>("GlobalPresetToggleButton"))
-			//	.Content()
-			//	[
-			//		SNew(SOverlay)
-			//		+ SOverlay::Slot()
-			//	.HAlign(EHorizontalAlignment::HAlign_Center)
-			//	.VAlign(EVerticalAlignment::VAlign_Top)
-			//	.Padding(0.f, 7.f, 0.f, 0.f)
-			//	[
-			//		SNew(STextBlock)
-			//		.Text(LOCTEXT("AllCommandsButton", "All Commands"))
-			//	.TransformPolicy(ETextTransformPolicy::ToUpper)
-			//	.Font(FConsoleManagerStyle::Get().GetFontStyle("GlobalPresetButtonFont"))
-			//	]
-
-			//	]
-			//.IsChecked(this, &SConsoleManagerSlateWidget::GetCurrentSelectedGroup, CommandsManager->GetAllCommands()->Id)
-			//	.OnCheckStateChanged_Lambda([=](ECheckBoxState NewRadioState) {
-			//	if (CommandsManager->SetActiveAllCommands())
-			//	{
-			//		GenerateCommandsScrollBox();
-
-			//		CommandsListView->ScrollToTop();
-			//	}
-			//		})
-
 
 			FGuid GroupId = Group.Id;
 
@@ -1234,13 +1008,13 @@ void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
 				});
 
 			ContainerVBox->AddSlot()
+			[
+				SNew(SBox)
+				.Padding(FMargin(20.f, 0.f, 0.f, 2.f))
 				[
-					SNew(SBox)
-					.Padding(FMargin(20.f, 0.f, 0.f, 2.f))
-					[
-						Button
-					]
-				];
+					Button
+				]
+			];
 		}
 	}
 }
@@ -1258,7 +1032,6 @@ void SConsoleManagerSlateWidget::GenerateCommandsScrollBox()
 		{
 			CommandsListView->GetHeaderRow()->InsertColumn(HeaderValue, 1);
 		}
-		
 	}
 
 	FilterList();
@@ -1274,8 +1047,8 @@ void SConsoleManagerSlateWidget::RemoveGroup(FGuid Id)
 	{
 	case EAppReturnType::Type::Yes:
 		CommandsManager->RemoveGroup(Id);
-		GenerateGroupsScrollBox();
-		GenerateCommandsScrollBox();
+		//Refresh everything in case this was our selected group
+		RefreshEverything();
 		break;
 
 	case EAppReturnType::Type::No:
@@ -1287,7 +1060,7 @@ void SConsoleManagerSlateWidget::RemoveGroup(FGuid Id)
 void SConsoleManagerSlateWidget::DuplicateGroup(FGuid Id)
 {
 	CommandsManager->DuplicateGroup(Id);
-	GenerateGroupsScrollBox();
+	GroupsRefresh();
 }
 
 void SConsoleManagerSlateWidget::EditGroup(FGuid Id)
@@ -1517,7 +1290,6 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 	TArray<TSharedPtr<FConsoleCommand>> SelectedCommands;
 	CommandsListView->GetSelectedItems(SelectedCommands);
 	
-
 	// If we right clicked on listview and not any entry
 	if (SelectedCommands.Num() == 0 && Group.bIsEditable)
 	{
@@ -1546,7 +1318,6 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 		{
 			MenuBuilder.BeginSection("Command", LOCTEXT("CommandContextMenu_Header_Command", "Command"));
 			{
-
 				const FText ExecuteName = SelectedCommands.Num() > 1 ? FText::FromString("Execute Selected") : FText::FromString("Execute");
 				
 				EGroupType GroupType = Group.Type;
@@ -1652,9 +1423,6 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 							EUserInterfaceActionType::Button
 						);
 
-
-
-
 						FUIAction Action_AddNote(
 							FExecuteAction::CreateLambda(
 								[=]()
@@ -1685,8 +1453,6 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 							NAME_None,
 							EUserInterfaceActionType::Button
 						);
-
-
 					}
 					
 					FUIAction Action_RemoveCommands(
@@ -1720,9 +1486,6 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 						EUserInterfaceActionType::Button
 					);
 				}
-
-
-
 			}
 			MenuBuilder.EndSection();
 
@@ -1731,10 +1494,8 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 				MenuBuilder.BeginSection("Group", LOCTEXT("GroupContextMenu_Header_Group", "Group"));
 
 				FNewMenuDelegate Delegate;
-
 				Delegate.BindLambda([=](FMenuBuilder& SubMenuBuilder) 
 				{
-
 					FUIAction Action_AddCommandToNewGroup(
 					FExecuteAction::CreateLambda(
 						[=]() 
@@ -1780,13 +1541,9 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 							EUserInterfaceActionType::Button
 						);
 					}
-
 				});
 
 				MenuBuilder.AddSubMenu(FText::FromString("Add To Group"), FText::FromString("Add to existing or create new group"), Delegate);
-
-
-
 
 				MenuBuilder.EndSection();
 			}
@@ -1834,8 +1591,6 @@ bool SConsoleManagerSlateWidget::HandleNewGroup(FString& OutName, UCommandsConta
 	.OnSelectionChanged_Lambda([&SelectedContainer](UCommandsContainer* NewSelectedContainer, ESelectInfo::Type Info) {
 		SelectedContainer = NewSelectedContainer;
 	});
-
-	
 
 	TSharedRef<SWidget> ContentWidget =
 		SNew(SBox)
@@ -1886,10 +1641,6 @@ bool SConsoleManagerSlateWidget::HandleNewGroup(FString& OutName, UCommandsConta
 		}
 	);
 	
-
-
-	
-
 	TSharedRef<SCustomDialog> NewGroupDialog = SNew(SCustomDialog)
 		.Title(FText(LOCTEXT("NewGroupDialog_Title", "New Group")))
 		.DialogContent(ContentWidget)
@@ -1944,7 +1695,6 @@ void SConsoleManagerSlateWidget::HandleNewCommands()
 			]
 		];
 
-
 	TSharedRef<SCustomDialog> NewCommandDialog = SNew(SCustomDialog)
 		.Title(FText(LOCTEXT("NewCommandDialog_Title", "New Commands")))
 		.DialogContent(ContentWidget)
@@ -1957,8 +1707,6 @@ void SConsoleManagerSlateWidget::HandleNewCommands()
 
 	// returns 0 when OK is pressed, 1 when Cancel is pressed, -1 if the window is closed
 	const int ButtonPressed = NewCommandDialog->ShowModal();
-
-
 
 	switch (ButtonPressed)
 	{
@@ -2090,9 +1838,6 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 				];
 			}
 
-
-
-
 			CommandWidget->AddSlot()
 			.Padding(2.0f, 0.f, 2.f, 0.f)
 			.AutoWidth()
@@ -2106,7 +1851,6 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 					.ContentPadding(0)
 					.Content()
 					[
-
 						SNew(SImage)
 						.Image(FConsoleManagerStyle::Get().GetBrush("ConsoleManager.ExecAction"))
 						.ToolTipText(FText::FromString("Execute command"))
@@ -2117,7 +1861,6 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 						if (OnExecuteCommand.IsBound())
 						{
 							OnExecuteCommand.Execute(Item.ToSharedRef().Get());
-
 							Item->Refresh();
 						}
 
@@ -2126,9 +1869,6 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 					)
 				]
 			];
-
-
-
 		}
 
 		return CommandWidget;
@@ -2183,7 +1923,6 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 				else if( How == ETextCommit::OnCleared)
 				{
 				}
-
 			}
 		);
 
@@ -2201,7 +1940,6 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 				]
 			];
 
-		
 		return ParentWidget;
 	}
 	else if (ColumnName.IsEqual(FName(TEXT("Type"))))
@@ -2221,7 +1959,6 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 	}
 	else if (ColumnName.IsEqual(FName(TEXT("Current Value"))))
 	{
-
 		TSharedPtr<FConsoleCommand> LocalCmd = Item;
 
 		TAttribute<FText> CurrentValueText = TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateLambda([LocalCmd]() {
@@ -2283,7 +2020,6 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 
 		CurrentValueEditText = EditText;
 
-
 		const bool bContainsValueColumn_Copy = bContainsValueColumn;
 		TAttribute<FSlateColor> BorderColor = TAttribute<FSlateColor>::Create(TAttribute<FSlateColor>::FGetter::CreateLambda([LocalCmd, bContainsValueColumn_Copy]() {
 
@@ -2295,11 +2031,8 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 			const bool AreValuesEqual = LocalCmd->GetValue().Equals(LocalCmd->GetCurrentValue());
 			const FSlateColor RetColor = AreValuesEqual ? FConsoleManagerStyle::Get().GetSlateColor("MatchingValues") : FConsoleManagerStyle::Get().GetSlateColor("NotMatchingValues");
 
-
 			return RetColor;
 		}));
-
-
 
 		TSharedRef<SWidget> ParentWidget = SNew(SBox)
 			.VAlign(EVerticalAlignment::VAlign_Fill)
@@ -2314,7 +2047,6 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 					EditText
 				]
 			];
-
 
 		return ParentWidget;
 	}
@@ -2338,11 +2070,8 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 			.Text(FText::FromString(Type));
 	}
 
-
-
 	return SNullWidget::NullWidget;
 }
-
 
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
 

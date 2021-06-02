@@ -22,7 +22,6 @@ public:
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
 
-
 	void OpenTab();
 
 	void OpenSettings();
@@ -39,17 +38,11 @@ public:
 		return FModuleManager::LoadModuleChecked< FConsoleManagerModule >(ModuleName);
 	}
 
-	
-
 private:
 
 	void ApplySettings();
-
 	void RegisterMenus();
-
 	void AskForDefaultGroup();
-
-	
 
 	TSharedRef<class SDockTab> OnSpawnPluginTab(const class FSpawnTabArgs& SpawnTabArgs);
 
@@ -60,7 +53,6 @@ private:
 	TWeakPtr<class SConsoleManagerSlateWidget> ActiveTab;
 
 	TSharedPtr<FCommandsManager> CommandsManager;
-
 
 	/** The collection of registered asset type actions. */
 	TArray<TSharedRef<IAssetTypeActions>> RegisteredAssetTypeActions;

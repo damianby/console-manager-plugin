@@ -28,11 +28,9 @@ class CONSOLEMANAGER_API UConsoleManagerSettings : public UObject {
 public:
 	UConsoleManagerSettings(const FObjectInitializer& ObjectInitializer);
 
-
 	/** Global shortcut to open manager */
 	UPROPERTY(EditAnywhere, config, Category = Shortcuts, meta = (DisplayName = "Open manager shortcut"))
 		FInputChord OpenShortcut = FInputChord();
-
 
 	/** Commands font size */
 	UPROPERTY(EditAnywhere, config, Category = UI, meta = (DisplayName = "Commands font size"))
@@ -75,7 +73,6 @@ public:
 
 	UPROPERTY(EditAnywhere, config, Category = Startup, meta = (DisplayName = "Asset to load", EditCondition = "StartupOption==EConsoleManagerStartupOption::Specified"))
 		TSoftObjectPtr<UCommandsContainer> AssetToLoad;
-
 };
 
 

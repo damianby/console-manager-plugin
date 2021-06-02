@@ -72,8 +72,6 @@ FConsoleCommand::FConsoleCommand(const FConsoleCommand& Copy)
 	Value = Copy.Value;
 	RefreshExec();
 
-
-
 	CurrentValue = Copy.CurrentValue;
 	ObjType = Copy.ObjType;
 	Type = Copy.Type;
@@ -84,11 +82,6 @@ FConsoleCommand::FConsoleCommand(const FConsoleCommand& Copy)
 
 	
 	UE_LOG(LogTemp, Warning, TEXT("Data is %s : %s : %s"), *Name, *Value, *ExecCommand);
-	//}
-	//else
-	//{
-	//	FConsoleCommand(Copy.ExecCommand);
-	//}
 }
 
 

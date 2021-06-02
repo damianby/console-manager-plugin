@@ -69,8 +69,6 @@ void FConsoleManagerModule::StartupModule()
 			
 			CommandsManager->ShouldLoadAllContainers(GetMutableDefault<UConsoleManagerSettings>()->StartupOption == EConsoleManagerStartupOption::AllContainers);
 			
-
-
 			ApplySettings();
 
 			return true;
@@ -120,9 +118,6 @@ void FConsoleManagerModule::ShutdownModule()
 	if (ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings"))
 		SettingsModule->UnregisterSettings("Editor", "Plugins", "Console Manager");
 
-
-	CommandsManager->SaveCommands();
-
 	UToolMenus::UnRegisterStartupCallback(this);
 
 	UToolMenus::UnregisterOwner(this);
@@ -152,9 +147,6 @@ void FConsoleManagerModule::OpenTab()
 {
 	bIsTabAutostarted = false;
 
-	UE_LOG(LogTemp, Warning, TEXT("Open tab called!"));
-
-
 	if (ActiveTab.IsValid())
 	{
 		ActiveTab.Pin()->DrawAttention();
@@ -162,23 +154,6 @@ void FConsoleManagerModule::OpenTab()
 	}
 	else
 	{
-		/*TSharedPtr<SDockTab> TabAlive = FGlobalTabmanager::Get()->FindExistingLiveTab(ConsoleManagerTabName);
-
-		if (TabAlive.IsValid())
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Tab is alive!"));
-
-			TSharedPtr<SConsoleManagerSlateWidget> CMWidget = StaticCastSharedPtr<SConsoleManagerSlateWidget>(TabAlive);
-			if (CMWidget.IsValid())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("CM is valid"));
-				FGlobalTabmanager::Get()->TryInvokeTab(ConsoleManagerTabName);
-				CMWidget->TabActivated();
-			}
-		}*/
-
-		UE_LOG(LogTemp, Warning, TEXT("Tab alive is not found!"));
-
 		EConsoleManagerStartupOption StartupOption = GetMutableDefault<UConsoleManagerSettings>()->StartupOption;
 
 		switch (StartupOption)
@@ -191,7 +166,6 @@ void FConsoleManagerModule::OpenTab()
 
 			for (auto& SoftObjPtr : LastOpenedObjs)
 			{
-				
 				UCommandsContainer* ExistingObj = SoftObjPtr.Get();
 				if (ExistingObj)
 				{
@@ -215,7 +189,6 @@ void FConsoleManagerModule::OpenTab()
 			if (LoadedAsset)
 			{
 				CommandsManager->Initialize(TArray<UCommandsContainer*>{LoadedAsset});
-
 			}
 			else
 			{
@@ -229,7 +202,6 @@ void FConsoleManagerModule::OpenTab()
 		default:
 
 			CommandsManager->Initialize();
-
 			break;
 		}
 		
@@ -273,17 +245,6 @@ void FConsoleManagerModule::OpenTab(const TArray<UObject*>& Containers)
 	else {
 		FGlobalTabmanager::Get()->TryInvokeTab(ConsoleManagerTabName);
 	}
-
-	//TSharedPtr<SDockTab> TabAlive = FGlobalTabmanager::Get()->TryInvokeTab(ConsoleManagerTabName);
-
-	//if (TabAlive.IsValid())
-	//{
-	//	TSharedPtr<SConsoleManagerSlateWidget> CMWidget = StaticCastSharedPtr<SConsoleManagerSlateWidget>(TabAlive);
-	//	if (CMWidget.IsValid())
-	//	{
-	//		CMWidget->TabActivated();
-	//	}
-	//}
 }
 
 void FConsoleManagerModule::ApplySettings()
@@ -412,25 +373,15 @@ void FConsoleManagerModule::AskForDefaultGroup()
 
 TSharedRef<class SDockTab> FConsoleManagerModule::OnSpawnPluginTab(const FSpawnTabArgs& SpawnTabArgs)
 {
-
 	//TSharedRef<SDockTab> Tab = SNew(SDockTab)
 	//	.TabRole(ETabRole::NomadTab);
-
 
 	//TWeakObjectPtr<UDeviceProfileManager> DevProf = TWeakObjectPtr<UDeviceProfileManager>(&UDeviceProfileManager::Get());
 
 	//TSharedRef<SWidget> ProfCr = SNew(SDeviceProfileCreateProfilePanel, DevProf);
 
-
-
 	//Tab->SetContent(ProfCr);
-
-
 	//return Tab;
-
-
-
-
 
 	//If there isnt any group created on window open ask user if he wants to create new with all variables
 	//if (CommandsManager->GetCommandGroups().Num() == 0)
@@ -502,12 +453,10 @@ TSharedRef<class SConsoleManagerSlateWidget> FConsoleManagerModule::BuildUI()
 		.DisplaySetByValue(DisplaySetByValue)
 		.DisplayCommandType(DisplayCommandType);
 
-
 	SDockTab::FOnTabClosedCallback ClosedTabDelegate;
 
 	ClosedTabDelegate.BindLambda([this](TSharedRef<SDockTab> DockTab)
 		{
-
 			const TArray<UCommandsContainer*>& Containers = CommandsManager->GetCommandsContainers();
 
 			ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings");
@@ -521,8 +470,6 @@ TSharedRef<class SConsoleManagerSlateWidget> FConsoleManagerModule::BuildUI()
 			GetMutableDefault<UConsoleManagerSettings>()->LastSelectedObjs = LastSelectedObjs;
 			auto Section = SettingsModule->GetContainer("Editor")->GetCategory("Plugins")->GetSection("Console Manager");
 			Section->Save();
-
-			UE_LOG(LogTemp, Warning, TEXT("Closed window test"));
 
 			//CommandsManager->SaveToAssets();
 

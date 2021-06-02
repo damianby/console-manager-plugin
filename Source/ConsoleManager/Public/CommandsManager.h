@@ -36,14 +36,12 @@ public:
 	void Initialize(TArray<UCommandsContainer*> Containers);
 
 	
-
 	FORCEINLINE const TArray<TSharedPtr<FConsoleCommand>>& GetCurrentSharedCommands() const { return CurrentCommandsShared; }
 	FORCEINLINE const FCommandGroup& GetCurrentCommandGroup() const { return *CurrentGroup; };
 	FORCEINLINE const TArray<FConsoleCommand>& GetCurrentCommands() const { return CurrentGroup->Commands; }
 	FORCEINLINE const FCommandGroup* GetAllCommands() const { return &AllCommands; }
 	FORCEINLINE const FCommandGroup* GetHistory() const { return &ConsoleHistory; }
 	FORCEINLINE const FCommandGroup& GetSnapshot() const { return Snapshot; }
-
 
 	const TArray<TPair<FString, FGuid>> GetGroupList();
 	bool SetActiveHistory();
@@ -66,17 +64,10 @@ public:
 	bool RenameGroup(FGuid Id, const FString& NewName);
 	void DuplicateGroup(FGuid Id);
 
-
-
-
 	void ReorderCommandInCurrentGroup(int32 CurrentId, int32 NewId);
 	void DuplicateCommand(int32 Id);
 	void RemoveCommands(TArray<int32> Ids);
 	void SetNoteCommand(int32 Id, const FString& NewNote);
-
-
-
-
 
 	void AddCommandsToCurrentGroup(TArray<TSharedPtr<FConsoleCommand>> Commands);
 	void AddCommandsToGroup(FGuid Id, TArray<TSharedPtr<FConsoleCommand>> Commands);
@@ -85,19 +76,12 @@ public:
 
 	void ReplaceCommandInCurrentGroup(int32 Id, FConsoleCommand& NewCommand);
 
-
-	
-
 	const FConsoleCommand& GetConsoleCommand(int Id);
 
 	bool ExecuteCommand(const FConsoleCommand& Command);
 	bool ExecuteCommand(FConsoleCommand& Command);
 	void ExecuteMultipleCommands(TArray<TSharedPtr<FConsoleCommand>> Commands);
 	void ExecuteGroup(const FGuid& Id);
-
-
-
-	bool SaveCommands();
 
 	void UpdateHistory();
 
@@ -124,7 +108,6 @@ private:
 	FCommandGroup& AddNewGroup_Internal(const FString& Name, UCommandsContainer* Container, EGroupType Type = EGroupType::Default);
 
 	TArray<UCommandsContainer*> LoadAllContainers();
-
 
 
 	void AddCommandsToGroup(FCommandGroup* Group, TArray<TSharedPtr<FConsoleCommand>> Commands);

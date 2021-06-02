@@ -9,16 +9,7 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SGroupButton::Construct(const FArguments& InArgs) 
 {
 	SCheckBox::Construct(InArgs);
-	
-	/*
-	ChildSlot
-	[
-		// Populate the widget
-	];
-	*/
 }
-
-
 
 FReply SGroupButton::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
@@ -62,8 +53,5 @@ FReply SGroupButton::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointer
 //
 //	return Reply;
 //}
-
-
-
 
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION

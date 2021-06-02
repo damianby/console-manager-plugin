@@ -22,8 +22,7 @@ public:
 		, DefaultNotMatchingValues_Ref(MakeShareable(new FLinearColor(1.f, 0.f, 0.f, 1.f)))
 		, DefaultButtonHover_Ref(MakeShareable(new FLinearColor(0.728f, 0.364f, 0.003f)))
 		, DefaultButtonPress_Ref(MakeShareable(new FLinearColor(0.701f, 0.225f, 0.003f)))
-	{
-		
+	{	
 	}
 
 
@@ -40,7 +39,6 @@ public:
 
 	const TSharedRef<FLinearColor> DefaultButtonHover_Ref;
 	const TSharedRef<FLinearColor> DefaultButtonPress_Ref;
-
 };
 
 
@@ -88,7 +86,6 @@ void FConsoleManagerStyle::SetCommandsFontSize(int32 NewSize)
 
 	StyleInstance->Set("Fonts.Commands", FCoreStyle::GetDefaultFontStyle("Regular", NewSize));
 	StyleInstance->Set("Fonts.FontSize", static_cast<float>(NewSize));
-	
 }
 
 #define IMAGE_BRUSH( RelativePath, ... ) FSlateImageBrush( Style->RootToContentDir( RelativePath, TEXT(".png") ), __VA_ARGS__ )
@@ -130,13 +127,11 @@ TSharedRef< FSlateStyleSet > FConsoleManagerStyle::Create()
 
 	Style->Set("ConsoleManager.ExecAction", ExecActionBrush);
 
-
 	FSlateImageBrush* NoteBrush = new IMAGE_BRUSH(TEXT("Note_16"), Icon16x16);
 	NoteBrush->DrawAs = ESlateBrushDrawType::Box;
 	NoteBrush->Margin = FMargin(0);
 
 	Style->Set("Icons.Note", NoteBrush);
-
 
 	Style->Set("Icons.Settings", new IMAGE_BRUSH(TEXT("Settings_40"), Icon27x27));
 	Style->Set("Icons.Save", new IMAGE_BRUSH(TEXT("SaveAll_40"), Icon27x27));
@@ -148,7 +143,6 @@ TSharedRef< FSlateStyleSet > FConsoleManagerStyle::Create()
 	Style->Set("Icons.Warning", new IMAGE_BRUSH(TEXT("Warning_16"), Icon16x16));
 	Style->Set("Icons.Unknown", new IMAGE_BRUSH(TEXT("Unknown_16"), Icon16x16));
 	Style->Set("Icons.Error", new IMAGE_BRUSH(TEXT("Error_16"), Icon16x16));
-
 
 	Style->Set("MenuButtonHoverTint", FSlateColor(FLinearColor(0, 0, 0, 0.7f)));
 	Style->Set("MenuButtonPressTint", FSlateColor(FLinearColor(0, 0, 0, 0.5f)));
@@ -186,10 +180,8 @@ TSharedRef< FSlateStyleSet > FConsoleManagerStyle::Create()
 
 	Style->Set("EmptyButton", NoBorder);
 	
-	
 	Style->Set("Fonts.Commands", FCoreStyle::GetDefaultFontStyle("Regular", 9));
 	Style->Set("Fonts.FontSize", 9.0f);
-
 
 	// Normal Text
 	const FTextBlockStyle GlobalPresetButtonFont = FTextBlockStyle()
@@ -222,7 +214,6 @@ TSharedRef< FSlateStyleSet > FConsoleManagerStyle::Create()
 		.SetCheckedPressedImage(IMAGE_BRUSH(TEXT("ButtonSolo_Clicked"), FVector2D(150, 34), FLinearColor(1.f, 1.f, 1.f, 0.5f)));
 
 	Style->Set("GlobalPresetToggleButton", GlobalPresetToggleButton);
-
 
 	const FCheckBoxStyle SinglePresetToggleButton = FCheckBoxStyle()
 		.SetCheckBoxType(ESlateCheckBoxType::ToggleButton)
