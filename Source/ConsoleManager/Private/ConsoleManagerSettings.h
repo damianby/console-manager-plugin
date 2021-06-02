@@ -47,11 +47,11 @@ public:
 
 	/** Contains information what type of variable to use (only applies to CVar's) */
 	UPROPERTY(EditAnywhere, config, Category = UI, meta = (DisplayName = "Show variable type"))
-		bool DisplayCommandValueType = true;
+		bool DisplayCommandValueType = false;
 
 	/** Shows by whom variable was set */
 	UPROPERTY(EditAnywhere, config, Category = UI, meta = (DisplayName = "Show Set By"))
-		bool DisplaySetByValue = true;
+		bool DisplaySetByValue = false;
 
 	/** Contains information of type(CVar, CCmd, Exec) */
 	UPROPERTY(EditAnywhere, config, Category = UI, meta = (DisplayName = "Show command type"))
