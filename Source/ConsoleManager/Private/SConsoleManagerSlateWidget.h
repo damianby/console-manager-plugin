@@ -189,7 +189,7 @@ public:
 		, _DisplayCommandType()
 	{}
 
-	SLATE_ARGUMENT(TWeakPtr<FCommandsManager>, CommandsManager);
+	SLATE_ARGUMENT(TSharedPtr<FCommandsManager>, CommandsManager);
 	SLATE_ARGUMENT(bool, DisplayCommandValueType);
 	SLATE_ARGUMENT(bool, DisplaySetByValue);
 	SLATE_ARGUMENT(bool, DisplayCommandType);
@@ -203,7 +203,7 @@ public:
 	void RefreshListView() { 
 		if (bNeedsRefresh)
 		{		
-			if (CommandsManager.Pin()->GetCurrentCommandGroup().Type != EGroupType::History)
+			if (CommandsManager->GetCurrentCommandGroup().Type != EGroupType::History)
 			{
 				CommandsListView->RebuildList();
 			}
@@ -250,7 +250,7 @@ private:
 
 	bool bNeedsRefresh = true;
 
-	TWeakPtr<FCommandsManager> CommandsManager;
+	TSharedPtr<FCommandsManager> CommandsManager;
 
 	TSharedPtr<SScrollBox> GroupsScrollBox;
 	TSharedPtr<SScrollBox> CommandsScrollBox;

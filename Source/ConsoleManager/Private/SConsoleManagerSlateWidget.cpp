@@ -122,7 +122,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 
 
 	CommandsListView = SNew(SListView< TSharedPtr<FConsoleCommand> >)
-		.ListItemsSource(&CommandsManager.Pin()->GetCurrentSharedCommands())
+		.ListItemsSource(&CommandsManager->GetCurrentSharedCommands())
 		.ItemHeight(25.0f)
 		.OnGenerateRow(this, &SConsoleManagerSlateWidget::OnCommandsRowGenerate)
 		.SelectionMode(ESelectionMode::Multi)
@@ -226,7 +226,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 						GetMenuButton(LOCTEXT("SnapshotButton", "Snapshot"), FConsoleManagerStyle::Get().GetBrush("Icons.Snapshot"), 
 						FOnClicked::CreateLambda([=]() {
 
-								CommandsManager.Pin()->CreateSnapshotCVars();
+								CommandsManager->CreateSnapshotCVars();
 
 								return FReply::Handled();
 							}))
@@ -240,18 +240,18 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 						GetMenuButton(LOCTEXT("RevertButton", "Revert"), FConsoleManagerStyle::Get().GetBrush("Icons.Revert"),
 						FOnClicked::CreateLambda([=]() {
 
-								CommandsManager.Pin()->RevertSnapshotCVars();
+								CommandsManager->RevertSnapshotCVars();
 								/*FString NewGroupName;
 								UCommandsContainer* SelectedContainer;
 								if (HandleNewGroup(NewGroupName, SelectedContainer))
 								{
-									CommandsManager.Pin()->CreateSnapshotCVars(NewGroupName, SelectedContainer);
+									CommandsManager->CreateSnapshotCVars(NewGroupName, SelectedContainer);
 								}*/
 
 								return FReply::Handled();
 							}),
 							TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]() {
-								return CommandsManager.Pin()->GetSnapshot().Commands.Num() > 0 ? true : false;
+								return CommandsManager->GetSnapshot().Commands.Num() > 0 ? true : false;
 								})))
 					]
 
@@ -263,7 +263,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 						GetMenuButton(LOCTEXT("SaveButton", "Save"), FConsoleManagerStyle::Get().GetBrush("Icons.Save"),
 						FOnClicked::CreateLambda([=]() {
 
-								CommandsManager.Pin()->SaveToAssets();
+								CommandsManager->SaveToAssets();
 
 								return FReply::Handled();
 							}))
@@ -296,9 +296,9 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 							]
 
 						]
-						.IsChecked(this, &SConsoleManagerSlateWidget::GetCurrentSelectedGroup, CommandsManager.Pin()->GetAllCommands()->Id)
+						.IsChecked(this, &SConsoleManagerSlateWidget::GetCurrentSelectedGroup, CommandsManager->GetAllCommands()->Id)
 						.OnCheckStateChanged_Lambda([=](ECheckBoxState NewRadioState) {
-							if (CommandsManager.Pin()->SetActiveAllCommands())
+							if (CommandsManager->SetActiveAllCommands())
 							{
 								GenerateCommandsScrollBox();
 
@@ -341,9 +341,9 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 							]
 
 						]
-						.IsChecked(this, &SConsoleManagerSlateWidget::GetCurrentSelectedGroup, CommandsManager.Pin()->GetHistory()->Id)
+						.IsChecked(this, &SConsoleManagerSlateWidget::GetCurrentSelectedGroup, CommandsManager->GetHistory()->Id)
 						.OnCheckStateChanged_Lambda([=](ECheckBoxState NewRadioState) {
-							if (CommandsManager.Pin()->SetActiveHistory())
+							if (CommandsManager->SetActiveHistory())
 							{
 								GenerateCommandsScrollBox();
 								CommandsListView->ScrollToBottom();
@@ -376,7 +376,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 					
 					]
 					.OnClicked(FOnClicked::CreateLambda([=]() {
-						if(CommandsManager.Pin()->SetActiveHistory())
+						if(CommandsManager->SetActiveHistory())
 						{
 							GenerateCommandsScrollBox();
 							CommandsListView->ScrollToBottom();
@@ -411,9 +411,9 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 								]
 
 								]
-								.IsChecked(this, &SConsoleManagerSlateWidget::GetCurrentSelectedGroup, CommandsManager.Pin()->GetSnapshot().Id)
+								.IsChecked(this, &SConsoleManagerSlateWidget::GetCurrentSelectedGroup, CommandsManager->GetSnapshot().Id)
 								.OnCheckStateChanged_Lambda([=](ECheckBoxState NewRadioState) {
-									if (CommandsManager.Pin()->SetActiveSnapshot())
+									if (CommandsManager->SetActiveSnapshot())
 									{
 										GenerateCommandsScrollBox();
 
@@ -643,11 +643,11 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 	//	Content
 	//];
 
-	CommandsManager.Pin()->OnDataRefreshed.BindSP(this, &SConsoleManagerSlateWidget::RefreshEverything);
-	CommandsManager.Pin()->OnGroupsRefresh.BindSP(this, &SConsoleManagerSlateWidget::GroupsRefresh);
-	CommandsManager.Pin()->OnCommandsRefresh.BindSP(this, &SConsoleManagerSlateWidget::CommandsRefresh);
+	CommandsManager->OnDataRefreshed.BindSP(this, &SConsoleManagerSlateWidget::RefreshEverything);
+	CommandsManager->OnGroupsRefresh.BindSP(this, &SConsoleManagerSlateWidget::GroupsRefresh);
+	CommandsManager->OnCommandsRefresh.BindSP(this, &SConsoleManagerSlateWidget::CommandsRefresh);
 
-	//CommandsManager.Pin()->OnDataRefreshed.BindLambda(
+	//CommandsManager->OnDataRefreshed.BindLambda(
 	//	[this]() {
 
 	//		GenerateGroupsScrollBox();
@@ -741,10 +741,10 @@ EActiveTimerReturnType SConsoleManagerSlateWidget::SetFocusPostConstruct(double 
 
 void SConsoleManagerSlateWidget::FilterList()
 {
-	const TArray<TSharedPtr<FConsoleCommand>>& Commands = CommandsManager.Pin()->GetCurrentSharedCommands();
+	const TArray<TSharedPtr<FConsoleCommand>>& Commands = CommandsManager->GetCurrentSharedCommands();
 
 	// We could iterate directly over commands instead of pointers for faster access
-	//const TArray<FConsoleCommand>& CommandsForIterate = CommandsManager.Pin()->GetCurrentCommands();
+	//const TArray<FConsoleCommand>& CommandsForIterate = CommandsManager->GetCurrentCommands();
 
 	bool bShowAll = bShowCCmd && bShowCVar && bShowExec && !bShowOnlyModified;
 	if (FilterString.IsEmpty() && bShowAll)
@@ -803,7 +803,7 @@ void SConsoleManagerSlateWidget::FilterList()
 
 void SConsoleManagerSlateWidget::OnAddGroupButtonClicked()
 {
-	//CommandsManager.Pin()->AddNewGroup("NewGroup");
+	//CommandsManager->AddNewGroup("NewGroup");
 
 	//GenerateGroupsScrollBox();
 
@@ -811,7 +811,7 @@ void SConsoleManagerSlateWidget::OnAddGroupButtonClicked()
 
 void SConsoleManagerSlateWidget::OnSelectGroupClicked(ECheckBoxState NewRadioState, FGuid Id)
 {
-	if (CommandsManager.Pin()->SetActiveGroup(Id))
+	if (CommandsManager->SetActiveGroup(Id))
 	{
 		SearchBox->SetText(FText::GetEmpty());
 		GenerateCommandsScrollBox();
@@ -825,7 +825,7 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 {
 	Item->Refresh();
 
-	const FCommandGroup& CurrentGroup = CommandsManager.Pin()->GetCurrentCommandGroup();
+	const FCommandGroup& CurrentGroup = CommandsManager->GetCurrentCommandGroup();
 
 	const bool bDisplayIcons = CurrentGroup.Type != EGroupType::AllCommands;
 
@@ -836,7 +836,7 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 	Row->SetOnCommandValueEdit(FOnCommandValueEdit::CreateLambda(
 		[=](TSharedPtr<FConsoleCommand> Command, int32 Index)
 		{
-			CommandsManager.Pin()->ReplaceCommandInCurrentGroup(Index, Command.ToSharedRef().Get());
+			CommandsManager->ReplaceCommandInCurrentGroup(Index, Command.ToSharedRef().Get());
 		}
 	));
 
@@ -844,7 +844,7 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 		[=](const FConsoleCommand& Command)
 		{
 			bNeedsRefresh = false;
-			CommandsManager.Pin()->UpdateCurrentEngineValue(Command);
+			CommandsManager->UpdateCurrentEngineValue(Command);
 			bNeedsRefresh = true;
 
 
@@ -883,7 +883,7 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 			//}
 
 			//bNeedsRefresh = false;
-			CommandsManager.Pin()->UpdateCurrentEngineValue(Command.ToSharedRef().Get());
+			CommandsManager->UpdateCurrentEngineValue(Command.ToSharedRef().Get());
 			//bNeedsRefresh = true;
 
 		}
@@ -902,7 +902,7 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 
 			TSharedRef<DragNDrop> DragOp = MakeShareable(new DragNDrop);
 
-			DragOp->Manager = CommandsManager.Pin();
+			DragOp->Manager = CommandsManager;
 			DragOp->Command = Item;
 
 			//auto t1 = std::chrono::high_resolution_clock::now();
@@ -910,7 +910,7 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 			CommandsListView->ClearSelection();
 			CommandsListView->SetSelection(Item, ESelectInfo::Direct);
 
-			DragOp->Id = CommandsManager.Pin()->GetCurrentSharedCommands().Find(Item);
+			DragOp->Id = CommandsManager->GetCurrentSharedCommands().Find(Item);
 
 			//auto t2 = std::chrono::high_resolution_clock::now();
 
@@ -933,16 +933,16 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 
 			if (DragConnectionOp.IsValid())
 			{
-				CommandsManager.Pin()->GetCurrentCommands();
+				CommandsManager->GetCurrentCommands();
 
-				int32 NewPosition = CommandsManager.Pin()->GetCurrentSharedCommands().Find(Item);
+				int32 NewPosition = CommandsManager->GetCurrentSharedCommands().Find(Item);
 
 				if (Zone != EItemDropZone::AboveItem)
 				{
 					NewPosition += 1;
 				}
 
-				CommandsManager.Pin()->ReorderCommandInCurrentGroup(DragConnectionOp->Id, NewPosition);
+				CommandsManager->ReorderCommandInCurrentGroup(DragConnectionOp->Id, NewPosition);
 
 				GenerateCommandsScrollBox();
 			}
@@ -962,7 +962,7 @@ void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
 
 	GroupsScrollBox->ClearChildren();
 
-	const TArray<UCommandsContainer*>& Containers = CommandsManager.Pin()->GetCommandsContainers();
+	const TArray<UCommandsContainer*>& Containers = CommandsManager->GetCommandsContainers();
 
 	for (int i = 0; i < Containers.Num(); i++)
 	{
@@ -995,7 +995,7 @@ void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
 								UCommandsContainer* SelectedContainer = nullptr;
 								if (HandleNewGroup(NewGroupName, SelectedContainer, Container))
 								{
-									CommandsManager.Pin()->CreateNewGroup(NewGroupName, SelectedContainer);
+									CommandsManager->CreateNewGroup(NewGroupName, SelectedContainer);
 								}
 									
 
@@ -1088,9 +1088,9 @@ void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
 			//	]
 
 			//	]
-			//.IsChecked(this, &SConsoleManagerSlateWidget::GetCurrentSelectedGroup, CommandsManager.Pin()->GetAllCommands()->Id)
+			//.IsChecked(this, &SConsoleManagerSlateWidget::GetCurrentSelectedGroup, CommandsManager->GetAllCommands()->Id)
 			//	.OnCheckStateChanged_Lambda([=](ECheckBoxState NewRadioState) {
-			//	if (CommandsManager.Pin()->SetActiveAllCommands())
+			//	if (CommandsManager->SetActiveAllCommands())
 			//	{
 			//		GenerateCommandsScrollBox();
 
@@ -1121,7 +1121,7 @@ void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
 			Button->ShiftRightClickDelegate.BindLambda(
 				[this, GroupId]()
 				{
-					CommandsManager.Pin()->ExecuteGroup(GroupId);
+					CommandsManager->ExecuteGroup(GroupId);
 				}
 			);
 
@@ -1146,7 +1146,7 @@ void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
 
 										if (HandleNewGroup(NewGroupName, SelectedContainer, Container))
 										{
-											CommandsManager.Pin()->CreateNewGroup(NewGroupName, SelectedContainer);
+											CommandsManager->CreateNewGroup(NewGroupName, SelectedContainer);
 										}
 									}),
 									FCanExecuteAction()),
@@ -1233,7 +1233,7 @@ void SConsoleManagerSlateWidget::GenerateGroupsScrollBox()
 void SConsoleManagerSlateWidget::GenerateCommandsScrollBox()
 {
 	CommandsListView->ClearSelection();
-	if (CommandsManager.Pin()->GetCurrentCommandGroup().Type == EGroupType::AllCommands)
+	if (CommandsManager->GetCurrentCommandGroup().Type == EGroupType::AllCommands)
 	{
 		CommandsListView->GetHeaderRow()->RemoveColumn("Value");
 	}
@@ -1258,7 +1258,7 @@ void SConsoleManagerSlateWidget::RemoveGroup(FGuid Id)
 	switch (Output)
 	{
 	case EAppReturnType::Type::Yes:
-		CommandsManager.Pin()->RemoveGroup(Id);
+		CommandsManager->RemoveGroup(Id);
 		GenerateGroupsScrollBox();
 		GenerateCommandsScrollBox();
 		break;
@@ -1271,13 +1271,13 @@ void SConsoleManagerSlateWidget::RemoveGroup(FGuid Id)
 
 void SConsoleManagerSlateWidget::DuplicateGroup(FGuid Id)
 {
-	CommandsManager.Pin()->DuplicateGroup(Id);
+	CommandsManager->DuplicateGroup(Id);
 	GenerateGroupsScrollBox();
 }
 
 void SConsoleManagerSlateWidget::EditGroup(FGuid Id)
 {
-	const FCommandGroup* Group = CommandsManager.Pin()->GetGroupById(Id);
+	const FCommandGroup* Group = CommandsManager->GetGroupById(Id);
 
 	TSharedRef<SEditableTextBox> Widget =
 		SNew(SEditableTextBox)
@@ -1324,7 +1324,7 @@ void SConsoleManagerSlateWidget::EditGroup(FGuid Id)
 	switch (ButtonPressed)
 	{
 	case 0:
-		CommandsManager.Pin()->RenameGroup(Id, Widget->GetText().ToString());
+		CommandsManager->RenameGroup(Id, Widget->GetText().ToString());
 		break;
 	}
 
@@ -1497,7 +1497,7 @@ void SConsoleManagerSlateWidget::UpdateHeaderColumnsVisibility(bool bShouldDispl
 
 TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 {
-	const FCommandGroup& Group = CommandsManager.Pin()->GetCurrentCommandGroup();
+	const FCommandGroup& Group = CommandsManager->GetCurrentCommandGroup();
 
 	TArray<TSharedPtr<FConsoleCommand>> SelectedCommands;
 	CommandsListView->GetSelectedItems(SelectedCommands);
@@ -1572,20 +1572,20 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 
 									if (bOnlyCVars)
 									{
-										CommandsManager.Pin()->ExecuteMultipleCommands(SelectedCommands);
+										CommandsManager->ExecuteMultipleCommands(SelectedCommands);
 									}
 									else
 									{
 										const FText WarningText = FText::FromString("Selected rows contain commands and/or exec's, executing multiple of these may lead to crash!\nContinue?");
 										if (DisplayExecuteWarning(WarningText))
 										{
-											CommandsManager.Pin()->ExecuteMultipleCommands(SelectedCommands);
+											CommandsManager->ExecuteMultipleCommands(SelectedCommands);
 										}
 									}
 								}
 								else
 								{
-									CommandsManager.Pin()->ExecuteCommand(SelectedCommands[0].ToSharedRef().Get());
+									CommandsManager->ExecuteCommand(SelectedCommands[0].ToSharedRef().Get());
 								}
 							}
 						
@@ -1618,7 +1618,7 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 							FExecuteAction::CreateLambda(
 								[=]()
 								{
-									CommandsManager.Pin()->DuplicateCommand(CommandsManager.Pin()->GetCurrentSharedCommands().Find(SelectedCommands[0]));
+									CommandsManager->DuplicateCommand(CommandsManager->GetCurrentSharedCommands().Find(SelectedCommands[0]));
 									GenerateCommandsScrollBox();
 
 									CommandsListView->SetSelection(SelectedCommands[0]);
@@ -1651,9 +1651,9 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 
 									if (SetNewNote)
 									{
-										int32 Id = CommandsManager.Pin()->GetCurrentSharedCommands().Find(SelectedCommands[0]);
+										int32 Id = CommandsManager->GetCurrentSharedCommands().Find(SelectedCommands[0]);
 
-										CommandsManager.Pin()->SetNoteCommand(Id, Note);
+										CommandsManager->SetNoteCommand(Id, Note);
 									}
 									
 								}
@@ -1680,14 +1680,14 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 							{
 								TArray<int32> Ids;
 
-								const TArray<TSharedPtr<FConsoleCommand>>& Commands = CommandsManager.Pin()->GetCurrentSharedCommands();
+								const TArray<TSharedPtr<FConsoleCommand>>& Commands = CommandsManager->GetCurrentSharedCommands();
 
 								for (int i = 0; i < SelectedCommands.Num(); i++)
 								{
 									Ids.Add(Commands.Find(SelectedCommands[i]));
 								}
 
-								CommandsManager.Pin()->RemoveCommands(Ids);
+								CommandsManager->RemoveCommands(Ids);
 
 								GenerateCommandsScrollBox();
 							}
@@ -1728,7 +1728,7 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 							UCommandsContainer* SelectedContainer = nullptr;
 							if (HandleNewGroup(NewGroupName, SelectedContainer))
 							{
-								CommandsManager.Pin()->CreateNewGroup(NewGroupName, SelectedContainer, SelectedCommands);
+								CommandsManager->CreateNewGroup(NewGroupName, SelectedContainer, SelectedCommands);
 							}
 						}),
 					FCanExecuteAction()
@@ -1745,7 +1745,7 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 					);
 					SubMenuBuilder.AddSeparator();
 
-					auto& CommandGroups = CommandsManager.Pin()->GetGroupList();
+					auto& CommandGroups = CommandsManager->GetGroupList();
 
 					// Add entry for every group to submenu
 					for (int i = 0; i < CommandGroups.Num(); i++)
@@ -1758,7 +1758,7 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 							FUIAction(FExecuteAction::CreateLambda(
 								[=]() 
 								{
-									CommandsManager.Pin()->AddCommandsToGroup(CommandGroups[i].Value, SelectedCommands);
+									CommandsManager->AddCommandsToGroup(CommandGroups[i].Value, SelectedCommands);
 								}), 
 							FCanExecuteAction()),
 							NAME_None,
@@ -1790,7 +1790,7 @@ bool SConsoleManagerSlateWidget::HandleNewGroup(FString& OutName, UCommandsConta
 		.HintText(FText::FromString("New name"))
 		.Text(FText::GetEmpty());
 
-	const TArray<UCommandsContainer*>& Containers = CommandsManager.Pin()->GetCommandsContainers();
+	const TArray<UCommandsContainer*>& Containers = CommandsManager->GetCommandsContainers();
 
 	UCommandsContainer* SelectedContainer = InContainer;
 
@@ -1958,7 +1958,7 @@ void SConsoleManagerSlateWidget::HandleNewCommands()
 			NewCommands.Add(MakeShareable(new FConsoleCommand(StringCommand)));
 		}
 
-		CommandsManager.Pin()->AddCommandsToCurrentGroup(NewCommands);
+		CommandsManager->AddCommandsToCurrentGroup(NewCommands);
 		GenerateCommandsScrollBox();
 		CommandsListView->ScrollToBottom();
 		break;
@@ -2001,7 +2001,7 @@ TSharedRef<SButton> SConsoleManagerSlateWidget::GetMenuButton(FText Text, const 
 
 ECheckBoxState SConsoleManagerSlateWidget::GetCurrentSelectedGroup(FGuid Id) const
 {
-	return CommandsManager.Pin()->GetCurrentCommandGroup().Id == Id ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+	return CommandsManager->GetCurrentCommandGroup().Id == Id ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
 }
 
 TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName& ColumnName)
