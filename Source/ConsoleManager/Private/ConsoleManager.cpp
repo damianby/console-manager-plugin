@@ -460,8 +460,11 @@ TSharedRef<class SDockTab> FConsoleManagerModule::OnSpawnPluginTab(const FSpawnT
 			else
 			{
 				UCommandsContainer* LoadedObj = SoftObjPtr.LoadSynchronous();
-				Objects.Add(LoadedObj);
-				UE_LOG(LogTemp, Warning, TEXT("Loading assets"));
+				if (LoadedObj)
+				{
+					Objects.Add(LoadedObj);
+					UE_LOG(LogTemp, Warning, TEXT("Loading assets"));
+				}
 			}
 		}
 

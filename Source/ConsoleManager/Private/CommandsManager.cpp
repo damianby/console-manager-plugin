@@ -848,7 +848,11 @@ void FCommandsManager::UpdateHistory()
 	for (auto& Asset : Assets)
 	{
 		//Should check if object is pending kill!
-		//Asset.GetPackage()->IsPendingKill();
+		if (Asset.GetPackage()->IsPendingKill())
+		{
+			continue;
+		}
+		
 		UObject* Resolved = Asset.GetAsset();
 
 		if (Resolved)
