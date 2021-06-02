@@ -228,8 +228,13 @@ void FConsoleManagerModule::OpenTab()
 
 			break;
 		}
-
-		FGlobalTabmanager::Get()->TryInvokeTab(ConsoleManagerTabName);
+		
+		if (LastTabManager.IsValid()) {
+			LastTabManager.Pin()->TryInvokeTab(ConsoleManagerTabName);
+		}
+		else {
+			FGlobalTabmanager::Get()->TryInvokeTab(ConsoleManagerTabName);
+		}
 	}
 }
 
@@ -272,6 +277,13 @@ void FConsoleManagerModule::OpenTab(const TArray<UObject*>& Containers)
 	if (ActiveTab.IsValid())
 	{
 		ActiveTab.Pin()->TabActivated();
+	}
+
+	if (LastTabManager.IsValid()) {
+		LastTabManager.Pin()->TryInvokeTab(ConsoleManagerTabName);
+	}
+	else {
+		FGlobalTabmanager::Get()->TryInvokeTab(ConsoleManagerTabName);
 	}
 
 	//TSharedPtr<SDockTab> TabAlive = FGlobalTabmanager::Get()->TryInvokeTab(ConsoleManagerTabName);
@@ -502,6 +514,8 @@ TSharedRef<class SConsoleManagerSlateWidget> FConsoleManagerModule::BuildUI()
 	ClosedTabDelegate.BindLambda([this](TSharedRef<SDockTab> DockTab)
 		{
 			//CommandsManager->SaveToAssets();
+
+			LastTabManager = ActiveTab.Pin()->GetTabManager();
 			
 			ActiveTab.Reset();
 		});

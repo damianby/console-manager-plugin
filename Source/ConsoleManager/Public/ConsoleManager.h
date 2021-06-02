@@ -66,4 +66,6 @@ private:
 	TArray<TSharedRef<IAssetTypeActions>> RegisteredAssetTypeActions;
 
 	bool bIsTabAutostarted = true;
+
+	TWeakPtr<FTabManager> LastTabManager;
 };
