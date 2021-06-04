@@ -245,8 +245,15 @@ void FCommandsManager::Initialize_Internal(TArray<UCommandsContainer*>& Containe
 		CommandsContainers = LoadAllContainers();
 	}
 
+	GroupToContainerMap.Empty();
+
 	for (auto Container : CommandsContainers)
 	{
+		if (Container->IsPendingKillOrUnreachable() || !Container->IsValidLowLevel())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Skipping container, its either invalid, pending kill or unreachable"));
+			continue;
+		}
 		Container->OnDestroyCalled.BindRaw(this, &FCommandsManager::ContainerBeingDestroyed);
 		Container->OnRenamed.BindRaw(this, &FCommandsManager::ContainerRenamed);
 
@@ -797,7 +804,7 @@ void FCommandsManager::SaveToAssets()
 	if (ISourceControlModule::Get().IsEnabled())
 	{
 		TArray<UPackage*> PackageList;
-		for (auto& Container : CommandsContainers)
+		for (auto Container : CommandsContainers)
 		{
 			PackageList.Add(Container->GetPackage());
 		}
