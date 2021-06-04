@@ -70,12 +70,27 @@ FCommandsManager::FCommandsManager()
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Package %s reloaded"), *Event->GetNewPackage()->GetName());
 
+				UCommandsContainer* RepointedContainer = nullptr;
+				int IndexToInsert = 0;
 
-				for (auto& Container : CommandsContainers)
+				for (int i = 0; i < CommandsContainers.Num(); i++)
 				{
-					Event->RepointObject<UCommandsContainer>(Container);
+					UCommandsContainer* Container = CommandsContainers[i];
+
+					if (Event->GetRepointedObject(Container, RepointedContainer))
+					{
+						IndexToInsert = i;
+						UE_LOG(LogTemp, Warning, TEXT("Container %s must be repointed"), *Container->GetName());
+
+					}	
 				}
-				OnDataRefreshed.ExecuteIfBound();
+
+				if (RepointedContainer != nullptr)
+				{
+					CommandsContainers.Insert(RepointedContainer, IndexToInsert);
+				}
+				// No need to refresh after because old package will be destroyed triggering event to refresh all
+				
 			}
 		});
 	
@@ -1098,8 +1113,13 @@ void FCommandsManager::ContainerBeingDestroyed(UCommandsContainer* Container)
 
 		if (bContainerRemoved)
 		{
+			// We shouldnt call Initialize_Internal from OnDestroy event when there are
+			// no containers left because it might trigger garbage collector error
+			if (CommandsContainers.Num() > 0)
+			{
+				Initialize_Internal(CommandsContainers);
+			}
 			UE_LOG(LogTemp, Warning, TEXT("Container %s is dying! Removed: %d"), *Container->GetName(), bContainerRemoved);
-			Initialize_Internal(CommandsContainers);
 		}
 	}	
 }
