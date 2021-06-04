@@ -1557,10 +1557,7 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 
 bool SConsoleManagerSlateWidget::HandleNewGroup(FString& OutName, UCommandsContainer*& OutContainer, UCommandsContainer* InContainer)
 {
-	TSharedRef<SEditableTextBox> Widget =
-		SNew(SEditableTextBox)
-		.HintText(FText::FromString("New name"))
-		.Text(FText::GetEmpty());
+
 
 	const TArray<UCommandsContainer*>& Containers = CommandsManager->GetCommandsContainers();
 
@@ -1570,6 +1567,44 @@ bool SConsoleManagerSlateWidget::HandleNewGroup(FString& OutName, UCommandsConta
 	{
 		SelectedContainer = Containers[0];
 	}
+
+	TArray<FString> GroupNames;
+
+	auto UpdateGroupNames = [&SelectedContainer, &GroupNames]() {
+		const TArray<FCommandGroup>& Groups = SelectedContainer->Groups;
+
+		GroupNames.Empty();
+		for (int i = 0; i < Groups.Num(); i++)
+		{
+			GroupNames.Add(Groups[i].Name);
+		}
+	};
+
+	UpdateGroupNames();
+
+	TSharedRef<STextBlock> ErrorText = SNew(STextBlock)
+		.ColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.f, 20.0f / 255.0f)));
+
+	auto CheckIfContainerContains = [&GroupNames, ErrorText](const FString Name) {
+		if (GroupNames.Contains(Name))
+		{
+			ErrorText->SetText(LOCTEXT("AddNewGroup_Error_Info", "A group with this name already exists!"));
+		}
+		else
+		{
+			ErrorText->SetText(FText::GetEmpty());
+		}
+	};
+
+
+	TSharedRef<SEditableTextBox> Widget =
+		SNew(SEditableTextBox)
+		.HintText(FText::FromString("New name"))
+		.Text(FText::GetEmpty())
+		.OnTextChanged_Lambda([&CheckIfContainerContains](const FText& Text) {
+			CheckIfContainerContains(Text.ToString());
+		});
+
 
 	TAttribute<FText> SelectedOption = TAttribute<FText>::Create([&SelectedContainer]() {
 		return SelectedContainer->IsValidLowLevel() ? FText::FromString(SelectedContainer->GetName()) : FText::GetEmpty();
@@ -1588,8 +1623,11 @@ bool SConsoleManagerSlateWidget::HandleNewGroup(FString& OutName, UCommandsConta
 		SNew(STextBlock)
 		.Text(SelectedOption)
 	]
-	.OnSelectionChanged_Lambda([&SelectedContainer](UCommandsContainer* NewSelectedContainer, ESelectInfo::Type Info) {
+	.OnSelectionChanged_Lambda([&SelectedContainer, &UpdateGroupNames, &CheckIfContainerContains, Widget](UCommandsContainer* NewSelectedContainer, ESelectInfo::Type Info) {
 		SelectedContainer = NewSelectedContainer;
+		UpdateGroupNames();
+
+		CheckIfContainerContains(Widget->GetText().ToString());
 	});
 
 	TSharedRef<SWidget> ContentWidget =
@@ -1614,6 +1652,11 @@ bool SConsoleManagerSlateWidget::HandleNewGroup(FString& OutName, UCommandsConta
 			]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
+			[
+				ErrorText
+			]
+			+ SVerticalBox::Slot()
+			.AutoHeight()
 			.Padding(FMargin(0, 10, 0, 2))
 			[
 				SNew(STextBlock)
@@ -1625,27 +1668,12 @@ bool SConsoleManagerSlateWidget::HandleNewGroup(FString& OutName, UCommandsConta
 				ContainerComboBox
 			]
 		];
-
-	FSimpleDelegate OkClickedDelegate;
-	OkClickedDelegate.BindLambda(
-		[&Containers, &Widget]() {
-			for (auto Container : Containers)
-			{
-				FCommandGroup* FoundGroup = Container->GetGroupByName(Widget->GetText().ToString());
-
-				if (FoundGroup != nullptr)
-				{
-					UE_LOG(LogTemp, Warning, TEXT("Group found!"));
-				}
-			}
-		}
-	);
 	
 	TSharedRef<SCustomDialog> NewGroupDialog = SNew(SCustomDialog)
 		.Title(FText(LOCTEXT("NewGroupDialog_Title", "New Group")))
 		.DialogContent(ContentWidget)
 		.Buttons({
-			SCustomDialog::FButton(LOCTEXT("OK", "OK"), OkClickedDelegate),
+			SCustomDialog::FButton(LOCTEXT("OK", "OK"), FSimpleDelegate()),
 			SCustomDialog::FButton(LOCTEXT("Cancel", "Cancel"), FSimpleDelegate())
 			});
 

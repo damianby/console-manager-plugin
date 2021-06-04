@@ -590,6 +590,12 @@ void FCommandsManager::CreateNewGroup(const FString& Name, UCommandsContainer* C
 		FCommandGroup& NewGroup = AddNewGroup_Internal(Name, Container);
 		ContainerChanged(Container);
 		OnGroupsRefresh.ExecuteIfBound();
+
+		DisplayNotification(LOCTEXT("AddNewGroup_Notification", "Group created!"), SNotificationItem::ECompletionState::CS_Success);
+	}
+	else
+	{
+		DisplayNotification(LOCTEXT("AddNewGroup_Error_Notification", "Group with given name exists in selected container!"), SNotificationItem::ECompletionState::CS_Fail);
 	}
 }
 
@@ -601,6 +607,12 @@ void FCommandsManager::CreateNewGroup(const FString& Name, UCommandsContainer* C
 		AddCommandsToGroup(&NewGroup, Commands);
 		ContainerChanged(Container);
 		OnGroupsRefresh.ExecuteIfBound();
+
+		DisplayNotification(LOCTEXT("AddNewGroup_Notification", "Group created!"), SNotificationItem::ECompletionState::CS_Success);
+	}
+	else
+	{
+		DisplayNotification(LOCTEXT("AddNewGroup_Error_Notification", "Group with given name exists in selected container!"), SNotificationItem::ECompletionState::CS_Fail);
 	}
 }
 
