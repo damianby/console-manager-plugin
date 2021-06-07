@@ -811,11 +811,11 @@ void FCommandsManager::SaveToAssets()
 	{
 		TArray<UPackage*> PackageList;
 		for (auto Container : CommandsContainers)
-		{
+		{	
 			PackageList.Add(Container->GetPackage());
 		}
 
-		FEditorFileUtils::PromptForCheckoutAndSave(PackageList, false, false);
+		FEditorFileUtils::PromptForCheckoutAndSave(PackageList, true, false);
 	}
 	else
 	{
@@ -825,13 +825,10 @@ void FCommandsManager::SaveToAssets()
 		{
 			UPackage* Package = Container->GetPackage();
 
-			Package->MarkPackageDirty();
-
 			UE_LOG(LogTemp, Warning, TEXT("Package name: %s | %s | %s"), *Package->FileName.ToString(), *Package->GetFullGroupName(false), *Package->GetPathName());
 
 			// Construct a filename from long package name.
 			FString PackageFileName = FPackageName::LongPackageNameToFilename(Package->GetPathName(), FPackageName::GetAssetPackageExtension());
-
 
 			if (!IPlatformFile::GetPlatformPhysical().IsReadOnly(*PackageFileName))
 			{
@@ -853,79 +850,6 @@ void FCommandsManager::SaveToAssets()
 		}
 	}
 	//FUnrealEdMisc::
-	//FUnrealEdMisc::Get().RestartEditor(bWarn);
-
-	//for (auto& Container : CommandsContainers)
-	//{
-	//	UPackage* Package = Container->GetPackage();
-
-	//	Package->MarkPackageDirty();
-
-	//	UE_LOG(LogTemp, Warning, TEXT("Package name: %s | %s | %s"), *Package->FileName.ToString(), *Package->GetFullGroupName(false), *Package->GetPathName());
-
-	//	// Construct a filename from long package name.
-	//	FString PackageFileName = FPackageName::LongPackageNameToFilename(Package->GetPathName(), FPackageName::GetAssetPackageExtension());
-	//
-	//	//FString Path = FString::Printf(TEXT("%s%s%s"));
-	//	
-	//	//IPlatformFile::GetPlatformPhysical();
-
-	//	
-
-	//	//FEditorFileUtils::Source
-
-	//	//FEditorFileUtils::CheckoutPackages()
-
-	//	//UPackage::Save(Package, Resolved, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, Asset.);
-	//	//Resolved->PostEditChange();
-	//
-	//	
-	//}
-
-	
-
-	//TArray<FAssetData> Assets;
-//UAssetManager::Get().GetAssetRegistry().GetAssetsByClass(UCommandsContainer::StaticClass()->GetFName(), Assets);
-
-
-//UE_LOG(LogTemp, Warning, TEXT("Asset count %d || %s"), Assets.Num(), *UCommandsContainer::StaticClass()->GetFName().ToString());
-
-//for (auto& Asset : Assets)
-//{
-//	UPackage* Package = Asset.GetPackage();
-//	//Package->MarkPackageDirty();
-
-
-//	UObject* Resolved = Asset.GetAsset();
-
-//	if (Resolved)
-//	{
-//		UCommandsContainer* Container = Cast< UCommandsContainer >(Resolved);
-//		auto& Groups = CommandsManager.Get()->GetCommandGroups();
-
-//		for (int i = 0; i < Groups.Num(); i++)
-//		{
-//			Container->Groups.Add(Groups[i]);
-//		}
-//	}
-//	else
-//	{
-//		UE_LOG(LogTemp, Warning, TEXT("Not resolved!"));
-//	}
-
-//	UE_LOG(LogTemp, Warning, TEXT("Package name: %s | %s | %s"), *Package->FileName.ToString(), *Package->GetFullGroupName(false), *Package->GetPathName());
-//	// Construct a filename from long package name.
-//	FString PackageFileName = FPackageName::LongPackageNameToFilename(Package->GetPathName(), FPackageName::GetAssetPackageExtension());
-//	
-//	//FString Path = FString::Printf(TEXT("%s%s%s"));
-
-//	FSavePackageResultStruct OutStruct = Package->Save(Package, Asset.GetAsset(), EObjectFlags::RF_Standalone | EObjectFlags::RF_Public, *PackageFileName);
-//	//UPackage::Save(Package, Resolved, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, Asset.);
-//	//Resolved->PostEditChange();
-//	
-//	UE_LOG(LogTemp, Warning, TEXT("Result of save: %d | %lld"), OutStruct.Result, OutStruct.TotalFileSize);
-//	
-//}
 }
 
 void FCommandsManager::Refresh()
