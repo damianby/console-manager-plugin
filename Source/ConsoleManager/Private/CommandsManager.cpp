@@ -412,13 +412,19 @@ void FCommandsManager::AddCommandsToGroup(FCommandGroup* Group, TArray<TSharedPt
 		{
 			for (const auto& Command : Commands)
 			{
-				FConsoleCommand& NewCommand = Group->Commands.Add_GetRef(*Command.Get());
+				// Make double copy to avoid adding elements that are from this container
+				FConsoleCommand& NewCommand = Group->Commands.Add_GetRef(FConsoleCommand(*Command.Get()));
 
 				if (NewCommand.GetValue().IsEmpty())
 				{
 					NewCommand.SetValue(Command->GetCurrentValue());
 				}
 			}
+		}
+
+		if (Group->Id == CurrentGroup->Id)
+		{
+			OnCommandsRefresh.ExecuteIfBound();
 		}
 	}
 }

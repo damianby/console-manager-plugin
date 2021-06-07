@@ -1750,7 +1750,6 @@ void SConsoleManagerSlateWidget::HandleNewCommands()
 		}
 
 		CommandsManager->AddCommandsToCurrentGroup(NewCommands);
-		GenerateCommandsScrollBox();
 		CommandsListView->ScrollToBottom();
 		break;
 	}
