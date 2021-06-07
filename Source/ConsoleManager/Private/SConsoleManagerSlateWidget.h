@@ -249,6 +249,7 @@ private:
 	TSharedPtr<SCheckBox> ShowVarsCb;
 	TSharedPtr<SCheckBox> ShowCmdsCb;
 	TSharedPtr<SCheckBox> ShowExecsCb;
+	TSharedPtr<SCheckBox> ShowModifiedCb;
 
 	bool bNeedsRefresh = true;
 

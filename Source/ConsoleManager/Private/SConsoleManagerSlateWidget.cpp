@@ -448,7 +448,7 @@ void SConsoleManagerSlateWidget::Construct(const FArguments& InArgs)
 								+ SHorizontalBox::Slot()
 								.FillWidth(1.0f)
 								[
-									SNew(SCheckBox)
+									SAssignNew(ShowModifiedCb, SCheckBox)
 									.IsChecked(ECheckBoxState::Unchecked)
 									.OnCheckStateChanged_Lambda([=](ECheckBoxState State) {
 
@@ -628,13 +628,21 @@ void SConsoleManagerSlateWidget::FilterList()
 	}
 	else
 	{
+		TArray<FString> SearchTags;
+
+		FilterString.ParseIntoArrayWS(SearchTags);
+
+		// Here are all elements that do not start with search string but contain string
+		TArray<TSharedPtr<FConsoleCommand>> SecondaryFilteredListView;
+
 		FilteredListView.Empty();
 		for (const auto& Command : Commands)
 		{
 			bool bShouldBeDisplayed = true;
 			if (Command->GetObjType() == EConsoleCommandType::CVar)
 			{
-				bShouldBeDisplayed = bShowCVar;
+				// if show only modified always show cvars
+				bShouldBeDisplayed = bShowCVar || bShowOnlyModified;
 			}
 			else if (Command->GetObjType() == EConsoleCommandType::CCmd)
 			{
@@ -647,9 +655,6 @@ void SConsoleManagerSlateWidget::FilterList()
 				bShouldBeDisplayed = bShowExec && !bShowOnlyModified;
 			}
 
-			// If its empty no need to check if string contains empty string
-			bool bContainFilterString = FilterString.IsEmpty() || Command->GetName().Contains(FilterString);
-
 			bool bIsModified = false;
 			if (bShowOnlyModified)
 			{
@@ -657,18 +662,52 @@ void SConsoleManagerSlateWidget::FilterList()
 				bIsModified = !Command->GetValue().Equals(Command->GetCurrentValue(), ESearchCase::IgnoreCase);
 			}
 
-			//if (Command->GetSetBy().Contains("Constructor"))
-			//{
-			//	continue;
-			//}
-
 			bShouldBeDisplayed = (bShowOnlyModified == bIsModified) && bShouldBeDisplayed;
+
 			
-			if (bContainFilterString && bShouldBeDisplayed)
+			if (!bShouldBeDisplayed)
+			{
+				continue;
+			}
+			else if (SearchTags.Num() == 0)
 			{
 				FilteredListView.Add(Command);
 			}
+			else if (SearchTags.Num() == 1) // If there is only one tag to search, put elements that start with tag on top of the list
+			{
+				// If its empty no need to check if string contains empty string
+				const bool bContainFilterString = Command->GetName().Contains(SearchTags[0]);
+
+				const bool bStartsWith = Command->GetName().StartsWith(SearchTags[0]);
+
+				if (bStartsWith)
+				{
+					FilteredListView.Add(Command);
+				}
+				else if (bContainFilterString)
+				{
+					SecondaryFilteredListView.Add(Command);
+				}
+			}
+			else // If contains all tags put on top of the list
+			{
+				bool bContainsAllTags = true;
+
+				for (int i = 0; i < SearchTags.Num(); i++)
+				{
+					const bool bContainsTag = Command->GetName().Contains(SearchTags[i]);
+
+					bContainsAllTags = bContainsAllTags && bContainsTag;
+				}
+
+				if (bContainsAllTags)
+				{
+					FilteredListView.Add(Command);
+				}
+			}
 		}
+
+		FilteredListView.Append(SecondaryFilteredListView);
 
 		CommandsListView->SetListItemsSource(FilteredListView);
 		CommandsListView->RebuildList();
