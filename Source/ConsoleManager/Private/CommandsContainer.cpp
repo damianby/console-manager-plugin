@@ -80,7 +80,7 @@ FCommandGroup* UCommandsContainer::GetGroupByName(const FString& Name)
 {
 	for (FCommandGroup& Group : Groups)
 	{
-		if (Group.Name.Equals(Name))
+		if (Group.Name.Equals(Name, ESearchCase::IgnoreCase))
 		{
 			return &Group;
 		}
