@@ -121,6 +121,9 @@ TSharedRef< FSlateStyleSet > FConsoleManagerStyle::Create()
 	Style->Set("ConsoleManager.OpenTab", new IMAGE_BRUSH(TEXT("ButtonIcon_40x"), Icon40x40));
 	Style->Set("ConsoleManager.OpenTab.Small", new IMAGE_BRUSH(TEXT("ButtonIcon_40x"), Icon20x20));
 	
+	Style->Set("ClassIcon.CommandsContainer", new IMAGE_BRUSH(TEXT("AssetIcon_20"), FVector2D(16.f, 16.f)));
+
+
 	FSlateImageBrush* ExecActionBrush = new IMAGE_BRUSH(TEXT("Execute_16"), Icon16x16);
 	ExecActionBrush->DrawAs = ESlateBrushDrawType::Box;
 	ExecActionBrush->Margin = FMargin(0);
@@ -139,7 +142,7 @@ TSharedRef< FSlateStyleSet > FConsoleManagerStyle::Create()
 	Style->Set("Icons.Snapshot", new IMAGE_BRUSH(TEXT("Snapshot_40"), Icon27x27));
 	Style->Set("Icons.Remove", new IMAGE_BRUSH(TEXT("Remove_40"), Icon27x27));
 	Style->Set("Icons.Add", new IMAGE_BRUSH(TEXT("Add_40"), Icon27x27));
-	Style->Set("Icons.Duplicate", new IMAGE_BRUSH(TEXT("Duplicate_40"), Icon27x27));
+	//Style->Set("Icons.Duplicate", new IMAGE_BRUSH(TEXT("Duplicate_40"), Icon27x27));
 	Style->Set("Icons.Warning", new IMAGE_BRUSH(TEXT("Warning_16"), Icon16x16));
 	Style->Set("Icons.Unknown", new IMAGE_BRUSH(TEXT("Unknown_16"), Icon16x16));
 	Style->Set("Icons.Error", new IMAGE_BRUSH(TEXT("Error_16"), Icon16x16));
