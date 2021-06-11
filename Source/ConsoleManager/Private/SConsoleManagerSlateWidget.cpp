@@ -1492,7 +1492,7 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 				{
 					FUIAction Action_AddCommandToNewGroup(
 					FExecuteAction::CreateLambda(
-						[=]() 
+						[this, SelectedCommands]() 
 						{
 							FString NewGroupName;
 							UCommandsContainer* SelectedContainer = nullptr;
@@ -1515,25 +1515,40 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 					);
 					SubMenuBuilder.AddSeparator();
 
-					auto& CommandGroups = CommandsManager->GetGroupList();
+					const TArray<UCommandsContainer*>& Containers = CommandsManager->GetCommandsContainers();
+					UE_LOG(LogTemp, Warning, TEXT("Containers length: %d"), Containers.Num());
 
-					// Add entry for every group to submenu
-					for (int i = 0; i < CommandGroups.Num(); i++)
+					for (const UCommandsContainer* Container : Containers)
 					{
-						SubMenuBuilder.AddMenuEntry
-						(
-							FText::FromString(CommandGroups[i].Key),
-							FText::GetEmpty(),
-							FSlateIcon(),
-							FUIAction(FExecuteAction::CreateLambda(
-								[=]() 
+						FNewMenuDelegate ContainerSubMenuDelegate;
+
+						ContainerSubMenuDelegate.BindLambda([Container, this, SelectedCommands](FMenuBuilder& ContainerMenuBuilder)
+							{
+								const TArray<FCommandGroup>& Groups = Container->Groups;
+								for (int i = 0; i < Groups.Num(); i++)
 								{
-									CommandsManager->AddCommandsToGroup(CommandGroups[i].Value, SelectedCommands);
-								}), 
-							FCanExecuteAction()),
-							NAME_None,
-							EUserInterfaceActionType::Button
-						);
+									const FCommandGroup& CurrentGroup = Groups[i];
+
+									ContainerMenuBuilder.AddMenuEntry
+									(
+										FText::FromString(Groups[i].Name),
+										FText::GetEmpty(),
+										FSlateIcon(),
+										FUIAction(FExecuteAction::CreateLambda(
+											[this, &CurrentGroup, SelectedCommands]()
+											{
+												CommandsManager->AddCommandsToGroup(CurrentGroup.Id, SelectedCommands);
+											}),
+											FCanExecuteAction()),
+										NAME_None,
+										EUserInterfaceActionType::Button
+									);
+								}
+							});
+
+						SubMenuBuilder.AddSubMenu(FText::FromString(Container->GetName()), FText::GetEmpty(), ContainerSubMenuDelegate);
+
+
 					}
 				});
 
@@ -2000,6 +2015,7 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 			}
 		))
 		.ClearKeyboardFocusOnCommit(false)
+		.MinDesiredWidth(50.f)
 		.AllowContextMenu(false)
 		.SelectAllTextWhenFocused(true)
 		.SelectAllTextOnCommit(true)
