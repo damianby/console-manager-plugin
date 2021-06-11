@@ -21,10 +21,13 @@
 #include "Engine/AssetManager.h"
 #include "CommandsContainerActions.h"
 #include "CommandsContainer.h"
-
+#include "Framework/Notifications/NotificationManager.h"
 
 #include "ISettingsContainer.h"
 #include "ISettingsCategory.h"
+
+#include "CommandsContainerFactoryNew.h"
+#include "Interfaces/IMainFrameModule.h"
 
 #include "LevelEditor.h"
 #include "SDeviceProfileCreateProfilePanel.h"
@@ -52,7 +55,7 @@ void FConsoleManagerModule::StartupModule()
 		);
 		
 		// Rebuild UI if active after change to settings
-		Section->OnModified().BindLambda([=]() {
+		Section->OnModified().BindLambda([this]() {
 
 			if (!ActiveTab.IsValid())
 			{
@@ -66,8 +69,6 @@ void FConsoleManagerModule::StartupModule()
 					}
 				}
 			}
-			
-			CommandsManager->ShouldLoadAllContainers(GetMutableDefault<UConsoleManagerSettings>()->StartupOption == EConsoleManagerStartupOption::AllContainers);
 			
 			ApplySettings();
 
@@ -88,10 +89,19 @@ void FConsoleManagerModule::StartupModule()
 		FExecuteAction::CreateRaw(this, &FConsoleManagerModule::OpenTab),
 		FCanExecuteAction());
 
+	PluginCommands->MapAction(
+		FConsoleManagerCommands::Get().OpenTabLast,
+		FExecuteAction::CreateRaw(this, &FConsoleManagerModule::OpenTabLast),
+		FCanExecuteAction());
 
 	// Register in level editor module for global shortcut
-	FLevelEditorModule& LevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
-	LevelEditorModule.GetGlobalLevelEditorActions()->Append(PluginCommands.ToSharedRef());
+	/*FLevelEditorModule& LevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
+	LevelEditorModule.GetGlobalLevelEditorActions()->Append(PluginCommands.ToSharedRef());*/
+
+	// Register globally instead of level editor
+	IMainFrameModule& MainFrame = FModuleManager::Get().LoadModuleChecked<IMainFrameModule>("MainFrame");
+	MainFrame.GetMainFrameCommandBindings()->Append(PluginCommands.ToSharedRef());
+
 
 	UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FConsoleManagerModule::RegisterMenus));
 
@@ -141,77 +151,60 @@ void FConsoleManagerModule::ShutdownModule()
 			AssetTools.UnregisterAssetTypeActions(Action);
 		}
 	}
+
+	if (!IsEngineExitRequested() && ToolBarExtender.IsValid())
+	{
+		FLevelEditorModule* LevelEditorModule = FModuleManager::GetModulePtr<FLevelEditorModule>("LevelEditor");
+		if (LevelEditorModule)
+		{
+			LevelEditorModule->GetToolBarExtensibilityManager()->RemoveExtender(ToolBarExtender);
+		}
+	}
+
 }
 
 void FConsoleManagerModule::OpenTab()
 {
 	bIsTabAutostarted = false;
 
-	if (ActiveTab.IsValid())
+	CommandsManager->Initialize();
+
+	SpawnOrActivateTab();
+
+}
+
+void FConsoleManagerModule::OpenTabs(const TArray<UCommandsContainer*> Containers)
+{
+	bIsTabAutostarted = false;
+
+	CommandsManager->Initialize(Containers);
+
+	SpawnOrActivateTab();
+	
+}
+
+void FConsoleManagerModule::OpenTabLast()
+{
+	TArray<TSoftObjectPtr<UCommandsContainer>> LastOpenedObjs = GetMutableDefault<UConsoleManagerSettings>()->LastSelectedObjs;
+
+	TArray<UCommandsContainer*> Objects;
+
+	for (auto& SoftObjPtr : LastOpenedObjs)
 	{
-		ActiveTab.Pin()->DrawAttention();
-		ActiveTab.Pin()->TabActivated();
-	}
-	else
-	{
-		EConsoleManagerStartupOption StartupOption = GetMutableDefault<UConsoleManagerSettings>()->StartupOption;
-
-		switch (StartupOption)
+		UCommandsContainer* ExistingObj = SoftObjPtr.Get();
+		if (ExistingObj)
 		{
-		case EConsoleManagerStartupOption::LastOpened:
+			Objects.Add(ExistingObj);
+		}
+		else
 		{
-			TArray<TSoftObjectPtr<UCommandsContainer>> LastOpenedObjs = GetMutableDefault<UConsoleManagerSettings>()->LastSelectedObjs;
-
-			TArray<UCommandsContainer*> Objects;
-
-			for (auto& SoftObjPtr : LastOpenedObjs)
-			{
-				UCommandsContainer* ExistingObj = SoftObjPtr.Get();
-				if (ExistingObj)
-				{
-					Objects.Add(ExistingObj);
-				}
-				else
-				{
-					UCommandsContainer* LoadedObj = SoftObjPtr.LoadSynchronous();
-					Objects.Add(LoadedObj);
-				}
-			}
-
-			CommandsManager->Initialize(Objects);
-
-			break;
-		}
-		case EConsoleManagerStartupOption::Specified:
-		{
-			UCommandsContainer* LoadedAsset = GetMutableDefault<UConsoleManagerSettings>()->AssetToLoad.Get();
-
-			if (LoadedAsset)
-			{
-				CommandsManager->Initialize(TArray<UCommandsContainer*>{LoadedAsset});
-			}
-			else
-			{
-				// Loads all if specified asset is not found
-				CommandsManager->Initialize();
-			}
-
-			break;
-		}
-		case EConsoleManagerStartupOption::AllContainers:
-		default:
-
-			CommandsManager->Initialize();
-			break;
-		}
-		
-		if (LastTabManager.IsValid()) {
-			LastTabManager.Pin()->TryInvokeTab(ConsoleManagerTabName);
-		}
-		else {
-			FGlobalTabmanager::Get()->TryInvokeTab(ConsoleManagerTabName);
+			UCommandsContainer* LoadedObj = SoftObjPtr.LoadSynchronous();
+			Objects.Add(LoadedObj);
 		}
 	}
+
+	CommandsManager->Initialize(Objects);
+	SpawnOrActivateTab();
 }
 
 void FConsoleManagerModule::OpenSettings()
@@ -220,32 +213,6 @@ void FConsoleManagerModule::OpenSettings()
 	SettingsModule->ShowViewer("Editor", "Plugins", "Console Manager");
 }
 
-void FConsoleManagerModule::OpenTab(const TArray<UObject*>& Containers)
-{
-	bIsTabAutostarted = false;
-
-	TArray<UCommandsContainer*> OutCommandsContainers;
-
-	for (const auto& Container : Containers)
-	{
-		UCommandsContainer* OutContainer = StaticCast<UCommandsContainer*>(Container);
-		OutCommandsContainers.Add(OutContainer);
-	}
-
-	CommandsManager->Initialize(OutCommandsContainers);
-
-	if (ActiveTab.IsValid())
-	{
-		ActiveTab.Pin()->TabActivated();
-	}
-
-	if (LastTabManager.IsValid()) {
-		LastTabManager.Pin()->TryInvokeTab(ConsoleManagerTabName);
-	}
-	else {
-		FGlobalTabmanager::Get()->TryInvokeTab(ConsoleManagerTabName);
-	}
-}
 
 void FConsoleManagerModule::ApplySettings()
 {
@@ -258,10 +225,37 @@ void FConsoleManagerModule::ApplySettings()
 	FConsoleManagerStyle::SetCommandsFontSize(CommandsFontSize);
 
 	FInputChord OpenManagerShortcut = GetMutableDefault<UConsoleManagerSettings>()->OpenShortcut;
-	if (OpenManagerShortcut.IsValidChord())
+	FInputChord OpenLastManagerShortcut = GetMutableDefault<UConsoleManagerSettings>()->OpenLastShortcut;
+
+	bool bAreEqual = OpenManagerShortcut.GetRelationship(OpenLastManagerShortcut) == FInputChord::ERelationshipType::Same;
+
+	if (bAreEqual && OpenManagerShortcut.IsValidChord())
 	{
-		FConsoleManagerCommands::Get().OpenTab->SetActiveChord(OpenManagerShortcut, EMultipleKeyBindingIndex::Secondary);
+		ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings");
+		GetMutableDefault<UConsoleManagerSettings>()->OpenShortcut = FInputChord();
+		GetMutableDefault<UConsoleManagerSettings>()->OpenLastShortcut = FInputChord();
+		auto Section = SettingsModule->GetContainer("Editor")->GetCategory("Plugins")->GetSection("Console Manager");
+		Section->Save();
+
+		FNotificationInfo Info(LOCTEXT("WrongShortcuts", "Shortcuts cannot be the same"));
+
+		Info.bFireAndForget = true;
+		Info.ExpireDuration = 3.0f;
+		Info.FadeOutDuration = 2.0f;
+		Info.FadeInDuration = 0.5f;
+		Info.bUseSuccessFailIcons = true;
+
+		TSharedPtr<SNotificationItem> NotificationItem = FSlateNotificationManager::Get().AddNotification(Info);
+		NotificationItem->SetCompletionState(SNotificationItem::ECompletionState::CS_Fail);
+
 	}
+
+	OpenManagerShortcut = OpenManagerShortcut.IsValidChord() && !bAreEqual ? OpenManagerShortcut : FInputChord();
+	OpenLastManagerShortcut = OpenLastManagerShortcut.IsValidChord() && !bAreEqual ? OpenLastManagerShortcut : FInputChord();
+
+	FConsoleManagerCommands::Get().OpenTab->SetActiveChord(OpenManagerShortcut, EMultipleKeyBindingIndex::Primary);
+	FConsoleManagerCommands::Get().OpenTabLast->SetActiveChord(OpenLastManagerShortcut, EMultipleKeyBindingIndex::Primary);
+
 
 	if (CommandsManager.IsValid())
 	{
@@ -277,7 +271,7 @@ void FConsoleManagerModule::ApplySettings()
 		ActiveTab.Pin()->UpdateHeaderColumnsVisibility(DisplayCommandValueType, DisplaySetByValue, DisplayCommandType);
 	}
 
-	CommandsManager->ShouldLoadAllContainers(GetMutableDefault<UConsoleManagerSettings>()->StartupOption == EConsoleManagerStartupOption::AllContainers);
+	CommandsManager->ShouldLoadAllContainers(true);
 }
 
 void FConsoleManagerModule::RegisterMenus()
@@ -294,32 +288,195 @@ void FConsoleManagerModule::RegisterMenus()
 	}
 
 	{
-		UToolMenu* ToolbarMenu = UToolMenus::Get()->ExtendMenu("LevelEditor.LevelEditorToolBar");
-		{
-			FToolMenuSection& Section = ToolbarMenu->FindOrAddSection("Settings");
-			{
-			
-				FToolMenuEntry& Entry = Section.AddEntry(FToolMenuEntry::InitToolBarButton(FConsoleManagerCommands::Get().OpenTab));
-				Entry.SetCommandList(PluginCommands);
 
-				//Section.AddEntry(FToolMenuEntry::InitComboButton(
-				//	"ConsoleManagerDropdown",
-				//	FUIAction(
-				//		FExecuteAction(),
-				//		FCanExecuteAction(),
-				//		FIsActionChecked(),
-				//		FIsActionButtonVisible::CreateStatic(FLevelEditorActionCallbacks::CanShowSourceCodeActions)),
-				//	FNewToolMenuChoice(),
-				//	LOCTEXT("CompileCombo_Label", "Compile Options"),
-				//	LOCTEXT("CompileComboToolTip", "Compile options menu"),
-				//	FSlateIcon(FEditorStyle::GetStyleSetName(), "LevelEditor.Recompile"),
-				//	true
-				//));
 
-			}
-		}
+
+		ToolBarExtender = MakeShareable(new FExtender);
+		ToolBarExtender->AddToolBarExtension("Settings", EExtensionHook::After, PluginCommands, FToolBarExtensionDelegate::CreateRaw(this, &FConsoleManagerModule::FillToolbar));
+
+		FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
+		LevelEditorModule.GetToolBarExtensibilityManager()->AddExtender(ToolBarExtender);
+
+
+		//UToolMenu* ToolbarMenu = UToolMenus::Get()->ExtendMenu("LevelEditor.LevelEditorToolBar");
+		//{
+		//	FToolMenuSection& Section = ToolbarMenu->FindOrAddSection("Settings");
+		//	{
+		//	
+		//		FToolMenuEntry& Entry = Section.AddEntry(FToolMenuEntry::InitToolBarButton(FConsoleManagerCommands::Get().OpenTab));
+		//		Entry.SetCommandList(PluginCommands);
+
+		//		//Section.AddEntry(FToolMenuEntry::InitComboButton(
+		//		//	"ConsoleManagerDropdown",
+		//		//	FUIAction(
+		//		//		FExecuteAction(),
+		//		//		FCanExecuteAction(),
+		//		//		FIsActionChecked(),
+		//		//		FIsActionButtonVisible::CreateStatic(FLevelEditorActionCallbacks::CanShowSourceCodeActions)),
+		//		//	FNewToolMenuChoice(),
+		//		//	LOCTEXT("CompileCombo_Label", "Compile Options"),
+		//		//	LOCTEXT("CompileComboToolTip", "Compile options menu"),
+		//		//	FSlateIcon(FEditorStyle::GetStyleSetName(), "LevelEditor.Recompile"),
+		//		//	true
+		//		//));
+
+		//	}
+		//}
 	}
 }
+
+void FConsoleManagerModule::FillToolbar(FToolBarBuilder& ToolbarBuilder)
+{
+	ToolbarBuilder.BeginSection("Console Manager");
+	{
+		// Add a button to edit the current media profile
+		ToolbarBuilder.AddToolBarButton(
+			FConsoleManagerCommands::Get().OpenTab,
+			NAME_None,
+			LOCTEXT("ConsoleManager_Label", "ConsoleM"),
+			FText::FromString("Opens console manager window"),
+			FSlateIcon(FConsoleManagerStyle::GetStyleSetName(), TEXT("ConsoleManager.OpenTab"))
+		);
+
+		// Add a simple drop-down menu (no label, no icon for the drop-down button itself) that list the media profile available
+		ToolbarBuilder.AddComboButton(
+			FUIAction(),
+			FOnGetContent::CreateRaw(this, &FConsoleManagerModule::GenerateMenuContent),
+			FText::GetEmpty(),
+			LOCTEXT("MediaProfileButton_ToolTip", "List of Media Profile available to the user for editing or creation."),
+			FSlateIcon(),
+			true
+		);
+	}
+	ToolbarBuilder.EndSection();
+}
+
+TSharedRef<SWidget> FConsoleManagerModule::GenerateMenuContent()
+{
+	const bool bShouldCloseWindowAfterMenuSelection = true;
+	FMenuBuilder MenuBuilder(bShouldCloseWindowAfterMenuSelection, nullptr);
+
+	MenuBuilder.BeginSection("Container", LOCTEXT("NewContainerSection", "New"));
+	{
+		
+		MenuBuilder.AddMenuEntry(
+			LOCTEXT("CreateMenuLabel", "New Empty Commands Container"),
+			LOCTEXT("CreateMenuTooltip", "Create a new Commands Container"),
+			FSlateIcon(),
+			FUIAction(
+				FExecuteAction::CreateRaw(this, &FConsoleManagerModule::CreateNewContainer)
+			)
+		);
+	}
+	MenuBuilder.EndSection();
+
+	MenuBuilder.BeginSection("Container", LOCTEXT("ContainerSelection", "Containers"));
+	{
+		TArray<UCommandsContainer*> Containers = LoadAllContainers();
+
+		for (auto Container : Containers)
+		{
+			const TArray<UCommandsContainer*> Objs = { Container };
+
+			MenuBuilder.AddMenuEntry(
+				FText::FromString(Container->GetName()),
+				FText::GetEmpty(),
+				FSlateIcon(FConsoleManagerStyle::GetStyleSetName(), TEXT("ClassIcon.CommandsContainer")),
+				FUIAction(
+					FExecuteAction::CreateRaw(this, &FConsoleManagerModule::OpenTabs, Objs)
+				)
+			);
+		}
+	}
+	MenuBuilder.EndSection();
+
+	return MenuBuilder.MakeWidget();
+}
+
+void FConsoleManagerModule::CreateNewContainer()
+{
+
+	UCommandsContainerFactoryNew* ContainerFactory = DuplicateObject<UCommandsContainerFactoryNew>(GetDefault<UCommandsContainerFactoryNew>(), GetTransientPackage());
+
+	FAssetToolsModule& AssetToolsModule = FAssetToolsModule::GetModule();
+	AssetToolsModule.Get().CreateAssetWithDialog(ContainerFactory->GetSupportedClass(), ContainerFactory);
+
+	
+	/*TArray<UObject*> ObjectsToSync;
+	ObjectsToSync.Add(NewAsset);
+	GEditor->SyncBrowserToObjects(ObjectsToSync);*/
+}
+
+void FConsoleManagerModule::SpawnOrActivateTab()
+{
+	if (ActiveTab.IsValid())
+	{
+		ActiveTab.Pin()->DrawAttention();
+		ActiveTab.Pin()->TabActivated();
+	}
+	else
+	{
+		if (LastTabManager.IsValid())
+		{
+			LastTabManager.Pin()->TryInvokeTab(ConsoleManagerTabName);
+		}
+		else
+		{
+			FGlobalTabmanager::Get()->TryInvokeTab(ConsoleManagerTabName);
+		}
+	}
+	SaveLastSelectedObjects();
+}
+
+void FConsoleManagerModule::SaveLastSelectedObjects()
+{
+	const TArray<UCommandsContainer*>& Containers = CommandsManager->GetCommandsContainers();
+
+	ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings");
+	TArray< TSoftObjectPtr<UCommandsContainer>> LastSelectedObjs;
+
+	for (auto& Container : Containers)
+	{
+		LastSelectedObjs.Add(TSoftObjectPtr<UCommandsContainer>(Container));
+	}
+
+	GetMutableDefault<UConsoleManagerSettings>()->LastSelectedObjs = LastSelectedObjs;
+	auto Section = SettingsModule->GetContainer("Editor")->GetCategory("Plugins")->GetSection("Console Manager");
+	Section->Save();
+}
+
+TArray<UCommandsContainer*> FConsoleManagerModule::LoadAllContainers()
+{
+	TArray<FAssetData> Assets;
+	UAssetManager::Get().GetAssetRegistry().GetAssetsByClass(UCommandsContainer::StaticClass()->GetFName(), Assets);
+
+	TArray<UCommandsContainer*> Containers;
+
+	UE_LOG(LogTemp, Warning, TEXT("Found %d assets"), Assets.Num());
+
+	for (auto& Asset : Assets)
+	{
+		//Should check if object is pending kill!
+		if (Asset.GetPackage()->IsPendingKill())
+		{
+			continue;
+		}
+
+		UObject* Resolved = Asset.GetAsset();
+
+		if (Resolved)
+		{
+			UCommandsContainer* Container = StaticCast< UCommandsContainer* >(Resolved);
+
+			Containers.Add(Container);
+		}
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Finished loading assets!"));
+
+	return Containers;
+}
+
 
 void FConsoleManagerModule::AskForDefaultGroup()
 {
@@ -423,16 +580,13 @@ TSharedRef<class SDockTab> FConsoleManagerModule::OnSpawnPluginTab(const FSpawnT
 		// If there are no previously selected we load all containers
 		if (Objects.Num() > 0)
 		{
-
 			CommandsManager->Initialize(Objects);
 		}
 		else
 		{
 			CommandsManager->Initialize();
 		}
-
 	}
-
 
 	TSharedRef<SConsoleManagerSlateWidget> UI = BuildUI();
 	
@@ -457,19 +611,7 @@ TSharedRef<class SConsoleManagerSlateWidget> FConsoleManagerModule::BuildUI()
 
 	ClosedTabDelegate.BindLambda([this](TSharedRef<SDockTab> DockTab)
 		{
-			const TArray<UCommandsContainer*>& Containers = CommandsManager->GetCommandsContainers();
-
-			ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings");
-			TArray< TSoftObjectPtr<UCommandsContainer>> LastSelectedObjs;
-
-			for (auto& Container : Containers)
-			{
-				LastSelectedObjs.Add(TSoftObjectPtr<UCommandsContainer>(Container));
-			}
-
-			GetMutableDefault<UConsoleManagerSettings>()->LastSelectedObjs = LastSelectedObjs;
-			auto Section = SettingsModule->GetContainer("Editor")->GetCategory("Plugins")->GetSection("Console Manager");
-			Section->Save();
+			SaveLastSelectedObjects();
 
 			//CommandsManager->SaveToAssets();
 

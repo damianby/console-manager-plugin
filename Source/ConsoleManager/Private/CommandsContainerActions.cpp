@@ -117,7 +117,16 @@ bool FCommandsContainerActions::HasActions(const TArray<UObject*>& InObjects) co
 
 void FCommandsContainerActions::OpenAssetEditor(const TArray<UObject*>& InObjects, TSharedPtr<class IToolkitHost> EditWithinLevelEditor)
 {
-	FConsoleManagerModule::GetModule().OpenTab(InObjects);
+
+	TArray<UCommandsContainer*> OutCommandsContainers;
+
+	for (const auto& Container : InObjects)
+	{
+		UCommandsContainer* OutContainer = StaticCast<UCommandsContainer*>(Container);
+		OutCommandsContainers.Add(OutContainer);
+	}
+
+	FConsoleManagerModule::GetModule().OpenTabs(OutCommandsContainers);
 
 	//EToolkitMode::Type Mode = EditWithinLevelEditor.IsValid()
 	//	? EToolkitMode::WorldCentric

@@ -33,7 +33,7 @@ public:
 	~FCommandsManager();
 
 	void Initialize();
-	void Initialize(TArray<UCommandsContainer*> Containers);
+	void Initialize(const TArray<UCommandsContainer*>& Containers);
 
 	
 	FORCEINLINE const TArray<TSharedPtr<FConsoleCommand>>& GetCurrentSharedCommands() const { return CurrentCommandsShared; }
@@ -103,7 +103,7 @@ private:
 	// Function called when console sink is called (on variable change), can be blocked by bSinkBlocked
 	void VariableChanged();
 
-	void Initialize_Internal(TArray<UCommandsContainer*>& Containers);
+	void Initialize_Internal(const TArray<UCommandsContainer*>& Containers);
 
 	FCommandGroup& AddNewGroup_Internal(const FString& Name, UCommandsContainer* Container, EGroupType Type = EGroupType::Default);
 

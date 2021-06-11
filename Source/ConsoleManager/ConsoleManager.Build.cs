@@ -41,6 +41,7 @@ public class ConsoleManager : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
+				"MainFrame",
 				"Projects",
 				"InputCore",
 				"UnrealEd",

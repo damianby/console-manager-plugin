@@ -12,15 +12,6 @@
 
 class UCommandsContainer;
 
-
-UENUM(BlueprintType)
-enum class EConsoleManagerStartupOption : uint8
-{
-	AllContainers UMETA(DisplayName = "All containers"),
-	LastOpened	UMETA(DisplayName = "Last opened"),
-	Specified	UMETA(DisplayName = "Specified")
-};
-
 UCLASS(config = ConsoleManager)
 class CONSOLEMANAGER_API UConsoleManagerSettings : public UObject {
 	GENERATED_BODY()
@@ -28,15 +19,19 @@ class CONSOLEMANAGER_API UConsoleManagerSettings : public UObject {
 public:
 	UConsoleManagerSettings(const FObjectInitializer& ObjectInitializer);
 
-	/** Global shortcut to open manager */
-	UPROPERTY(EditAnywhere, config, Category = Shortcuts, meta = (DisplayName = "Open manager shortcut"))
+	/** Global shortcut to open containers */
+	UPROPERTY(EditAnywhere, config, Category = Shortcuts, meta = (DisplayName = "Open all containers"))
 		FInputChord OpenShortcut = FInputChord();
+
+	/** Global shortcut to open last selected containers */
+	UPROPERTY(EditAnywhere, config, Category = Shortcuts, meta = (DisplayName = "Open last selected containers"))
+		FInputChord OpenLastShortcut = FInputChord();
 
 	/** Commands font size */
 	UPROPERTY(EditAnywhere, config, Category = UI, meta = (DisplayName = "Commands font size"))
 		int32 CommandsFontSize = 9;
 
-	/** Should toolbar button be visible next to settings (when disabled Console Manager will be accessible from Window tab)  */
+	/** Should toolbar button be visible next to settings (when disabled Console Manager will be accessible from Window tab or shortcut)  */
 	UPROPERTY(EditAnywhere, config, Category = UI, meta = (DisplayName = "Show toolbar button"))
 		bool bShowToolbar = true;
 
@@ -66,13 +61,6 @@ public:
 	/** The color used to visualize difference between values */
 	UPROPERTY(EditAnywhere, config, Category = Colors, meta = (DisplayName = "Different values color"))
 		FLinearColor NotMatchingValuesColor;
-
-	/** Which commands to open when clicking on toolbar button or Window menu */
-	UPROPERTY(EditAnywhere, config, Category = Startup, meta = (DisplayName = "Default container on open"))
-		EConsoleManagerStartupOption StartupOption = EConsoleManagerStartupOption::AllContainers;
-
-	UPROPERTY(EditAnywhere, config, Category = Startup, meta = (DisplayName = "Asset to load", EditCondition = "StartupOption==EConsoleManagerStartupOption::Specified"))
-		TSoftObjectPtr<UCommandsContainer> AssetToLoad;
 };
 
 

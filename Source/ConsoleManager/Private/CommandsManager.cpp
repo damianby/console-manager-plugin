@@ -236,7 +236,7 @@ void FCommandsManager::VariableChanged()
 	}
 }
 
-void FCommandsManager::Initialize_Internal(TArray<UCommandsContainer*>& Containers)
+void FCommandsManager::Initialize_Internal(const TArray<UCommandsContainer*>& Containers)
 {
 	CommandsContainers = Containers;
 
@@ -272,7 +272,7 @@ void FCommandsManager::Initialize()
 	Initialize_Internal(Containers);
 }
 
-void FCommandsManager::Initialize(TArray<UCommandsContainer*> Containers)
+void FCommandsManager::Initialize(const TArray<UCommandsContainer*>& Containers)
 {
 	Initialize_Internal(Containers);
 }

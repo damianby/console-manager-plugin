@@ -26,7 +26,8 @@ public:
 
 	void OpenSettings();
 
-	void OpenTab(const TArray<UObject*>& Containers);
+	void OpenTabs(const TArray<UCommandsContainer*> Containers);
+	void OpenTabLast();
 
 	/**
 	 * @brief Provide singleton like access to this module
@@ -38,11 +39,23 @@ public:
 		return FModuleManager::LoadModuleChecked< FConsoleManagerModule >(ModuleName);
 	}
 
+	FCommandsManager* GetCommandsManager() { return CommandsManager.Get(); }
+
 private:
 
 	void ApplySettings();
 	void RegisterMenus();
 	void AskForDefaultGroup();
+
+	void FillToolbar(FToolBarBuilder& ToolbarBuilder);
+	TSharedRef<SWidget> GenerateMenuContent();
+
+	void CreateNewContainer();
+
+	void SpawnOrActivateTab();
+	void SaveLastSelectedObjects();
+
+	TArray<UCommandsContainer*> LoadAllContainers();
 
 	TSharedRef<class SDockTab> OnSpawnPluginTab(const class FSpawnTabArgs& SpawnTabArgs);
 
@@ -60,4 +73,6 @@ private:
 	bool bIsTabAutostarted = true;
 
 	TWeakPtr<FTabManager> LastTabManager;
+
+	TSharedPtr<FExtender> ToolBarExtender;
 };

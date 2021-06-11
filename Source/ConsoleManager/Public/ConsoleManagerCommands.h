@@ -21,8 +21,7 @@ public:
 
 public:
 	TSharedPtr< FUICommandInfo > OpenTab;
+	TSharedPtr< FUICommandInfo > OpenTabLast;
 
 	TSharedPtr<FUICommandList> GroupContextMenu;
-
-	TSharedPtr<FUICommandInfo> NewGroupCommand;
 };
