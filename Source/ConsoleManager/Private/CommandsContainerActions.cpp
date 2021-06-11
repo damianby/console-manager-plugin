@@ -52,36 +52,6 @@ bool FCommandsContainerActions::CanFilter()
 void FCommandsContainerActions::GetActions(const TArray<UObject*>& InObjects, FMenuBuilder& MenuBuilder)
 {
 	FAssetTypeActions_Base::GetActions(InObjects, MenuBuilder);
-
-	auto Containers = GetTypedWeakObjectPtrs<UCommandsContainer>(InObjects);
-
-	MenuBuilder.AddMenuEntry(
-		LOCTEXT("TextAsset_ReverseText", "Reverse Text"),
-		LOCTEXT("TextAsset_ReverseTextToolTip", "Reverse the text stored in the selected text asset(s)."),
-		FSlateIcon(),
-		FUIAction()
-			/*FExecuteAction::CreateLambda([=] {
-				for (auto& TextAsset : TextAssets)
-				{
-					if (TextAsset.IsValid() && !TextAsset->Text.IsEmpty())
-					{
-						TextAsset->Text = FText::FromString(TextAsset->Text.ToString().Reverse());
-						TextAsset->PostEditChange();
-					}
-				}
-				}),
-			FCanExecuteAction::CreateLambda([=] {
-					for (auto& TextAsset : TextAssets)
-					{
-						if (TextAsset.IsValid() && !TextAsset->Text.IsEmpty())
-						{
-							return true;
-						}
-					}
-					return false;
-				})
-					)*/
-	);
 }
 
 

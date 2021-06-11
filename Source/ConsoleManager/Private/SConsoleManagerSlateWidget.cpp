@@ -564,55 +564,6 @@ EActiveTimerReturnType SConsoleManagerSlateWidget::SetFocusPostConstruct(double 
 	return EActiveTimerReturnType::Continue;
 }
 
-//FReply SConsoleManagerSlateWidget::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
-//{
-//	return FReply::Unhandled();
-//
-//	FMenuBuilder MenuBuilder(true, NULL, TSharedPtr<FExtender>());
-//	
-//	{
-//		MenuBuilder.BeginSection("Group", LOCTEXT("GroupContextMenu_Header_Group", "Group"));
-//		{
-//			FUIAction Action_NewGroup(
-//
-//				FExecuteAction::CreateSP(this, &SConsoleManagerSlateWidget::OnAddGroupButtonClicked),
-//				FCanExecuteAction()
-//			);
-//
-//			MenuBuilder.AddMenuEntry
-//			(
-//				LOCTEXT("GroupContextMenu_NewGroup", "Add group"),
-//				LOCTEXT("GroupContextMenu_NewGroup_Desc", "Creates new group"),
-//				FSlateIcon(),
-//				Action_NewGroup,
-//				NAME_None,
-//				EUserInterfaceActionType::Button
-//			);
-//		}
-//		MenuBuilder.EndSection();
-//	}
-//
-//	
-//
-//	UE_LOG(LogTemp, Warning, TEXT("Mouse btn up"));
-//
-//	if (MouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
-//	{
-//		TSharedRef<SWidget> MenuContents = MenuBuilder.MakeWidget();
-//		FWidgetPath WidgetPath = MouseEvent.GetEventPath() != nullptr ? *MouseEvent.GetEventPath() : FWidgetPath();
-//		FSlateApplication::Get().PushMenu(AsShared(), WidgetPath, MenuContents, MouseEvent.GetScreenSpacePosition(), FPopupTransitionEffect(FPopupTransitionEffect::ContextMenu));
-//
-//		return FReply::Handled();
-//	}
-//	else
-//	{
-//		return FReply::Unhandled();
-//	}
-//
-//
-//
-//}
-
 void SConsoleManagerSlateWidget::FilterList()
 {
 	const TArray<TSharedPtr<FConsoleCommand>>& Commands = CommandsManager->GetCurrentSharedCommands();
@@ -731,7 +682,11 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 
 	const bool bDisplayIcons = CurrentGroup.Type != EGroupType::AllCommands;
 
-	TSharedRef<SConsoleCommandListRow> Row = SNew(SConsoleCommandListRow, OwnerTable).Item(Item).bIsValid(Item->IsValid()).bDisplayIcons(bDisplayIcons).bIsEditable(CurrentGroup.bIsEditable);
+	TSharedRef<SConsoleCommandListRow> Row = SNew(SConsoleCommandListRow, OwnerTable)
+		.Item(Item)
+		.bIsValid(Item->IsValid())
+		.bDisplayIcons(bDisplayIcons)
+		.bIsEditable(CurrentGroup.bIsEditable);
 
 	Row->SetOnCommandValueEdit(FOnCommandValueEdit::CreateLambda(
 		[=](TSharedPtr<FConsoleCommand> Command, int32 Index)
@@ -746,8 +701,6 @@ TSharedRef<ITableRow> SConsoleManagerSlateWidget::OnCommandsRowGenerate(TSharedP
 			bNeedsRefresh = false;
 			CommandsManager->UpdateCurrentEngineValue(Command);
 			bNeedsRefresh = true;
-
-
 		}
 	));
 
@@ -1064,6 +1017,7 @@ void SConsoleManagerSlateWidget::GenerateCommandsScrollBox()
 	if (CommandsManager->GetCurrentCommandGroup().Type == EGroupType::AllCommands)
 	{
 		CommandsListView->GetHeaderRow()->RemoveColumn("Value");
+		
 	}
 	else
 	{
@@ -1531,6 +1485,7 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 			if (SelectedCommands.Num() > 0)
 			{
 				MenuBuilder.BeginSection("Group", LOCTEXT("GroupContextMenu_Header_Group", "Group"));
+
 
 				FNewMenuDelegate Delegate;
 				Delegate.BindLambda([=](FMenuBuilder& SubMenuBuilder) 
