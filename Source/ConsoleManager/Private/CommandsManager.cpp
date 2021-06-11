@@ -262,6 +262,7 @@ void FCommandsManager::Initialize_Internal(const TArray<UCommandsContainer*>& Co
 			GroupToContainerMap.Add(GroupInContainer.Id, Container);
 		}
 	}
+	SetActiveAllCommands();
 
 	OnDataRefreshed.ExecuteIfBound();
 }
