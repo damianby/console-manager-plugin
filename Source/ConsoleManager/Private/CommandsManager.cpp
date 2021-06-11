@@ -437,10 +437,21 @@ void FCommandsManager::AddCommandsToCurrentGroup(TArray<TSharedPtr<FConsoleComma
 
 void FCommandsManager::AddCommandsToGroup(FGuid Id, TArray<TSharedPtr<FConsoleCommand>> Commands)
 {
-	FCommandGroup* Group = GetGroup(Id);
+	UCommandsContainer** FoundContainer = GroupToContainerMap.Find(Id);
 
+	UCommandsContainer* Container = nullptr;
+	if (FoundContainer)
+	{
+		Container = *FoundContainer;
+	}
+
+	FCommandGroup* Group = GetGroup(Id);
 	AddCommandsToGroup(Group, Commands);
-	ContainerChanged();
+
+	if (Container)
+	{
+		ContainerChanged(Container);
+	}
 }
 
 void FCommandsManager::UpdateCurrentEngineValue(const FConsoleCommand& Command)
