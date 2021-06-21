@@ -597,6 +597,22 @@ void FCommandsManager::ExecuteGroup(const FGuid& Id)
 	}
 }
 
+bool FCommandsManager::ExecuteGroup(UCommandsContainer* Container, const FString& Name)
+{
+	if (Container && Container->IsValidLowLevel())
+	{
+		FCommandGroup* FoundGroup = Container->GetGroupByName(Name);
+
+		if (FoundGroup)
+		{
+			ExecuteGroup_Internal(*FoundGroup);
+
+			return true;
+		}
+	}
+	return false;
+}
+
 void FCommandsManager::RemoveGroup(FGuid Id)
 {
 	UCommandsContainer** FoundContainer = GroupToContainerMap.Find(Id);
@@ -1030,6 +1046,17 @@ bool FCommandsManager::Execute_Internal(const FConsoleCommand& Command, bool Upd
 	return bWasHandled;
 	
 	*/
+}
+
+bool FCommandsManager::ExecuteGroup_Internal(const FCommandGroup& Group)
+{
+	bool bSuccess = true;
+	for (const auto& Command : Group.Commands)
+	{
+		bSuccess = bSuccess && Execute_Internal(Command, false);
+	}
+
+	return bSuccess;
 }
 
 void FCommandsManager::ValidateCommands(TArray<FConsoleCommand>& Commands)

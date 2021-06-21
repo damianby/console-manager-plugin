@@ -82,6 +82,7 @@ public:
 	bool ExecuteCommand(FConsoleCommand& Command);
 	void ExecuteMultipleCommands(TArray<TSharedPtr<FConsoleCommand>> Commands);
 	void ExecuteGroup(const FGuid& Id);
+	bool ExecuteGroup(UCommandsContainer* Container, const FString& Name);
 
 	void UpdateHistory();
 
@@ -131,6 +132,7 @@ private:
 
 
 	bool Execute_Internal(const FConsoleCommand& Command, bool UpdateHistory = true);
+	bool ExecuteGroup_Internal(const FCommandGroup& Group);
 
 	void ValidateCommands(TArray<FConsoleCommand>& Commands);
 
