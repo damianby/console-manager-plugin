@@ -28,7 +28,7 @@ static const TCHAR* GetSetByTCHAR(EConsoleVariableFlags InSetBy)
 	return TEXT("<UNKNOWN>");
 }
 
-FConsoleCommand::FConsoleCommand(FString _Command)
+FConsoleCommand::FConsoleCommand(FString _Command, bool bOnlyName)
 {
 	const TCHAR* It = *_Command;
 
@@ -60,6 +60,7 @@ FConsoleCommand::FConsoleCommand(FString _Command)
 	{
 		Name = FoundName;
 	}
+	bNameAsValue = bOnlyName;
 
 	InitialParse(CachedObj);
 	RefreshExec();
@@ -79,11 +80,12 @@ FConsoleCommand::FConsoleCommand(const FConsoleCommand& Copy)
 	bIsInitiallyParsed = Copy.bIsInitiallyParsed;
 	Note = Copy.Note;
 	SetBy = Copy.SetBy;
+	bReadOnly = Copy.bReadOnly;
+	bNameAsValue = Copy.bNameAsValue;
 
 	
 	UE_LOG(LogTemp, Warning, TEXT("Data is %s : %s : %s"), *Name, *Value, *ExecCommand);
 }
-
 
 void FConsoleCommand::Refresh()
 {
@@ -102,7 +104,6 @@ void FConsoleCommand::Refresh()
 			CurrentValue = CVar->GetString();
 		}
 	}
-
 }
 void FConsoleCommand::InitializeLoaded()
 {
@@ -112,6 +113,9 @@ void FConsoleCommand::InitialParse(IConsoleObject* Obj)
 {
 	if (Obj)
 	{
+	/*	Obj->GetFlags()
+			EConsoleVariableFlags*/
+
 		SetBy = GetSetByTCHAR(Obj->GetFlags());
 
 		IConsoleCommand* CCmd = Obj->AsCommand();
@@ -121,6 +125,8 @@ void FConsoleCommand::InitialParse(IConsoleObject* Obj)
 		{
 			CurrentValue = CVar->GetString();
 			ObjType = EConsoleCommandType::CVar;
+
+			bReadOnly = CVar->TestFlags(ECVF_ReadOnly);
 
 			if (CVar->IsVariableBool())
 			{

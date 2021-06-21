@@ -43,13 +43,17 @@ public:
 		UE_LOG(LogTemp, Warning, TEXT("DEFAULT CONSTRUCTOR is %s : %s : %s"), *Name, *Value, *ExecCommand);
 	};
 
-	FConsoleCommand(FString _Command);
+	FConsoleCommand(FString _Command, bool bOnlyName = false);
 	FConsoleCommand(const FConsoleCommand& Copy);
 
 	void SetIsValid(bool NewValid) { bIsValid = NewValid; };
 	bool IsValid() { return bIsValid; };
 	FORCEINLINE bool operator == (const FString& Other) const {
 		return Name.Equals(Other, ESearchCase::IgnoreCase);
+	};
+
+	FORCEINLINE bool operator < (const FConsoleCommand& Other) const {
+		return Name < Other.Name;
 	};
 
 	FORCEINLINE const FString& GetExec() const
@@ -71,6 +75,10 @@ public:
 	FORCEINLINE const EConsoleCommandVarType& GetType() const { return Type; }
 	FORCEINLINE const EConsoleCommandType& GetObjType() const { return ObjType; }
 	FORCEINLINE const FString& GetNote() const { return Note; }
+	FORCEINLINE bool IsReadOnly() const { return bReadOnly; }
+	FORCEINLINE bool IsNameAsValue() const { return bNameAsValue; }
+
+	void SetOnlyName(bool Val) { bNameAsValue = Val; }
 
 	const FString& GetCurrentValue() const { return CurrentValue; };
 
@@ -107,6 +115,9 @@ private:
 
 	bool bIsValid = true;
 	bool bIsInitiallyParsed = false;
+
+	bool bNameAsValue = false;
+	bool bReadOnly = false;
 
 	IConsoleObject* CachedObj = nullptr;
 };

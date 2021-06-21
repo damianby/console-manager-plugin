@@ -20,8 +20,12 @@
 #include "Misc/ConfigCacheIni.h"
 #include "Misc/OutputDeviceFile.h"
 
-#include "DeviceProfiles/DeviceProfileManager.h"
+#include "LevelEditorViewport.h"
 
+#include "Stats/StatsData.h"
+
+#include "DeviceProfiles/DeviceProfileManager.h"
+#include "Engine/Console.h"
 
 #define LOCTEXT_NAMESPACE "FConsoleManagerModule"
 
@@ -387,6 +391,72 @@ bool FCommandsManager::SetActiveHistory()
 
 bool FCommandsManager::SetActiveAllCommands()
 {
+
+#if ALLOW_CONSOLE
+
+	// Create the viewport's console.
+	//UConsole* ViewportConsole = NewObject<UConsole>(GEngine);
+	// register console to get all log messages
+	//GLog->AddOutputDevice(ViewportConsole);
+	
+	UConsole* ViewportConsole = nullptr;
+
+	//FEditorDelegates::PostPIEStarted
+
+	
+	if (GEngine && GEngine->GameViewport)
+	{
+		ViewportConsole = GEngine->GameViewport->ViewportConsole;
+	}
+
+	//TEXTFILTER class exists!
+	if (ViewportConsole)
+	{
+		ViewportConsole->BuildRuntimeAutoCompleteList(true);
+		TArray<FAutoCompleteCommand>& Commands = ViewportConsole->AutoCompleteList;
+
+		for (int i = 0; i < Commands.Num(); i++)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Command %s || %s"), *Commands[i].Command, *Commands[i].Desc);
+		}
+
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Game viewport does not exists!"));
+	}
+
+
+#endif // !UE_BUILD_SHIPPING
+
+	if (GEditor)
+	{
+		const TArray<FLevelEditorViewportClient*>& Viewports = GEditor->GetLevelViewportClients();
+
+		for (int i = 0; i < Viewports.Num(); i++)
+		{
+			FLevelEditorViewportClient* Client = Viewports[i];
+
+			bool isEnabled = Client->IsStatEnabled(TEXT("FPS"));
+
+			UE_LOG(LogTemp, Warning, TEXT("Viewport %d, is: %d"), i, isEnabled);
+		}
+		UE_LOG(LogTemp, Warning, TEXT("IS ACTIVE IN ACITVE: %d"), GEditor->GetActiveViewport()->GetClient()->IsStatEnabled(TEXT("FPS")));
+
+		UWorld* EditorWorld = GEditor->GetEditorWorldContext().World();
+
+		if (EditorWorld)
+		{
+			//GEditor->GetEditorWorldContext().wo
+		}
+
+	}
+	//GEngine->GStatProcessingViewportClient
+
+
+
+
+
 	if (CurrentGroup != &AllCommands)
 	{
 		SetCurrentCommands(AllCommands);
@@ -976,6 +1046,21 @@ bool FCommandsManager::Execute_Internal(const FConsoleCommand& Command, bool Upd
 		IConsoleManager::Get().AddConsoleHistoryEntry(TEXT(""), *ExecCommand);
 	}
 
+	/** Pointer to the classic "Cmd" executor */
+	//TUniquePtr<FConsoleCommandExecutor> CmdExec;
+	//CmdExec = MakeUnique<FConsoleCommandExecutor>();
+	//#if (UE_BUILD_SHIPPING || UE_BUILD_TEST)
+	//	if (CVar->TestFlags(ECVF_Cheat))
+	//	{
+	//		return;
+	//	}
+	//#endif // (UE_BUILD_SHIPPING || UE_BUILD_TEST)
+	//	if (CVar->TestFlags(ECVF_Unregistered))
+	//	{
+	//		return;
+	//	}
+
+
 	return SuccessExecuting;
 
 	//HERE Exec from FConsoleCommandExecutor
@@ -1130,10 +1215,44 @@ void FCommandsManager::DumpAllCommands()
 	AllCommands.bIsEditable = false;
 	AllCommands.Type = EGroupType::AllCommands;
 
+
+
+	TArray<FConsoleCommand>& Commands = AllCommands.Commands;
+
+	
+	// stat commands
+	{
+		const TSet<FName>& StatGroupNames = FStatGroupGameThreadNotifier::Get().StatGroupNames;
+		for (const FName& StatGroupName : StatGroupNames)
+		{
+			FString Command = FString(TEXT("Stat "));
+			Command += StatGroupName.ToString().RightChop(sizeof("STATGROUP_") - 1);
+
+			int32 Idx = 0;
+			for (; Idx < Commands.Num(); ++Idx)
+			{
+				if (Commands[Idx].Name == Command)
+				{
+					break;
+				}
+			}
+
+			Idx = (Idx < Commands.Num()) ? Idx : Commands.Add(FConsoleCommand(Command));
+			Commands[Idx].Name = Command;
+			Commands[Idx].SetOnlyName(true);
+		}
+	}
+
+
+
 	for (auto& Command : LocalCommands)
 	{
 		AllCommands.Commands.Add(FConsoleCommand(Command));
 	}
+
+	AllCommands.Commands.Sort();
+
+
 
 	const FString Path = FPaths::GeneratedConfigDir() + TEXT("Console.txt");
 	
@@ -1178,5 +1297,239 @@ FCommandGroup* FCommandsManager::GetGroup(FGuid Id)
 	return nullptr;
 }
 
+//
+//
+//TArray<FString> DumpCmds()
+//{
+//	LLM_SCOPE(ELLMTag::EngineMisc);
+//
+//#if ALLOW_CONSOLE
+//
+//	TArray< FAutoCompleteCommand > AutoCompleteList;
+//	const UConsoleSettings* ConsoleSettings = GetDefault<UConsoleSettings>();
+//	// copy the manual list first
+//	AutoCompleteList.Reset();
+//	AutoCompleteList.AddDefaulted(ConsoleSettings->ManualAutoCompleteList.Num());
+//	for (int32 Idx = 0; Idx < ConsoleSettings->ManualAutoCompleteList.Num(); Idx++)
+//	{
+//		AutoCompleteList[Idx] = ConsoleSettings->ManualAutoCompleteList[Idx];
+//		AutoCompleteList[Idx].Color = ConsoleSettings->AutoCompleteCommandColor;
+//	}
+//
+//	// systems that have registered to want to introduce entries
+//	RegisterConsoleAutoCompleteEntries.Broadcast(AutoCompleteList);
+//
+//	// console variables
+//	{
+//		IConsoleManager::Get().ForEachConsoleObjectThatStartsWith(
+//			FConsoleObjectVisitor::CreateStatic< TArray<struct FAutoCompleteCommand>& >(
+//				&FConsoleVariableAutoCompleteVisitor::OnConsoleVariable,
+//				AutoCompleteList));
+//	}
+//
+//	// iterate through script exec functions and append to the list
+//	for (TObjectIterator<UFunction> It; It; ++It)
+//	{
+//		UFunction* Func = *It;
+//
+//		// Determine whether or not this is a level script event that we can call (must be defined in the level script actor and not in parent, and has no return value)
+//		const UClass* FuncOuter = Cast<UClass>(Func->GetOuter());
+//		const bool bIsLevelScriptFunction = FuncOuter
+//			&& (FuncOuter->IsChildOf(ALevelScriptActor::StaticClass()))
+//			&& (FuncOuter != ALevelScriptActor::StaticClass())
+//			&& (Func->ReturnValueOffset == MAX_uint16)
+//			&& (Func->GetSuperFunction() == nullptr);
+//
+//		// exec functions that either have no parent, level script events, or are in the global state (filtering some unnecessary dupes)
+//		if ((Func->HasAnyFunctionFlags(FUNC_Exec) && (Func->GetSuperFunction() == nullptr || FuncOuter))
+//			|| bIsLevelScriptFunction)
+//		{
+//			FString FuncName = Func->GetName();
+//			if (FDefaultValueHelper::HasWhitespaces(FuncName))
+//			{
+//				FuncName = FString::Printf(TEXT("\"%s\""), *FuncName);
+//			}
+//			if (bIsLevelScriptFunction)
+//			{
+//				FuncName = FString(TEXT("ce ")) + FuncName;
+//			}
+//
+//			int32 Idx = 0;
+//			for (; Idx < AutoCompleteList.Num(); ++Idx)
+//			{
+//				if (AutoCompleteList[Idx].Command == FuncName)
+//				{
+//					break;
+//				}
+//			}
+//
+//			const int32 NewIdx = (Idx < AutoCompleteList.Num()) ? Idx : AutoCompleteList.AddDefaulted();
+//			AutoCompleteList[NewIdx].Command = FuncName;
+//			AutoCompleteList[NewIdx].Color = ConsoleSettings->AutoCompleteCommandColor;
+//
+//			FString Desc;
+//
+//			// build a help string
+//			// append each property (and it's type) to the help string
+//			for (TFieldIterator<FProperty> PropIt(Func); PropIt && (PropIt->PropertyFlags & CPF_Parm); ++PropIt)
+//			{
+//				FProperty* Prop = *PropIt;
+//				Desc += FString::Printf(TEXT("%s[%s] "), *Prop->GetName(), *Prop->GetCPPType());
+//			}
+//			AutoCompleteList[NewIdx].Desc = Desc + AutoCompleteList[NewIdx].Desc;
+//		}
+//	}
+//
+//	// enumerate maps
+//	{
+//		auto FindPackagesInDirectory = [](TArray<FString>& OutPackages, const FString& InPath)
+//		{
+//			// Can't search packages using the filesystem when I/O dispatcher is enabled
+//			if (FIoDispatcher::IsInitialized())
+//			{
+//				FString PackagePath;
+//				if (FPackageName::TryConvertFilenameToLongPackageName(InPath, PackagePath))
+//				{
+//					if (FAssetRegistryModule* AssetRegistryModule = FModuleManager::LoadModulePtr<FAssetRegistryModule>(TEXT("AssetRegistry")))
+//					{
+//						TArray<FAssetData> Assets;
+//						AssetRegistryModule->Get().GetAssetsByPath(FName(*PackagePath), Assets, true);
+//
+//						for (const FAssetData& Asset : Assets)
+//						{
+//							if (!!(Asset.PackageFlags & PKG_ContainsMap))
+//							{
+//								OutPackages.Emplace(Asset.AssetName.ToString());
+//							}
+//						}
+//					}
+//				}
+//			}
+//			else
+//			{
+//				TArray<FString> Filenames;
+//				FPackageName::FindPackagesInDirectory(Filenames, InPath);
+//
+//				for (const FString& Filename : Filenames)
+//				{
+//					const int32 NameStartIdx = Filename.Find(TEXT("/"), ESearchCase::IgnoreCase, ESearchDir::FromEnd);
+//					const int32 ExtIdx = Filename.Find(*FPackageName::GetMapPackageExtension(), ESearchCase::IgnoreCase, ESearchDir::FromEnd);
+//
+//					if (NameStartIdx != INDEX_NONE && ExtIdx != INDEX_NONE)
+//					{
+//						OutPackages.Emplace(Filename.Mid(NameStartIdx + 1, ExtIdx - NameStartIdx - 1));
+//					}
+//				}
+//			}
+//		};
+//
+//		TArray<FString> Packages;
+//		for (const FString& MapPath : ConsoleSettings->AutoCompleteMapPaths)
+//		{
+//			FindPackagesInDirectory(Packages, FString::Printf(TEXT("%s%s"), *FPaths::ProjectDir(), *MapPath));
+//		}
+//
+//		FindPackagesInDirectory(Packages, FPaths::GameUserDeveloperDir());
+//
+//		for (const FString& MapName : Packages)
+//		{
+//			int32 NewIdx = 0;
+//			// put _P maps at the front so that they match early, since those are generally the maps we want to actually open
+//			if (MapName.EndsWith(TEXT("_P")))
+//			{
+//				AutoCompleteList.InsertDefaulted(0, 3);
+//			}
+//			else
+//			{
+//				NewIdx = AutoCompleteList.AddDefaulted(3);
+//			}
+//
+//			AutoCompleteList[NewIdx].Command = FString::Printf(TEXT("open %s"), *MapName);
+//			AutoCompleteList[NewIdx].Color = ConsoleSettings->AutoCompleteCommandColor;
+//			AutoCompleteList[NewIdx + 1].Command = FString::Printf(TEXT("travel %s"), *MapName);
+//			AutoCompleteList[NewIdx + 1].Color = ConsoleSettings->AutoCompleteCommandColor;
+//			AutoCompleteList[NewIdx + 2].Command = FString::Printf(TEXT("servertravel %s"), *MapName);
+//			AutoCompleteList[NewIdx + 2].Color = ConsoleSettings->AutoCompleteCommandColor;
+//		}
+//	}
+//
+//	// misc commands
+//	{
+//		const int32 NewIdx = AutoCompleteList.AddDefaulted();
+//		AutoCompleteList[NewIdx].Command = FString(TEXT("open 127.0.0.1"));
+//		AutoCompleteList[NewIdx].Desc = FString(TEXT("(opens connection to localhost)"));
+//		AutoCompleteList[NewIdx].Color = ConsoleSettings->AutoCompleteCommandColor;
+//	}
+//
+//#if STATS
+//	// stat commands
+//	{
+//		const TSet<FName>& StatGroupNames = FStatGroupGameThreadNotifier::Get().StatGroupNames;
+//		for (const FName& StatGroupName : StatGroupNames)
+//		{
+//			FString Command = FString(TEXT("Stat "));
+//			Command += StatGroupName.ToString().RightChop(sizeof("STATGROUP_") - 1);
+//
+//			int32 Idx = 0;
+//			for (; Idx < AutoCompleteList.Num(); ++Idx)
+//			{
+//				if (AutoCompleteList[Idx].Command == Command)
+//				{
+//					break;
+//				}
+//			}
+//
+//			Idx = (Idx < AutoCompleteList.Num()) ? Idx : AutoCompleteList.AddDefaulted();
+//			AutoCompleteList[Idx].Command = Command;
+//			AutoCompleteList[Idx].Color = ConsoleSettings->AutoCompleteCommandColor;
+//		}
+//	}
+//#endif
+//
+//	// Add all showflag commands.
+//	{
+//		struct FIterSink
+//		{
+//			FIterSink(TArray<FAutoCompleteCommand>& InAutoCompleteList)
+//				: AutoCompleteList(InAutoCompleteList)
+//			{
+//			}
+//
+//			bool HandleShowFlag(uint32 InIndex, const FString& InName)
+//			{
+//				// Get localized name.
+//				FText LocName;
+//				FEngineShowFlags::FindShowFlagDisplayName(InName, LocName);
+//
+//				int32 NewIdx = AutoCompleteList.AddDefaulted();
+//				AutoCompleteList[NewIdx].Command = TEXT("show ") + InName;
+//				AutoCompleteList[NewIdx].Desc = FString::Printf(TEXT("(toggles the %s showflag)"), *LocName.ToString());
+//				AutoCompleteList[NewIdx].Color = GetDefault<UConsoleSettings>()->AutoCompleteCommandColor;
+//
+//				return true;
+//			}
+//
+//			bool OnEngineShowFlag(uint32 InIndex, const FString& InName)
+//			{
+//				return HandleShowFlag(InIndex, InName);
+//			}
+//
+//			bool OnCustomShowFlag(uint32 InIndex, const FString& InName)
+//			{
+//				return HandleShowFlag(InIndex, InName);
+//			}
+//
+//			TArray<FAutoCompleteCommand>& AutoCompleteList;
+//		};
+//
+//		FIterSink Sink(AutoCompleteList);
+//		FEngineShowFlags::IterateAllFlags(Sink);
+//	}
+//
+//	// Add any commands from UConsole subclasses
+//	AugmentRuntimeAutoCompleteList(AutoCompleteList);
+//
+//	AutoCompleteList.Shrink();
+//}
 
 #undef LOCTEXT_NAMESPACE
