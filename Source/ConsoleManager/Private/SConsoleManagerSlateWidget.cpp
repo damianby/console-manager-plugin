@@ -627,9 +627,15 @@ void SConsoleManagerSlateWidget::FilterList()
 			else if (SearchTags.Num() == 1) // If there is only one tag to search, put elements that start with tag on top of the list
 			{
 				// If its empty no need to check if string contains empty string
-				const bool bContainFilterString = Command->GetName().Contains(SearchTags[0]);
+				bool bContainFilterString = Command->GetName().Contains(SearchTags[0]);
 
-				const bool bStartsWith = Command->GetName().StartsWith(SearchTags[0]);
+				bool bStartsWith = Command->GetName().StartsWith(SearchTags[0]);
+
+				if (Command->IsCustomExec())
+				{
+					bStartsWith = bStartsWith || Command->GetValue().StartsWith(SearchTags[0]);
+					bContainFilterString = bContainFilterString || Command->GetValue().Contains(SearchTags[0]);
+				}
 
 				if (bStartsWith)
 				{
@@ -644,11 +650,24 @@ void SConsoleManagerSlateWidget::FilterList()
 			{
 				bool bContainsAllTags = true;
 
-				for (int i = 0; i < SearchTags.Num(); i++)
+				if (Command->IsCustomExec())
 				{
-					const bool bContainsTag = Command->GetName().Contains(SearchTags[i]);
+					for (int i = 0; i < SearchTags.Num(); i++)
+					{
+						bool bContainsTag = Command->GetName().Contains(SearchTags[i]);
 
-					bContainsAllTags = bContainsAllTags && bContainsTag;
+						bContainsTag = bContainsTag || Command->GetValue().Contains(SearchTags[i]);
+
+						bContainsAllTags = bContainsAllTags && bContainsTag;
+					}
+				}
+				else
+				{
+					for (int i = 0; i < SearchTags.Num(); i++)
+					{
+						bool bContainsTag = Command->GetName().Contains(SearchTags[i]);
+						bContainsAllTags = bContainsAllTags && bContainsTag;
+					}
 				}
 
 				if (bContainsAllTags)
@@ -2002,11 +2021,23 @@ TSharedRef<SWidget> SConsoleCommandListRow::GenerateWidgetForColumn(const FName&
 	{
 		TSharedPtr<FConsoleCommand> LocalCmd = Item;
 
-		TAttribute<FText> CurrentValueText = TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateLambda([LocalCmd]() {
-			return FText::FromString(LocalCmd->GetCurrentValue());
+
+		const FString& (FConsoleCommand::*GetValuePtr)() const;
+
+
+		if (LocalCmd->GetObjType() == EConsoleCommandType::Exec && !LocalCmd->GetValue().IsEmpty())
+		{
+			GetValuePtr = &FConsoleCommand::GetValue;
+		}
+		else
+		{
+			GetValuePtr = &FConsoleCommand::GetCurrentValue;
+		}
+
+		TAttribute<FText> CurrentValueText = TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateLambda([LocalCmd, GetValuePtr]() {
+			return FText::FromString((LocalCmd.Get()->*GetValuePtr)());
 		}));
 
-		FText EditTextValue = FText::FromString(Item->GetCurrentValue());
 
 		TSharedRef<SEditableText> EditText = SNew(SEditableText)
 		.HintText(CurrentValueText)

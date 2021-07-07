@@ -28,7 +28,7 @@ static const TCHAR* GetSetByTCHAR(EConsoleVariableFlags InSetBy)
 	return TEXT("<UNKNOWN>");
 }
 
-FConsoleCommand::FConsoleCommand(FString _Command)
+FConsoleCommand::FConsoleCommand(FString _Command, bool IsCustomExec)
 {
 	const TCHAR* It = *_Command;
 
@@ -41,24 +41,29 @@ FConsoleCommand::FConsoleCommand(FString _Command)
 	Name = Param1;
 	Value = _Command.Mid(Param1.Len() + 1);
 
-	FString FoundName;
-	IConsoleObject* Obj = nullptr;
+	CustomExec = IsCustomExec;
 
-	IConsoleManager::Get().ForEachConsoleObjectThatContains(FConsoleObjectVisitor::CreateLambda(
-		[&Param1, &FoundName, &Obj](const TCHAR* CurrentObjName, IConsoleObject* CurrentObj) {
-			if (Param1.Equals(CurrentObjName, ESearchCase::IgnoreCase))
-			{
-				FoundName = FString(CurrentObjName);	
-				Obj = CurrentObj;
-			}
-		}),
-		*Name);
-	
-	CachedObj = Obj;
-
-	if (!FoundName.IsEmpty())
+	if (!CustomExec)
 	{
-		Name = FoundName;
+		FString FoundName;
+		IConsoleObject* Obj = nullptr;
+
+		IConsoleManager::Get().ForEachConsoleObjectThatContains(FConsoleObjectVisitor::CreateLambda(
+			[&Param1, &FoundName, &Obj](const TCHAR* CurrentObjName, IConsoleObject* CurrentObj) {
+				if (Param1.Equals(CurrentObjName, ESearchCase::IgnoreCase))
+				{
+					FoundName = FString(CurrentObjName);
+					Obj = CurrentObj;
+				}
+			}),
+			*Name);
+
+		CachedObj = Obj;
+
+		if (!FoundName.IsEmpty())
+		{
+			Name = FoundName;
+		}
 	}
 
 	InitialParse(CachedObj);
@@ -79,6 +84,8 @@ FConsoleCommand::FConsoleCommand(const FConsoleCommand& Copy)
 	bIsInitiallyParsed = Copy.bIsInitiallyParsed;
 	Note = Copy.Note;
 	SetBy = Copy.SetBy;
+
+	CustomExec = Copy.CustomExec;
 
 	
 	UE_LOG(LogTemp, Warning, TEXT("Data is %s : %s : %s"), *Name, *Value, *ExecCommand);

@@ -43,7 +43,7 @@ public:
 		UE_LOG(LogTemp, Warning, TEXT("DEFAULT CONSTRUCTOR is %s : %s : %s"), *Name, *Value, *ExecCommand);
 	};
 
-	FConsoleCommand(FString _Command);
+	FConsoleCommand(FString _Command, bool IsCustomExec = false);
 	FConsoleCommand(const FConsoleCommand& Copy);
 
 	void SetIsValid(bool NewValid) { bIsValid = NewValid; };
@@ -71,6 +71,7 @@ public:
 	FORCEINLINE const EConsoleCommandVarType& GetType() const { return Type; }
 	FORCEINLINE const EConsoleCommandType& GetObjType() const { return ObjType; }
 	FORCEINLINE const FString& GetNote() const { return Note; }
+	FORCEINLINE const bool IsCustomExec() const { return CustomExec; }
 
 	const FString& GetCurrentValue() const { return CurrentValue; };
 
@@ -107,6 +108,8 @@ private:
 
 	bool bIsValid = true;
 	bool bIsInitiallyParsed = false;
+
+	bool CustomExec = false;
 
 	IConsoleObject* CachedObj = nullptr;
 };
