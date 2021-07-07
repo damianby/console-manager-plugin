@@ -17,6 +17,7 @@
 #include "ISourceControlModule.h"
 #include "Misc/FileHelper.h"
 
+#include "Stats/StatsData.h"
 #include "Misc/ConfigCacheIni.h"
 #include "Misc/OutputDeviceFile.h"
 
@@ -1135,10 +1136,35 @@ void FCommandsManager::DumpAllCommands()
 	AllCommands.bIsEditable = false;
 	AllCommands.Type = EGroupType::AllCommands;
 
+	TArray<FConsoleCommand>& Commands = AllCommands.Commands;
+
+	// stat commands
+	{
+		const TSet<FName>& StatGroupNames = FStatGroupGameThreadNotifier::Get().StatGroupNames;
+		for (const FName& StatGroupName : StatGroupNames)
+		{
+			FString Command = FString(TEXT("Stat "));
+			Command += StatGroupName.ToString().RightChop(sizeof("STATGROUP_") - 1);
+
+			int32 Idx = 0;
+			for (; Idx < Commands.Num(); ++Idx)
+			{
+				if (Commands[Idx].Name == Command)
+				{
+					break;
+				}
+			}
+
+			Idx = (Idx < Commands.Num()) ? Idx : Commands.Add(FConsoleCommand(Command, true));
+		}
+	}
+
 	for (auto& Command : LocalCommands)
 	{
 		AllCommands.Commands.Add(FConsoleCommand(Command));
 	}
+
+	AllCommands.Commands.Sort();
 
 	const FString Path = FPaths::GeneratedConfigDir() + TEXT("Console.txt");
 	

@@ -52,6 +52,10 @@ public:
 		return Name.Equals(Other, ESearchCase::IgnoreCase);
 	};
 
+	FORCEINLINE bool operator < (const FConsoleCommand& Other) const {
+		return Name < Other.Name;
+	};
+
 	FORCEINLINE const FString& GetExec() const
 	{ 
 		return ExecCommand; 
