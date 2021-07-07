@@ -1095,6 +1095,11 @@ void FCommandsManager::ContainerBeingDestroyed(UCommandsContainer* Container)
 			{
 				Initialize_Internal(CommandsContainers);
 			}
+			else
+			{
+				// Else just refresh data as its empty anyway
+				OnDataRefreshed.ExecuteIfBound();
+			}
 			UE_LOG(LogTemp, Warning, TEXT("Container %s is dying! Removed: %d"), *Container->GetName(), bContainerRemoved);
 		}
 	}	
