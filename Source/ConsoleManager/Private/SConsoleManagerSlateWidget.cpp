@@ -1566,15 +1566,20 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 
 bool SConsoleManagerSlateWidget::HandleNewGroup(FString& OutName, UCommandsContainer*& OutContainer, UCommandsContainer* InContainer)
 {
-
-
 	const TArray<UCommandsContainer*>& Containers = CommandsManager->GetCommandsContainers();
 
 	UCommandsContainer* SelectedContainer = InContainer;
 
-	if (!InContainer->IsValidLowLevel() && Containers.Num() > 0)
+	if (Containers.Num() > 0)
 	{
-		SelectedContainer = Containers[0];
+		if (!InContainer->IsValidLowLevel())
+		{
+			SelectedContainer = Containers[0];
+		}
+	}
+	else
+	{
+		return false;
 	}
 
 	TArray<FString> GroupNames;
