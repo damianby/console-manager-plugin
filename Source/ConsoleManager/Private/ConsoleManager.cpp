@@ -430,8 +430,8 @@ void FConsoleManagerModule::InitializeCommandsManager(const TArray<UCommandsCont
 			UCommandsContainer* NewContainer = CreateNewContainer();
 			if (NewContainer != nullptr)
 			{
-				TArray<UCommandsContainer*> Containers = { NewContainer };
-				CommandsManager->Initialize(Containers);
+				TArray<UCommandsContainer*> TempContainers = { NewContainer };
+				CommandsManager->Initialize(TempContainers);
 			}
 		}
 	}
