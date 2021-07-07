@@ -167,20 +167,16 @@ void FConsoleManagerModule::OpenTab()
 {
 	bIsTabAutostarted = false;
 
-	CommandsManager->Initialize();
-
+	InitializeCommandsManager();
 	SpawnOrActivateTab();
-
 }
 
 void FConsoleManagerModule::OpenTabs(const TArray<UCommandsContainer*> Containers)
 {
 	bIsTabAutostarted = false;
 
-	CommandsManager->Initialize(Containers);
-
+	InitializeCommandsManager(&Containers);
 	SpawnOrActivateTab();
-	
 }
 
 void FConsoleManagerModule::OpenTabLast()
@@ -203,7 +199,7 @@ void FConsoleManagerModule::OpenTabLast()
 		}
 	}
 
-	CommandsManager->Initialize(Objects);
+	InitializeCommandsManager(&Objects);
 	SpawnOrActivateTab();
 }
 
@@ -364,7 +360,7 @@ TSharedRef<SWidget> FConsoleManagerModule::GenerateMenuContent()
 			LOCTEXT("CreateMenuTooltip", "Create a new Commands Container"),
 			FSlateIcon(),
 			FUIAction(
-				FExecuteAction::CreateRaw(this, &FConsoleManagerModule::CreateNewContainer)
+				FExecuteAction::CreateRaw(this, &FConsoleManagerModule::SpawnNewContainer)
 			)
 		);
 	}
@@ -393,18 +389,52 @@ TSharedRef<SWidget> FConsoleManagerModule::GenerateMenuContent()
 	return MenuBuilder.MakeWidget();
 }
 
-void FConsoleManagerModule::CreateNewContainer()
+void FConsoleManagerModule::SpawnNewContainer()
 {
+	CreateNewContainer();
+}
 
+UCommandsContainer* FConsoleManagerModule::CreateNewContainer()
+{
 	UCommandsContainerFactoryNew* ContainerFactory = DuplicateObject<UCommandsContainerFactoryNew>(GetDefault<UCommandsContainerFactoryNew>(), GetTransientPackage());
 
 	FAssetToolsModule& AssetToolsModule = FAssetToolsModule::GetModule();
-	AssetToolsModule.Get().CreateAssetWithDialog(ContainerFactory->GetSupportedClass(), ContainerFactory);
+	UObject* CreatedAsset = AssetToolsModule.Get().CreateAssetWithDialog(ContainerFactory->GetSupportedClass(), ContainerFactory);
 
-	
-	/*TArray<UObject*> ObjectsToSync;
-	ObjectsToSync.Add(NewAsset);
-	GEditor->SyncBrowserToObjects(ObjectsToSync);*/
+	if (CreatedAsset != nullptr)
+	{
+		return StaticCast<UCommandsContainer*>(CreatedAsset);
+	}
+	return nullptr;
+}
+
+void FConsoleManagerModule::InitializeCommandsManager(const TArray<UCommandsContainer*>* Containers)
+{
+	if (Containers != nullptr) 
+	{
+		CommandsManager->Initialize(*Containers);
+	}
+	else
+	{
+		CommandsManager->Initialize();
+	}
+
+	// Ask user to create new container if none found
+	if (CommandsManager->GetCommandsContainers().Num() == 0)
+	{
+		FText Title = FText::FromString("New Container");
+		EAppReturnType::Type Dec = FMessageDialog::Open(EAppMsgType::YesNo, LOCTEXT("CreateDefaultAssetDialog", "Would you like to create new command container?"), &Title);
+		
+		if (Dec == EAppReturnType::Type::Yes)
+		{
+			UCommandsContainer* NewContainer = CreateNewContainer();
+			if (NewContainer != nullptr)
+			{
+				TArray<UCommandsContainer*> Containers = { NewContainer };
+				CommandsManager->Initialize(Containers);
+			}
+		}
+	}
 }
 
 void FConsoleManagerModule::SpawnOrActivateTab()

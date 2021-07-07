@@ -45,12 +45,14 @@ private:
 
 	void ApplySettings();
 	void RegisterMenus();
-	void AskForDefaultGroup();
 
 	void FillToolbar(FToolBarBuilder& ToolbarBuilder);
 	TSharedRef<SWidget> GenerateMenuContent();
 
-	void CreateNewContainer();
+	void SpawnNewContainer();
+	UCommandsContainer* CreateNewContainer();
+
+	void InitializeCommandsManager(const TArray<UCommandsContainer*>* Containers = nullptr);
 
 	void SpawnOrActivateTab();
 	void SaveLastSelectedObjects();
