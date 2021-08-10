@@ -9,6 +9,9 @@
 
 #include "Modules/ModuleManager.h"
 
+
+DECLARE_LOG_CATEGORY_EXTERN(ConsoleManagerLog, VeryVerbose, All);
+
 class FToolBarBuilder;
 class FMenuBuilder;
 class UCommandsContainer;

@@ -69,7 +69,7 @@ FCommandsManager::FCommandsManager()
 		{
 			if (Phase == EPackageReloadPhase::OnPackageFixup)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Package %s reloaded"), *Event->GetNewPackage()->GetName());
+				UE_LOG(ConsoleManagerLog, Warning, TEXT("Package %s reloaded"), *Event->GetNewPackage()->GetName());
 
 				UCommandsContainer* RepointedContainer = nullptr;
 				int IndexToInsert = 0;
@@ -81,7 +81,7 @@ FCommandsManager::FCommandsManager()
 					if (Event->GetRepointedObject(Container, RepointedContainer))
 					{
 						IndexToInsert = i;
-						UE_LOG(LogTemp, Warning, TEXT("Container %s must be repointed"), *Container->GetName());
+						UE_LOG(ConsoleManagerLog, Warning, TEXT("Container %s must be repointed"), *Container->GetName());
 
 					}	
 				}
@@ -230,7 +230,7 @@ void FCommandsManager::VariableChanged()
 {
 	if (!bSinkBlocked)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Sink called!"));
+		UE_LOG(ConsoleManagerLog, VeryVerbose, TEXT("Sink called!"));
 		UpdateHistory();
 
 		OnCommandsRefresh.ExecuteIfBound();
@@ -252,7 +252,7 @@ void FCommandsManager::Initialize_Internal(const TArray<UCommandsContainer*>& Co
 	{
 		if (Container->IsPendingKillOrUnreachable() || !Container->IsValidLowLevel())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Skipping container, its either invalid, pending kill or unreachable"));
+			UE_LOG(ConsoleManagerLog, Verbose, TEXT("Skipping container, its either invalid, pending kill or unreachable"));
 			continue;
 		}
 		Container->OnDestroyCalled.BindRaw(this, &FCommandsManager::ContainerBeingDestroyed);
@@ -802,14 +802,14 @@ void FCommandsManager::UpdateHistory()
 	}
 }
 
- TArray<UCommandsContainer*> FCommandsManager::LoadAllContainers()
+TArray<UCommandsContainer*> FCommandsManager::LoadAllContainers()
 {
 	TArray<FAssetData> Assets;
 	UAssetManager::Get().GetAssetRegistry().GetAssetsByClass(UCommandsContainer::StaticClass()->GetFName(), Assets);
 
 	TArray<UCommandsContainer*> Containers;
 
-	UE_LOG(LogTemp, Warning, TEXT("Found %d assets"), Assets.Num());
+	UE_LOG(ConsoleManagerLog, Warning, TEXT("Loading all containers, found %d assets"), Assets.Num());
 
 	for (auto& Asset : Assets)
 	{
@@ -829,7 +829,7 @@ void FCommandsManager::UpdateHistory()
 		}
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Finished loading assets!"));
+	UE_LOG(ConsoleManagerLog, Warning, TEXT("Finished loading assets!"));
 
 	return Containers;
 }
@@ -854,7 +854,7 @@ void FCommandsManager::SaveToAssets()
 		{
 			UPackage* Package = Container->GetPackage();
 
-			UE_LOG(LogTemp, Warning, TEXT("Package name: %s | %s | %s"), *Package->FileName.ToString(), *Package->GetFullGroupName(false), *Package->GetPathName());
+			UE_LOG(ConsoleManagerLog, Verbose, TEXT("Package name: %s | %s | %s"), *Package->FileName.ToString(), *Package->GetFullGroupName(false), *Package->GetPathName());
 
 			// Construct a filename from long package name.
 			FString PackageFileName = FPackageName::LongPackageNameToFilename(Package->GetPathName(), FPackageName::GetAssetPackageExtension());
@@ -864,7 +864,7 @@ void FCommandsManager::SaveToAssets()
 				TArray<UPackage*> PackagesToSave = { Package };
 				FEditorFileUtils::PromptForCheckoutAndSave(PackagesToSave, true, true);
 				//FSavePackageResultStruct OutStruct = Package->Save(Package, Container, EObjectFlags::RF_Standalone | EObjectFlags::RF_Public, *PackageFileName);
-				//UE_LOG(LogTemp, Warning, TEXT("Result of save: %d | %lld"), OutStruct.Result, OutStruct.TotalFileSize);
+				//UE_LOG(ConsoleManagerLog, Warning, TEXT("Result of save: %d | %lld"), OutStruct.Result, OutStruct.TotalFileSize);
 			}
 			else
 			{
@@ -921,14 +921,11 @@ void FCommandsManager::RebuildSharedArray()
 
 	CurrentCommandsShared.Reset(CommandsNum);
 
-	UE_LOG(LogTemp, Warning, TEXT("Rebuild shared array!"));
+	UE_LOG(ConsoleManagerLog, VeryVerbose, TEXT("Rebuild shared array!"));
 
 	for (int i = 0; i < CommandsNum; i++)
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("Shared before : %s : %s : %s : %s"), *CurrentGroup->Commands[i].GetName(), *CurrentGroup->Commands[i].GetValue(), *CurrentGroup->Commands[i].GetExec(), *CurrentGroup->Commands[i].GetSetBy());
-
 		CurrentCommandsShared.Add(MakeShareable(&CurrentGroup->Commands[i], FDeleterNot()));
-		//UE_LOG(LogTemp, Warning, TEXT("Shared element: %s : %s : %s : %s"), *CurrentCommandsShared.Last()->GetName(), *CurrentCommandsShared.Last()->GetValue(), *CurrentCommandsShared.Last()->GetExec(), *CurrentCommandsShared.Last()->GetSetBy());
 	}
 }
 
@@ -1101,7 +1098,7 @@ void FCommandsManager::ContainerBeingDestroyed(UCommandsContainer* Container)
 				// Else just refresh data as its empty anyway
 				OnDataRefreshed.ExecuteIfBound();
 			}
-			UE_LOG(LogTemp, Warning, TEXT("Container %s is dying! Removed: %d"), *Container->GetName(), bContainerRemoved);
+			UE_LOG(ConsoleManagerLog, Verbose, TEXT("Container %s is dying! Removed: %d"), *Container->GetName(), bContainerRemoved);
 		}
 	}	
 }

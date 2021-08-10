@@ -1343,7 +1343,7 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 						{
 							for (auto& Command : SelectedCommands)
 							{
-								UE_LOG(LogTemp, Warning, TEXT("Command: %s || %s"), *Command->GetName(), *Command->GetValue());
+								UE_LOG(ConsoleManagerLog, VeryVerbose, TEXT("Command: %s || %s"), *Command->GetName(), *Command->GetValue());
 							}
 
 							bool ShouldExecute = true;
@@ -1535,7 +1535,6 @@ TSharedPtr<SWidget> SConsoleManagerSlateWidget::GetListViewContextMenu()
 					SubMenuBuilder.AddSeparator();
 
 					const TArray<UCommandsContainer*>& Containers = CommandsManager->GetCommandsContainers();
-					UE_LOG(LogTemp, Warning, TEXT("Containers length: %d"), Containers.Num());
 
 					for (const UCommandsContainer* Container : Containers)
 					{

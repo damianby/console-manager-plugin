@@ -34,14 +34,16 @@
 
 static const FName ConsoleManagerTabName("ConsoleManager");
 
+DEFINE_LOG_CATEGORY(ConsoleManagerLog);
+
 #define LOCTEXT_NAMESPACE "FConsoleManagerModule"
+
+
 
 
 void FConsoleManagerModule::StartupModule()
 {
 	CommandsManager = TSharedPtr<FCommandsManager>(new FCommandsManager());
-	
-	UE_LOG(LogTemp, Warning, TEXT("STARTUP MODULE"));
 
 	//FCoreDelegates::OnPostEngineInit
 	// We load module after engine and editor init so everything should be ready
@@ -482,7 +484,7 @@ TArray<UCommandsContainer*> FConsoleManagerModule::LoadAllContainers()
 
 	TArray<UCommandsContainer*> Containers;
 
-	UE_LOG(LogTemp, Warning, TEXT("Found %d assets"), Assets.Num());
+	UE_LOG(ConsoleManagerLog, Verbose, TEXT("Loading all containers, found %d assets"), Assets.Num());
 
 	for (auto& Asset : Assets)
 	{
@@ -502,7 +504,7 @@ TArray<UCommandsContainer*> FConsoleManagerModule::LoadAllContainers()
 		}
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Finished loading assets!"));
+	UE_LOG(ConsoleManagerLog, VeryVerbose, TEXT("Finished loading assets!"));
 
 	return Containers;
 }
@@ -522,12 +524,10 @@ TSharedRef<class SDockTab> FConsoleManagerModule::OnSpawnPluginTab(const FSpawnT
 	// if its autostarted then we load previously opened containers
 	if (bIsTabAutostarted)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("IS AUTOSTARTED"));
-
 		TArray<TSoftObjectPtr<UCommandsContainer>> LastOpenedObjs = GetMutableDefault<UConsoleManagerSettings>()->LastSelectedObjs;
 		TArray<UCommandsContainer*> Objects;
 
-		UE_LOG(LogTemp, Warning, TEXT("Last opened objects num: %d"), LastOpenedObjs.Num());
+		UE_LOG(ConsoleManagerLog, VeryVerbose, TEXT("Last opened objects num: %d"), LastOpenedObjs.Num());
 
 		for (auto& SoftObjPtr : LastOpenedObjs)
 		{
@@ -536,7 +536,7 @@ TSharedRef<class SDockTab> FConsoleManagerModule::OnSpawnPluginTab(const FSpawnT
 			if (ExistingObj)
 			{
 				Objects.Add(ExistingObj);
-				UE_LOG(LogTemp, Warning, TEXT("Last object: %s"), *ExistingObj->GetName());
+				UE_LOG(ConsoleManagerLog, VeryVerbose, TEXT("Last object: %s"), *ExistingObj->GetName());
 			}
 			else
 			{
@@ -544,7 +544,7 @@ TSharedRef<class SDockTab> FConsoleManagerModule::OnSpawnPluginTab(const FSpawnT
 				if (LoadedObj)
 				{
 					Objects.Add(LoadedObj);
-					UE_LOG(LogTemp, Warning, TEXT("Loading assets"));
+					UE_LOG(ConsoleManagerLog, VeryVerbose, TEXT("Loading assets"));
 				}
 			}
 		}

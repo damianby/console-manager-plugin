@@ -88,7 +88,7 @@ FConsoleCommand::FConsoleCommand(const FConsoleCommand& Copy)
 	CustomExec = Copy.CustomExec;
 
 	
-	UE_LOG(LogTemp, Warning, TEXT("Data is %s : %s : %s"), *Name, *Value, *ExecCommand);
+	UE_LOG(ConsoleManagerLog, VeryVerbose, TEXT("Copying FConsoleCommand:  %s : %s : %s"), *Name, *Value, *ExecCommand);
 }
 
 
@@ -154,7 +154,6 @@ void FConsoleCommand::InitialParse(IConsoleObject* Obj)
 		if (Obj->TestFlags(ECVF_Unregistered))
 		{
 			//Handle unregistered!
-			UE_LOG(LogTemp, Warning, TEXT("No test flag"));
 
 			bIsValid = false;
 		}
